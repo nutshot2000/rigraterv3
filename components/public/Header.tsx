@@ -20,7 +20,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
         }`;
 
     return (
-        <header className="bg-gray-800/50 backdrop-blur-sm sticky top-0 z-50 shadow-lg shadow-black/20">
+        <header className="bg-gray-800/40 glass sticky top-0 z-50 shadow-lg shadow-black/20 border-b border-white/10">
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center">
@@ -28,9 +28,9 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                             className="flex-shrink-0 flex items-center gap-2 cursor-pointer"
                             onClick={() => onNavigate(Page.HOME)}
                         >
-                           <ChipIcon className="h-8 w-8 text-teal-400" />
-                           <span className="text-white text-xl font-extrabold tracking-tight">Rigrater</span>
-                           <span className="hidden sm:inline text-xs text-teal-300/80 ml-1">rate. compare. upgrade.</span>
+                           <ChipIcon className="h-8 w-8" style={{ color: 'var(--accent)' }} />
+                           <span className="text-white text-xl font-extrabold tracking-tight neon-glow">Rigrater</span>
+                           <span className="hidden sm:inline text-xs" style={{ color: 'color-mix(in oklab, var(--accent) 85%, white 10%)' }}>rate. compare. upgrade.</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                                Admin Panel
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border "
+                        <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border neon-outline "
                              title={backendOn ? (isAuthenticated ? 'Connected to Supabase as admin' : 'Connected to Supabase - not logged in') : 'Local-only mode'}
                         >
                             <span className={`mr-2 w-2 h-2 rounded-full ${backendOn ? (isAuthenticated ? 'bg-green-400' : 'bg-yellow-400') : 'bg-red-400'}`}></span>

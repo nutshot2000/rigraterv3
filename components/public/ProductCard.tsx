@@ -18,24 +18,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
     };
 
     return (
-        <div className="bg-gray-800/60 rounded-xl overflow-hidden border border-gray-700 hover:border-teal-500/40 transition-all duration-300 shadow-sm hover:shadow-teal-500/20 group hover:scale-[1.02]">
+        <div className="bg-gray-800/50 glass rounded-xl overflow-hidden border border-white/10 transition-all duration-300 shadow-sm group hover:scale-[1.02] neon-outline">
             <div className="relative cursor-pointer" onClick={() => onCardClick(product)}>
                 <img 
                     src={product.imageUrl} 
                     alt={product.name} 
-                    className="w-full h-32 object-contain bg-gray-900/50 p-2" 
+                    className="w-full h-32 object-contain bg-gray-900/40 p-2" 
                     onError={handleImageError} 
                     loading="lazy" 
                 />
                 {product.brand && (
-                    <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded-full bg-black/70 border border-white/20 text-white uppercase tracking-wider font-medium">{product.brand}</span>
+                    <span className="absolute top-2 left-2 text-[9px] px-2 py-0.5 rounded-full bg-black/70 border border-white/20 text-white uppercase tracking-wider font-medium neon-outline" style={{ color:'var(--accent)' }}>{product.brand}</span>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             <div className="p-3 space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                    <span className="text-[10px] text-teal-300/90 uppercase tracking-wider font-medium">{product.category}</span>
-                    <span className="text-teal-400 font-bold text-sm">{product.price}</span>
+                    <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color:'color-mix(in oklab, var(--accent) 85%, white 10%)' }}>{product.category}</span>
+                    <span className="font-bold text-sm" style={{ color:'var(--accent)' }}>{product.price}</span>
                 </div>
                 <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight">{product.name}</h3>
                 <div className="flex items-center justify-between pt-1">
@@ -48,8 +48,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
                         className={`inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md border transition-colors ${
                             isInComparison 
                                 ? 'border-green-500/50 text-green-400 bg-green-500/10' 
-                                : 'border-gray-600 hover:border-teal-500 text-gray-300 hover:text-teal-300 hover:bg-teal-500/10'
-                        }`}
+                                : 'border-white/10 text-gray-300 hover:bg-opacity-10'
+                        } neon-outline`}
                         title={isInComparison ? 'Added to Comparison' : 'Add to Compare'}
                     >
                         {isInComparison ? <CheckCircleIcon className="w-3 h-3"/> : <CompareIcon className="w-3 h-3" />}

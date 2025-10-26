@@ -18,7 +18,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     return (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center z-50 p-2 sm:p-4 pt-8 sm:pt-16" onClick={onClose}>
             <div 
-                className="bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative border border-gray-700/50 animate-scale-in"
+                className="bg-gray-900/90 glass rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative border border-white/10 animate-scale-in neon-outline"
                 onClick={e => e.stopPropagation()}
             >
                 {/* Close Button - Fixed Position */}
