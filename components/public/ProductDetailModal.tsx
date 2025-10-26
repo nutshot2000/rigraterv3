@@ -16,13 +16,21 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     };
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center z-50 p-2 sm:p-4 pt-8 sm:pt-16" onClick={onClose}>
             <div 
-                className="bg-gray-900/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden relative border border-gray-700/50 animate-scale-in"
+                className="bg-gray-900/98 backdrop-blur-xl rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative border border-gray-700/50 animate-scale-in"
                 onClick={e => e.stopPropagation()}
             >
+                {/* Close Button - Fixed Position */}
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 z-20 p-2 text-gray-400 hover:text-white hover:bg-gray-800/80 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                >
+                    <CloseIcon className="w-5 h-5" />
+                </button>
+
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+                <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-800/30">
                     <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-teal-400 rounded-full"></div>
                         <span className="text-sm text-gray-400 uppercase tracking-wider">{product.category}</span>
@@ -32,37 +40,31 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                             </span>
                         )}
                     </div>
-                    <button 
-                        onClick={onClose} 
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all duration-200"
-                    >
-                        <CloseIcon className="w-5 h-5" />
-                    </button>
                 </div>
 
-                <div className="overflow-y-auto max-h-[calc(95vh-80px)]">
+                <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
                     <div className="grid lg:grid-cols-2 gap-0">
-                        {/* Image Section */}
-                        <div className="p-8 bg-gradient-to-br from-gray-800/50 to-gray-900/50">
-                            <div className="relative group">
+                        {/* Image Section - More Compact */}
+                        <div className="p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/30 flex items-center justify-center">
+                            <div className="relative group max-w-sm w-full">
                                 <img 
                                     src={product.imageUrl} 
                                     alt={product.name} 
-                                    className="w-full h-80 object-contain rounded-xl bg-white/5 p-4 border border-gray-700/50"
+                                    className="w-full h-64 object-contain rounded-lg bg-white/5 p-3 border border-gray-700/30"
                                     onError={handleImageError}
                                     loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
                             </div>
                         </div>
 
-                        {/* Content Section */}
-                        <div className="p-8 space-y-6">
+                        {/* Content Section - Better Spacing */}
+                        <div className="p-6 space-y-5">
                             {/* Product Info */}
                             <div>
-                                <h1 className="text-3xl font-bold text-white leading-tight mb-4">{product.name}</h1>
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="text-4xl font-bold text-teal-400">{product.price}</div>
+                                <h1 className="text-2xl font-bold text-white leading-tight mb-3">{product.name}</h1>
+                                <div className="flex items-center gap-4 mb-4">
+                                    <div className="text-3xl font-bold text-teal-400">{product.price}</div>
                                     <button
                                         className="text-sm text-gray-400 hover:text-teal-400 transition-colors underline"
                                         onClick={() => {
@@ -76,44 +78,44 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                                 </div>
                             </div>
 
-                            {/* Specifications */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {/* Specifications - More Compact */}
+                            <div className="space-y-3">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     Specifications
                                 </h3>
-                                <div className="grid grid-cols-1 gap-3">
+                                <div className="grid grid-cols-1 gap-2">
                                     {product.specifications.split(',').map((spec, index) => {
                                         if (!spec.trim()) return null;
                                         const [key, ...valueParts] = spec.split(':');
                                         const value = valueParts.join(':').trim();
                                         return (
-                                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-800/50 rounded-lg border border-gray-700/30">
-                                                <span className="text-gray-300 font-medium">{key?.trim()}</span>
-                                                <span className="text-white font-semibold">{value}</span>
+                                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-800/40 rounded-lg border border-gray-700/20">
+                                                <span className="text-gray-300 font-medium text-sm">{key?.trim()}</span>
+                                                <span className="text-white font-semibold text-sm">{value}</span>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
 
-                            {/* AI Review */}
-                            <div className="space-y-4">
-                                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
-                                    <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {/* AI Review - More Compact */}
+                            <div className="space-y-3">
+                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                                     </svg>
                                     AI Review
                                 </h3>
-                                <div className="bg-gray-800/30 border border-gray-700/50 rounded-xl p-4">
-                                    <p className="text-gray-200 leading-relaxed">{product.review}</p>
+                                <div className="bg-gray-800/20 border border-gray-700/30 rounded-lg p-3">
+                                    <p className="text-gray-200 leading-relaxed text-sm">{product.review}</p>
                                 </div>
                             </div>
 
                             {/* Buy Buttons */}
-                            <div className="pt-4">
+                            <div className="pt-2">
                                 <BuyButtons affiliateLink={product.affiliateLink} />
                             </div>
                         </div>
@@ -150,24 +152,24 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
     const ukBase = affiliateLink.includes('amazon.co.uk') ? affiliateLink : affiliateLink.replace('amazon.com', 'amazon.co.uk');
     const uk = AMAZON_TAG_UK ? enrichAmazonLink(ukBase, AMAZON_TAG_UK) : '';
     return (
-        <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <svg className="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="space-y-3">
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                <svg className="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 Buy Now
             </h3>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-2">
                 {preferredRegion === 'UK' && uk ? (
                     <>
-                        <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-orange-500/30 border border-orange-400/20">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg hover:shadow-orange-500/30 border border-orange-400/20 text-sm">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             Buy on Amazon (UK)
                         </a>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-teal-500/30 border border-teal-400/20">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg hover:shadow-teal-500/30 border border-teal-400/20 text-sm">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             Buy on Amazon (US)
@@ -175,15 +177,15 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
                     </>
                 ) : (
                     <>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-teal-500/30 border border-teal-400/20">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg hover:shadow-teal-500/30 border border-teal-400/20 text-sm">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                             </svg>
                             Buy on Amazon (US)
                         </a>
                         {uk && (
-                            <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-orange-500/30 border border-orange-400/20">
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-pink-600 hover:from-orange-600 hover:to-pink-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 shadow-lg hover:shadow-orange-500/30 border border-orange-400/20 text-sm">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                                 </svg>
                                 Buy on Amazon (UK)
