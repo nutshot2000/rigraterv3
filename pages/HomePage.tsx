@@ -340,7 +340,7 @@ const HomePage: React.FC = () => {
                     />
                     <VirtualizedGrid
                         items={currentPageProducts}
-                        itemHeight={320}
+                        itemHeight={240}
                         onEndReached={() => setPage(p => (p < totalPages ? p + 1 : p))}
                         renderItem={(product) => (
                         <ProductCard
