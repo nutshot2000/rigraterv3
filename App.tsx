@@ -10,7 +10,6 @@ import ComparisonsPage from './pages/ComparisonsPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import { Page, Product, BlogPost } from './types';
 import ToastContainer from './components/shared/ToastContainer';
-import QuickNav from './components/public/QuickNav';
 
 const AppContent: React.FC = () => {
     const { page, setPage } = useApp();
@@ -69,7 +68,6 @@ const AppContent: React.FC = () => {
                     {renderPage()}
                 </Suspense>
             </main>
-            <QuickNav current={page} onGo={setPage} />
             <Footer />
             <ToastContainer />
         </div>
