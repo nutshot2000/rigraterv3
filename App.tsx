@@ -5,15 +5,21 @@ import Footer from './components/public/Footer';
 import HomePage from './pages/HomePage';
 import CategoriesPage from './pages/CategoriesPage';
 import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 import ComparisonsPage from './pages/ComparisonsPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
-import { Page } from './types';
+import { Page, Product, BlogPost } from './types';
 import ToastContainer from './components/shared/ToastContainer';
 
 const AppContent: React.FC = () => {
     const { page, setPage } = useApp();
+    const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
 
     const renderPage = () => {
+        if (selectedBlogPost) {
+            return <BlogPostPage post={selectedBlogPost} onBack={() => setSelectedBlogPost(null)} />;
+        }
+
         switch (page) {
             case Page.HOME:
                 return <HomePage />;
@@ -22,7 +28,7 @@ const AppContent: React.FC = () => {
             case Page.CATEGORIES:
                 return <CategoriesPage />;
             case Page.BLOG:
-                return <BlogPage />;
+                return <BlogPage onSelectPost={setSelectedBlogPost} />;
             case Page.COMPARISONS:
                 return <ComparisonsPage />;
             default:

@@ -1,43 +1,69 @@
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 import { useApp } from '../context/AppContext';
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
+import { BlogPost } from '../types';
 
-const BlogPage: React.FC = () => {
+interface BlogPageProps {
+    onSelectPost: (post: BlogPost) => void;
+}
+
+const BlogPage: React.FC<BlogPageProps> = ({ onSelectPost }) => {
     const { blogPosts } = useApp();
-    const [openSlug, setOpenSlug] = useState<string | null>(null);
-    const current = useMemo(() => blogPosts.find(b => b.slug === openSlug) || null, [openSlug, blogPosts]);
 
     return (
         <div className="animate-fade-in">
-            <h1 className="text-3xl font-bold text-white mb-6">Blog</h1>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {blogPosts.map(post => (
-                    <article key={post.id} className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden hover:bg-gray-700/50 transition cursor-pointer" onClick={() => setOpenSlug(post.slug)}>
-                        {post.coverImageUrl && <img src={post.coverImageUrl} alt={post.title} className="w-full h-40 object-cover" loading="lazy" />}
-                        <div className="p-4">
-                            <h2 className="text-xl font-semibold text-white">{post.title}</h2>
-                            <p className="text-gray-400 text-sm mt-1">{post.summary}</p>
-                            <div className="mt-2 text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</div>
-                        </div>
-                    </article>
-                ))}
-            </div>
+            <header className="mb-10 text-center relative p-8 panel-blueprint">
+                <h1 className="text-5xl md:text-7xl text-white leading-tight font-bold">
+                    THE <span className="text-sky-300">RIGRATER</span> BLOG
+                </h1>
+                <p className="mt-4 text-lg text-slate-300 max-w-3xl mx-auto">
+                    AI-powered insights, reviews, and guides for PC hardware enthusiasts.
+                </p>
+            </header>
 
-            {current && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setOpenSlug(null)}>
-                    <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative border border-gray-700 animate-scale-in" onClick={e => e.stopPropagation()}>
-                        {current.coverImageUrl && <img src={current.coverImageUrl} alt={current.title} className="w-full h-60 object-cover" loading="lazy" />}
-                        <div className="p-6">
-                            <h2 className="text-3xl font-bold text-white">{current.title}</h2>
-                            <div className="prose prose-invert max-w-none mt-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(current.content || '') as string) }} />
-                        </div>
-                    </div>
+            {blogPosts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {blogPosts.map(post => (
+                        <BlogPostCard key={post.id} post={post} onSelectPost={onSelectPost} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16 panel-blueprint">
+                    <p className="text-slate-400 text-xl">No blog posts have been published yet.</p>
                 </div>
             )}
         </div>
     );
 };
+
+interface BlogPostCardProps {
+    post: BlogPost;
+    onSelectPost: (post: BlogPost) => void;
+}
+
+const BlogPostCard: React.FC<BlogPostCardProps> = ({ post, onSelectPost }) => {
+    return (
+        <div 
+            className="bg-slate-900/50 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10 cursor-pointer"
+            onClick={() => onSelectPost(post)}
+        >
+            <div className="h-48 bg-slate-800/50 flex items-center justify-center overflow-hidden">
+                <img 
+                    src={post.coverImageUrl} 
+                    alt={post.title} 
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+            </div>
+            <div className="p-4 bg-slate-900">
+                <h3 className="text-lg font-bold text-white line-clamp-2 mb-2 h-14">{post.title}</h3>
+                <p className="text-sm text-slate-400 line-clamp-3 mb-4 h-16">{post.summary}</p>
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                    <span className="font-semibold text-sky-400 group-hover:underline">Read More →</span>
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export default BlogPage;
 
