@@ -1,0 +1,5 @@
+{
+  "name": "PC Part Affiliate Site with AI Admin",
+  "description": "A sleek affiliate marketing website for PC parts, featuring an AI-powered admin panel to automate content creation, manage products, and generate reviews using the Gemini API.",
+  "requestFramePermissions": []
+}
