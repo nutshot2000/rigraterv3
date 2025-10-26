@@ -6,7 +6,16 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { font-family: 'VT323', ui-monospace, monospace; letter-spacing: 0.5px; }
+html, body { 
+  font-family: 'VT323', ui-monospace, monospace; 
+  letter-spacing: 0.5px; 
+  font-weight: 600; 
+  text-rendering: optimizeLegibility; 
+  -webkit-font-smoothing: antialiased; 
+  -moz-osx-font-smoothing: grayscale;
+  /* subtle faux bold to thicken VT323 */
+  text-shadow: 0.03em 0 currentColor, -0.03em 0 currentColor, 0 0.03em currentColor, 0 -0.03em currentColor;
+}
 .font-display { font-family: 'VT323', ui-monospace, monospace; }
 .font-mono-display { font-family: 'VT323', ui-monospace, monospace; }
 .font-crt { font-family: 'VT323', ui-monospace, monospace; letter-spacing: 1px; }
