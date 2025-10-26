@@ -69,7 +69,8 @@ const AdminDashboard: React.FC = () => {
     // Keyboard shortcut Ctrl+K / Cmd+K
     React.useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
-            const isK = e.key.toLowerCase() === 'k';
+            const key = (e as any).key;
+            const isK = typeof key === 'string' && key.toLowerCase() === 'k';
             if ((e.ctrlKey || e.metaKey) && isK) {
                 e.preventDefault();
                 setIsCmdOpen(prev => !prev);

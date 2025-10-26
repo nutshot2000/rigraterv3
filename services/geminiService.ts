@@ -39,48 +39,65 @@ const isLikelyImageUrl = (url: string): boolean => {
 /**
  * Sanitizes and validates the AI-generated product info.
  */
-export function sanitizeProductInfo(jsonString: string): AIProductInfo {
-    const parsed = JSON.parse(jsonString);
-    const requiredKeys: Array<keyof AIProductInfo> = [
-        'name', 'category', 'price', 'affiliateLink', 'review', 'specifications', 'imageUrls'
-    ];
-
-    for (const key of requiredKeys) {
-        if (parsed[key] === undefined || parsed[key] === null) {
-            throw new Error(`Missing required field: ${key}`);
+export function sanitizeProductInfo(input: unknown): AIProductInfo {
+    let parsed: any = input;
+    try {
+        if (typeof input === 'string') {
+            parsed = JSON.parse(input as string);
         }
+    } catch {
+        parsed = {};
     }
 
-    // Ensure imageUrls is an array of strings
-    if (!Array.isArray(parsed.imageUrls) || !parsed.imageUrls.every((item: any) => typeof item === 'string')) {
-        // Attempt to gracefully handle if it's a single string
-        if (typeof parsed.imageUrls === 'string') {
-            parsed.imageUrls = [parsed.imageUrls];
-        } else if (typeof parsed.imageUrl === 'string') { // Fallback to old field
-            parsed.imageUrls = [parsed.imageUrl];
-        } else {
-            throw new Error("Invalid format for 'imageUrls': must be an array of strings.");
-        }
-    }
-    
-    // Maintain backward compatibility for imageUrl for a short period
-    parsed.imageUrl = parsed.imageUrls[0] || FALLBACK_IMAGE_URL;
+    const out: any = { ...parsed };
 
-    return parsed as AIProductInfo;
+    // Coerce required, with sensible defaults
+    out.name = typeof out.name === 'string' && out.name.trim() ? out.name.trim() : 'Unknown Product';
+    out.category = typeof out.category === 'string' && out.category.trim() ? out.category.trim() : 'Misc';
+
+    const priceRaw = (out.price || '').toString().trim();
+    out.price = priceRaw ? (priceRaw.startsWith('$') ? priceRaw : `$${priceRaw}`) : '$0.00';
+
+    // Affiliate link best-effort
+    try {
+        const link = (out.affiliateLink || '').toString().trim();
+        const u = new URL(link);
+        out.affiliateLink = u.protocol === 'http:' || u.protocol === 'https:' ? link : '#';
+    } catch {
+        out.affiliateLink = '#';
+    }
+
+    // Images: prefer imageUrls array; fall back to imageUrl
+    if (Array.isArray(out.imageUrls)) {
+        out.imageUrls = out.imageUrls.filter((x: any) => typeof x === 'string' && x.trim());
+    } else if (typeof out.imageUrl === 'string' && out.imageUrl.trim()) {
+        out.imageUrls = [out.imageUrl.trim()];
+    } else {
+        out.imageUrls = [];
+    }
+    out.imageUrl = out.imageUrls[0] || FALLBACK_IMAGE_URL;
+
+    out.review = typeof out.review === 'string' ? out.review : '';
+    out.specifications = typeof out.specifications === 'string' ? out.specifications : '';
+    out.brand = typeof out.brand === 'string' ? out.brand : undefined;
+
+    return out as AIProductInfo;
 }
 
 export const generateProductInfo = async (productName: string): Promise<AIProductInfo> => {
     try {
-        const serverless = (process.env.SERVERLESS_AI || '').trim();
-        if (serverless) {
-            const resp = await fetch(`${serverless}/generateProductInfo`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+        const useServerless = (process.env.SERVERLESS_AI || '').trim();
+        if (useServerless) {
+            const resp = await fetch('/api/ai/product-info', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ productName })
             });
             if (!resp.ok) throw new Error('Serverless AI error');
-            const data: AIProductInfo = await resp.json();
-            return sanitizeProductInfo(JSON.stringify(data));
+            const data: any = await resp.json();
+            const sanitized = sanitizeProductInfo(data);
+            // Fill missing name from the user input, if needed
+            if (!sanitized.name || sanitized.name === 'Unknown Product') sanitized.name = productName;
+            return sanitized;
         }
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
         const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
@@ -88,8 +105,10 @@ export const generateProductInfo = async (productName: string): Promise<AIProduc
             `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), the product BRAND (manufacturer), and a standard Amazon affiliate link. Then, find a high-quality, official product image URL. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. Respond with ONLY a JSON object: {"review","price","affiliateLink","imageUrl","specifications","brand"}.`
         );
         const jsonText = cleanJsonString(response.response.text());
-        const productInfo: AIProductInfo = JSON.parse(jsonText);
-        return sanitizeProductInfo(JSON.stringify(productInfo));
+        const productInfo: any = JSON.parse(jsonText);
+        const sanitized = sanitizeProductInfo(productInfo);
+        if (!sanitized.name || sanitized.name === 'Unknown Product') sanitized.name = productName;
+        return sanitized;
 
     } catch (error) {
         console.error("Error generating product info:", error);
