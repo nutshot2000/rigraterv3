@@ -101,12 +101,13 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const fixedLink = applyTags(canonicalizeAmazon(formData.affiliateLink));
+        const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
         if (product) {
             updateProduct({ ...formData, affiliateLink: fixedLink, id: product.id });
             addToast('Product updated successfully!', 'success');
         } else {
             addProduct({ ...formData, affiliateLink: fixedLink });
-            addToast('Product added successfully!', 'success');
+            addToast(backendOn ? 'Product added successfully!' : 'Saved locally (login to persist to DB)', backendOn ? 'success' : 'error');
         }
         onClose();
     };

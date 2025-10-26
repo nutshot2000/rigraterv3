@@ -12,6 +12,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
     const { isAuthenticated } = useApp();
+    const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
     const navLinkClasses = (page: Page) => 
         `cursor-pointer px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${
@@ -50,6 +51,12 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                                {isAuthenticated && <span className="w-2 h-2 rounded-full bg-green-400"></span>}
                                Admin Panel
                             </div>
+                        </div>
+                        <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border "
+                             title={backendOn ? (isAuthenticated ? 'Connected to Supabase as admin' : 'Connected to Supabase - not logged in') : 'Local-only mode'}
+                        >
+                            <span className={`mr-2 w-2 h-2 rounded-full ${backendOn ? (isAuthenticated ? 'bg-green-400' : 'bg-yellow-400') : 'bg-red-400'}`}></span>
+                            {backendOn ? (isAuthenticated ? 'DB: Connected' : 'DB: Login required') : 'DB: Local-only'}
                         </div>
                     </div>
                 </div>
