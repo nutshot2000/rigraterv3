@@ -1,4 +1,4 @@
-import React, { useState, useCallback, Suspense } from 'react';
+import React, { useState, useCallback, Suspense, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/public/Header';
 import Footer from './components/public/Footer';
@@ -14,6 +14,30 @@ import ToastContainer from './components/shared/ToastContainer';
 const AppContent: React.FC = () => {
     const { page, setPage } = useApp();
     const [selectedBlogPost, setSelectedBlogPost] = useState<BlogPost | null>(null);
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if (e.altKey || e.ctrlKey || e.metaKey) return;
+            const target = e.target as HTMLElement | null;
+            const tag = (target?.tagName || '').toLowerCase();
+            const isTyping = tag === 'input' || tag === 'textarea' || (target?.isContentEditable ?? false);
+            if (isTyping) return;
+            const map: Record<string, Page> = {
+                '1': Page.HOME,
+                '2': Page.CATEGORIES,
+                '3': Page.BLOG,
+                '4': Page.COMPARISONS,
+                '5': Page.ADMIN,
+            };
+            const next = map[e.key];
+            if (next) {
+                e.preventDefault();
+                setPage(next);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [setPage]);
 
     const renderPage = () => {
         if (selectedBlogPost) {

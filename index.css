@@ -115,4 +115,7 @@ html, body {
 .panel-blueprint { @apply rounded-lg p-4; background: rgba(15, 23, 42, 0.3); border: 1px solid rgba(51, 65, 85, 0.7); box-shadow: none; }
 
 
+/* Hide scrollbars utility for horizontal nav overflow */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
