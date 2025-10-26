@@ -64,6 +64,7 @@ export interface AIProductInfo {
     affiliateLink: string;
     imageUrl: string;
     specifications: string;
+    brand?: string;
 }
 
 export interface AISuggestedProduct {

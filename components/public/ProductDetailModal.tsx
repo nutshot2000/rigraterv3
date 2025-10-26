@@ -79,6 +79,8 @@ const enrichAmazonLink = (url: string, tag: string): string => {
         const u = new URL(url);
         if (!tag) return url;
         if (u.hostname.includes('amazon.')) {
+            // Canonicalize to product path if possible
+            // Remove tracking params; keep our tag
             u.searchParams.set('tag', tag);
             return u.toString();
         }

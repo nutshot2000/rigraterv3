@@ -73,7 +73,7 @@ export const generateProductInfo = async (productName: string): Promise<AIProduc
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
         const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
         const response = await model.generateContent(
-            `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), and a standard Amazon affiliate link. Then, find a high-quality, official product image URL. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. Respond with ONLY a JSON object: {"review","price","affiliateLink","imageUrl","specifications"}.`
+            `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), the product BRAND (manufacturer), and a standard Amazon affiliate link. Then, find a high-quality, official product image URL. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. Respond with ONLY a JSON object: {"review","price","affiliateLink","imageUrl","specifications","brand"}.`
         );
         const jsonText = cleanJsonString(response.response.text());
         const productInfo: AIProductInfo = JSON.parse(jsonText);

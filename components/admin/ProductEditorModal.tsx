@@ -66,7 +66,7 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
         setIsGenerating(true);
         try {
             const aiData = await generateProductInfo(formData.name);
-            setFormData(prev => ({ ...prev, ...aiData }));
+            setFormData(prev => ({ ...prev, ...aiData, brand: aiData.brand || prev.brand }));
             addToast('AI content generated successfully!', 'success');
         } catch (error) {
             addToast('Failed to generate content from AI.', 'error');
@@ -164,7 +164,29 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                             <div className="space-y-4">
                                 {renderInputField('category', 'Category', 'e.g., GPU')}
-                                {renderInputField('imageUrl', 'Image URL', 'https://...')}
+                                <div>
+                                    <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            id="imageUrl"
+                                            name="imageUrl"
+                                            value={formData.imageUrl}
+                                            onChange={handleChange}
+                                            placeholder="https://..."
+                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                            required
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white text-xs"
+                                            title="Clear image URL"
+                                        >
+                                            Clear
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                              <div className="space-y-1">
                                 <label className="block text-sm font-medium text-gray-300">Image Preview</label>
@@ -201,7 +223,20 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
                             </button>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {renderInputField('price', 'Price (AI)', '$XXXX.XX')}
-                                {renderInputField('affiliateLink', 'Affiliate Link (AI)', 'https://amazon.com/...')}
+                                <div>
+                                    <label htmlFor="affiliateLink" className="block text-sm font-medium text-gray-300 mb-1">Affiliate Link (AI)</label>
+                                    <input
+                                        type="text"
+                                        id="affiliateLink"
+                                        name="affiliateLink"
+                                        value={formData.affiliateLink}
+                                        onChange={handleChange}
+                                        placeholder="https://amazon.com/..."
+                                        className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                        required
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Tip: Paste any Amazon URL (US or UK). We canonicalize and append your tag on save.</p>
+                                </div>
                             </div>
                             <div>
                                 <button

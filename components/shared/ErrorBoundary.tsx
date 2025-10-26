@@ -19,11 +19,16 @@ export default class ErrorBoundary extends React.Component<React.PropsWithChildr
 
     render() {
         if (this.state.hasError) {
+            const message = (this.state.error && (this.state.error.message || String(this.state.error))) || 'Unknown error';
+            const stack = this.state.error && this.state.error.stack;
             return (
                 <div className="min-h-screen flex items-center justify-center bg-gray-900 text-gray-100 p-6">
                     <div className="max-w-lg text-center">
                         <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
-                        <p className="text-gray-400 mb-4">Please refresh the page. If this persists, check the browser console for details.</p>
+                        <p className="text-gray-400 mb-4">{message}</p>
+                        {stack && (
+                            <pre className="text-left text-xs bg-gray-800 border border-gray-700 rounded p-3 overflow-auto max-h-64 mb-4 whitespace-pre-wrap break-words">{stack}</pre>
+                        )}
                         <button className="px-4 py-2 bg-teal-600 hover:bg-teal-500 rounded" onClick={() => window.location.reload()}>Reload</button>
                     </div>
                 </div>
