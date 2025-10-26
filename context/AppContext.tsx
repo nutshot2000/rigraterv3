@@ -110,28 +110,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     // Product Management
     const addProduct = useCallback((productData: Omit<Product, 'id'>) => {
         if (isBackendEnabled) {
-            // Fire-and-forget; optimistic update
             (async () => {
                 try {
                     const created = await createProductApi(productData);
                     setProducts(prev => [created, ...prev]);
                     recordAudit({ action: 'product.create', targetType: 'product', targetId: created.id, details: { name: created.name } });
-                } catch {
-                    // fallback to local optimistic add
-                    const newProduct: Product = { id: Date.now().toString(), ...productData };
-                    setProducts(prev => [newProduct, ...prev]);
-                    recordAudit({ action: 'product.create', targetType: 'product', targetId: newProduct.id, details: { name: newProduct.name } });
+                } catch (e: any) {
+                    // Do NOT silently fallback to local when backend is enabled
+                    const message = (e && (e.message || e.error_description)) || 'Failed to save product to database. Please ensure you are logged in and allowlisted.';
+                    setToasts(prev => [...prev, { id: Date.now(), message, type: 'error' }]);
                 }
             })();
         } else {
-            const newProduct: Product = {
-                id: Date.now().toString(),
-                ...productData,
-            };
+            const newProduct: Product = { id: Date.now().toString(), ...productData };
             setProducts(prev => [newProduct, ...prev]);
             recordAudit({ action: 'product.create', targetType: 'product', targetId: newProduct.id, details: { name: newProduct.name } });
         }
-    }, []);
+    }, [isBackendEnabled, recordAudit]);
 
     const updateProduct = useCallback((updatedProduct: Product) => {
         setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));

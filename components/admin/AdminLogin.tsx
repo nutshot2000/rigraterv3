@@ -24,9 +24,9 @@ const AdminLogin: React.FC = () => {
             <div className="text-center mb-8">
                 <LockClosedIcon className="w-12 h-12 mx-auto text-teal-400" />
                 <h2 className="text-3xl font-bold text-white mt-4">Admin Access</h2>
-                {!isBackendEnabled && (
-                    <p className="text-gray-400 text-xs mt-2">Local mode enabled.</p>
-                )}
+                <p className="text-gray-400 text-xs mt-2">
+                    {isBackendEnabled ? 'Supabase mode: sign in with your Supabase email + password' : 'Local mode: use the local admin password'}
+                </p>
             </div>
             <form onSubmit={handleSubmit}>
                 {isBackendEnabled && (
