@@ -201,10 +201,10 @@ const HomePage: React.FC = () => {
                     <div className="flex-1 relative">
                         <input
                             type="text"
-                            placeholder="Search products..."
+                            placeholder="Find your next upgrade..."
                             value={pendingSearch}
                             onChange={(e) => { setPendingSearch(e.target.value); setPage(1); }}
-                            className="w-full px-4 py-3 bg-gray-800/60 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition backdrop-blur-sm"
+                            className="input-crt font-crt"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ const HomePage: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="px-4 py-3 bg-gray-700/60 hover:bg-gray-600/60 border border-gray-600 rounded-xl text-white transition backdrop-blur-sm flex items-center gap-2"
+                        className="btn-crt font-crt flex items-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />

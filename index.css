@@ -102,5 +102,23 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 .crt-chroma { text-shadow: 0.06em 0 rgba(0, 255, 170, .25), -0.06em 0 rgba(0, 160, 255, .25), 0 0 12px rgba(184, 115, 51, 0.25); }
 .crt-frame { border: 2px solid rgba(255,255,255,0.12); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 0 0 0 2px rgba(0,0,0,0.6), 0 15px 35px rgba(0,0,0,0.5); border-radius: 10px; background: rgba(15, 23, 18, 0.6); }
 
+/* CRT components */
+.btn-crt {
+  @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-white transition; 
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  border: 2px solid rgba(255,255,255,0.14);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 0 6px 14px rgba(0,0,0,0.35);
+}
+.btn-crt:hover { filter: brightness(1.08); }
+.btn-crt--primary { border-color: color-mix(in oklab, var(--accent) 70%, white 10%); color: color-mix(in oklab, var(--accent) 85%, white 10%); }
+
+.input-crt {
+  @apply w-full rounded-md px-4 py-3 text-white placeholder-gray-400 outline-none; 
+  background: rgba(15,23,18,0.55);
+  border: 2px solid rgba(255,255,255,0.14);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6);
+}
+.panel-crt { @apply rounded-xl p-4; background: rgba(12,16,12,0.7); border: 2px solid rgba(255,255,255,0.12); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6); }
+
 
 

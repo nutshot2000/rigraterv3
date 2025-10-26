@@ -15,12 +15,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
     const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
     const navLinkClasses = (page: Page) => 
-        `cursor-pointer px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300 ${
-            currentPage === page ? 'bg-teal-500 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-        }`;
+        `cursor-pointer btn-crt ${currentPage === page ? 'btn-crt--primary' : ''} text-sm`;
 
     return (
-        <header className="bg-gray-800/40 glass sticky top-0 z-50 shadow-lg shadow-black/20 border-b border-white/10">
+        <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-white/10 crt-scan">
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center">
@@ -29,11 +27,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                             onClick={() => onNavigate(Page.HOME)}
                         >
                            <ChipIcon className="h-8 w-8" style={{ color: 'var(--accent)' }} />
-                           <span className="text-white text-xl font-extrabold tracking-tight neon-glow">Rigrater</span>
-                           <span className="hidden sm:inline text-xs" style={{ color: 'color-mix(in oklab, var(--accent) 85%, white 10%)' }}>rate. compare. upgrade.</span>
+                           <span className="text-white text-2xl font-crt crt-chroma">RIGRATER</span>
+                           <span className="hidden sm:inline text-xs font-crt" style={{ color: 'color-mix(in oklab, var(--accent) 85%, white 10%)' }}>rate • compare • upgrade</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                         <div className={navLinkClasses(Page.HOME)} onClick={() => onNavigate(Page.HOME)}>
                             Storefront
                         </div>
