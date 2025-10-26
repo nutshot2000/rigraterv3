@@ -18,7 +18,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
     };
 
     return (
-        <div className="bg-gray-800/50 glass rounded-xl overflow-hidden border border-white/10 transition-all duration-300 shadow-sm group hover:scale-[1.03] gradient-border">
+        <div className="bg-gray-800/50 glass rounded-xl overflow-hidden border border-white/10 transition-all duration-300 shadow-sm group hover:scale-[1.03] gradient-border" style={{border: '2px solid #14b8a6', boxShadow: '0 0 20px rgba(20, 184, 166, 0.3), inset 0 0 20px rgba(20, 184, 166, 0.1)'}}>
             <div className="relative cursor-pointer" onClick={() => onCardClick(product)}>
                 <img 
                     src={product.imageUrl} 
