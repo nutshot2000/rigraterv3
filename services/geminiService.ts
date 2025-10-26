@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AIProductInfo, AISuggestedProduct, BlogPost, ComparisonDoc } from '../types';
 import { FALLBACK_IMAGE_URL } from '../constants';
 
@@ -7,7 +7,7 @@ import { FALLBACK_IMAGE_URL } from '../constants';
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
 export const isAIEnabled = Boolean(GEMINI_KEY);
 
-const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
+const ai = new GoogleGenerativeAI(GEMINI_KEY);
 
 /**
  * Cleans the raw text response from the AI to extract a valid JSON string.
@@ -16,13 +16,10 @@ const ai = new GoogleGenAI({ apiKey: GEMINI_KEY });
  * @returns A clean string ready for JSON.parse().
  */
 const cleanJsonString = (rawText: string): string => {
-    // Matches ```json ... ``` and extracts the content between them.
     const match = rawText.match(/```json\s*([\s\S]*?)\s*```/);
     if (match && match[1]) {
         return match[1].trim();
     }
-    // Fallback for cases where the AI might just return the JSON without fences,
-    // or if the regex fails for some reason.
     return rawText.trim();
 };
 
@@ -60,10 +57,8 @@ const sanitizeProductInfo = (data: AIProductInfo): AIProductInfo => {
     };
 };
 
-
 export const generateProductInfo = async (productName: string): Promise<AIProductInfo> => {
     try {
-        // If serverless endpoint is configured, use it to keep API key server-side
         const serverless = (process.env.SERVERLESS_AI || '').trim();
         if (serverless) {
             const resp = await fetch(`${serverless}/generateProductInfo`, {
@@ -76,14 +71,11 @@ export const generateProductInfo = async (productName: string): Promise<AIProduc
             return sanitizeProductInfo(data);
         }
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), and a standard Amazon affiliate link. Then, use your search tool to find a high-quality, official product image URL. Prioritize images from official Amazon product pages, manufacturer websites, or major tech retail sites like Newegg. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. The review should be enthusiastic and highlight key features for gamers and PC builders. Respond with ONLY a valid JSON object with the following keys: "review", "price", "affiliateLink", "imageUrl", "specifications". Do not include any other text or markdown formatting.`,
-            config: {
-                tools: [{googleSearch: {}}],
-            }
-        });
-        const jsonText = cleanJsonString(response.text);
+        const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const response = await model.generateContent(
+            `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), and a standard Amazon affiliate link. Then, find a high-quality, official product image URL. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. Respond with ONLY a JSON object: {"review","price","affiliateLink","imageUrl","specifications"}.`
+        );
+        const jsonText = cleanJsonString(response.response.text());
         const productInfo: AIProductInfo = JSON.parse(jsonText);
         return sanitizeProductInfo(productInfo);
 
@@ -110,23 +102,12 @@ export const suggestNewProducts = async (category: string, count: number = 3, ex
             }));
         }
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: `You are a PC hardware market analyst. Suggest ${count} new and popular products in the "${category}" category that would be excellent for an affiliate marketing website.
-
-IMPORTANT: Do NOT include any product that matches or is substantially similar (model family/variant) to ANY of the following existing site items (case-insensitive): ${existingNames.slice(0,200).join('; ')}.
-
-Favor diversity across sub-brands, chipsets, sockets, and price tiers. For each product, provide its name and its category. Then, for each, use your search tool to find a high-quality, official product image URL. Prioritize images from official Amazon product pages, manufacturer websites, or major tech retail sites like Newegg. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page.
-
-Respond with ONLY a valid JSON array of objects, where each object has the keys: "name", "category", and "imageUrl". Do not include any other text or markdown formatting.`,
-            config: {
-                tools: [{googleSearch: {}}],
-            }
-        });
-
-        const jsonText = cleanJsonString(response.text);
+        const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+        const response = await model.generateContent(
+            `You are a PC hardware market analyst. Suggest ${count} new and popular products in the "${category}" category. Avoid duplicates and near-duplicates of: ${existingNames.slice(0,200).join('; ')}. Return ONLY a JSON array: [{"name","category","imageUrl"}].`
+        );
+        const jsonText = cleanJsonString(response.response.text());
         const suggestions: AISuggestedProduct[] = JSON.parse(jsonText);
-        // sanitize image URLs, keep others as is
         return suggestions.map(s => ({
             ...s,
             imageUrl: isLikelyImageUrl((s.imageUrl || '').trim()) ? (s.imageUrl || '').trim() : FALLBACK_IMAGE_URL,
@@ -139,7 +120,6 @@ Respond with ONLY a valid JSON array of objects, where each object has the keys:
 };
 
 export const generateBlogPost = async (title: string, outline?: string): Promise<Omit<BlogPost, 'id' | 'createdAt'>> => {
-    const base = { title };
     const serverless = (process.env.SERVERLESS_AI || '').trim();
     if (serverless) {
         const resp = await fetch(`${serverless}/generateBlogPost`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, outline }) });
@@ -147,11 +127,9 @@ export const generateBlogPost = async (title: string, outline?: string): Promise
         return await resp.json();
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Write an SEO-optimized blog post about: ${title}. ${outline ? `Outline: ${outline}.` : ''} Return ONLY a JSON with keys: title, slug, coverImageUrl, summary, content (markdown), tags (array of strings).`,
-    });
-    const jsonText = cleanJsonString((response as any).text);
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(`Write an SEO-optimized blog post about: ${title}. ${outline ? `Outline: ${outline}.` : ''} Return ONLY JSON: {title, slug, coverImageUrl, summary, content, tags}`);
+    const jsonText = cleanJsonString(response.response.text());
     const post = JSON.parse(jsonText);
     return post;
 };
@@ -164,11 +142,9 @@ export const generateComparison = async (title: string, products: { name: string
         return await resp.json();
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Create a detailed comparison titled "${title}" of these products and their specs: ${JSON.stringify(products)}. Return ONLY a JSON with keys: title, productIds (empty array placeholder), content (markdown), specDiffSummary.`,
-    });
-    const jsonText = cleanJsonString((response as any).text);
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(`Create a detailed comparison titled "${title}" of these products and their specs: ${JSON.stringify(products)}. Return ONLY JSON: {title, productIds, content, specDiffSummary}`);
+    const jsonText = cleanJsonString(response.response.text());
     const doc = JSON.parse(jsonText);
     return doc;
 };
@@ -191,15 +167,13 @@ export const chatWithAI = async (
         return String(data.text || data.message || '');
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const system = `You are an expert PC hardware assistant for an affiliate site. Provide accurate, concise answers that help select, compare, and recommend PC parts. If helpful, encourage comparisons and link strategies.`;
+    const system = `You are an expert PC hardware assistant for an affiliate site. Provide accurate, concise answers that help select, compare, and recommend PC parts.`;
     const context = opts?.context ? `\nContext:\n${opts.context}` : '';
     const history = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
     const prompt = `${system}${context}\n\nConversation so far:\n${history}\n\nAssistant:`;
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-    });
-    return (response as any).text as string;
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(prompt);
+    return response.response.text();
 };
 
 export const generateProductSEO = async (name: string, category: string, review: string): Promise<{ seoTitle: string; seoDescription: string }> => {
@@ -210,11 +184,9 @@ export const generateProductSEO = async (name: string, category: string, review:
         return await resp.json();
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Create an SEO title (<=60 chars) and meta description (<=155 chars) for a product page. Product name: ${name}. Category: ${category}. Summary: ${review}. Return JSON {"seoTitle":"...","seoDescription":"..."}.`
-    });
-    const jsonText = cleanJsonString((response as any).text);
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(`Create an SEO title (<=60 chars) and meta description (<=155 chars) for a product page. Product name: ${name}. Category: ${category}. Summary: ${review}. Return JSON {"seoTitle","seoDescription"}.`);
+    const jsonText = cleanJsonString(response.response.text());
     return JSON.parse(jsonText);
 };
 
@@ -227,11 +199,9 @@ export const suggestRivals = async (name: string, specifications: string, count:
         return Array.isArray(data) ? data : [];
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Suggest ${count} direct rival product names for: ${name}. Specs: ${specifications}. Focus on same class and price tier. Return ONLY a JSON array of strings (names).`
-    });
-    const jsonText = cleanJsonString((response as any).text);
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(`Suggest ${count} direct rival product names for: ${name}. Specs: ${specifications}. Focus on same class and price tier. Return ONLY a JSON array of strings (names).`);
+    const jsonText = cleanJsonString(response.response.text());
     const arr = JSON.parse(jsonText);
     return Array.isArray(arr) ? arr : [];
 };
@@ -245,11 +215,9 @@ export const extractProductsFromText = async (text: string): Promise<string[]> =
         return Array.isArray(data) ? data : [];
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: `Extract a list of PC product names from the following text. Include model identifiers (e.g., RTX 4070 SUPER, Ryzen 7 7800X3D). Return ONLY a JSON array of strings. Text: ${text}`,
-    });
-    const jsonText = cleanJsonString((response as any).text);
+    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+    const response = await model.generateContent(`Extract a list of PC product names from the following text. Include model identifiers. Return ONLY a JSON array of strings. Text: ${text}`);
+    const jsonText = cleanJsonString(response.response.text());
     const arr = JSON.parse(jsonText);
     return Array.isArray(arr) ? arr : [];
 };
