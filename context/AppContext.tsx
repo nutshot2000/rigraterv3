@@ -46,6 +46,7 @@ interface AppContextType {
     setPreferredRegion: (r: 'US' | 'UK') => void;
 
     audits: AuditEntry[];
+    currentUserEmail?: string;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -101,6 +102,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try { const s = localStorage.getItem('audits'); if (s) return JSON.parse(s); } catch {}
         return [];
     });
+
+    const [currentUserEmail, setCurrentUserEmail] = useState<string | undefined>(undefined);
 
     const recordAudit = useCallback((entry: Omit<AuditEntry, 'id' | 'ts' | 'actor'>) => {
         const full: AuditEntry = { id: Date.now().toString(), ts: new Date().toISOString(), actor: 'admin', ...entry };
@@ -318,6 +321,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!isBackendEnabled) return;
         (async () => {
             try {
+                const { data } = await (await import('../services/supabaseClient')).supabase!.auth.getUser();
+                setCurrentUserEmail(data.user?.email || undefined);
+                (await import('../services/supabaseClient')).supabase!.auth.onAuthStateChange((_e, session) => {
+                    setCurrentUserEmail(session?.user?.email || undefined);
+                });
+            } catch {}
+            try {
                 const remote = await fetchProducts();
                 if (Array.isArray(remote) && remote.length) {
                     setProducts(remote);
@@ -363,6 +373,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         preferredRegion,
         setPreferredRegion: setPreferredRegionState,
         audits,
+        currentUserEmail,
     };
 
     return (

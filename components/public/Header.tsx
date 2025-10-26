@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
-    const { isAuthenticated } = useApp();
+    const { isAuthenticated, currentUserEmail } = useApp();
     const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
     const navLinkClasses = (page: Page) => 
@@ -56,7 +56,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                              title={backendOn ? (isAuthenticated ? 'Connected to Supabase as admin' : 'Connected to Supabase - not logged in') : 'Local-only mode'}
                         >
                             <span className={`mr-2 w-2 h-2 rounded-full ${backendOn ? (isAuthenticated ? 'bg-green-400' : 'bg-yellow-400') : 'bg-red-400'}`}></span>
-                            {backendOn ? (isAuthenticated ? 'DB: Connected' : 'DB: Login required') : 'DB: Local-only'}
+                            {backendOn ? (isAuthenticated ? `DB: ${currentUserEmail || 'Connected'}` : 'DB: Login required') : 'DB: Local-only'}
                         </div>
                     </div>
                 </div>
