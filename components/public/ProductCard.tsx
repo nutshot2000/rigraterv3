@@ -37,7 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
                     <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color:'color-mix(in oklab, var(--accent) 85%, white 10%)' }}>{product.category}</span>
                     <span className="font-bold text-sm" style={{ color:'var(--accent)' }}>{product.price}</span>
                 </div>
-                <h3 className="text-sm font-bold text-white line-clamp-2 leading-tight">{product.name}</h3>
+                <h3 className="text-base text-white line-clamp-2 leading-snug crt-strong">{product.name}</h3>
                 <div className="flex items-center justify-between pt-1">
                     <div className="flex items-center gap-1">
                         <TrendBadge product={product} />
