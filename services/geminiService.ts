@@ -54,6 +54,7 @@ const sanitizeProductInfo = (data: AIProductInfo): AIProductInfo => {
         price: normalizedPrice || '$0.00',
         affiliateLink: affiliateLink || '#',
         imageUrl,
+        brand: (data.brand || '').trim(),
     };
 };
 
