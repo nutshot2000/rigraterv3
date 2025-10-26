@@ -95,24 +95,24 @@ html, body {
 
 /* CRT components */
 .crt-strong { text-shadow: none; }
-.btn-crt {
+.btn-blueprint {
   @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-white transition-colors duration-200; 
   background: rgba(30, 41, 59, 0.5); /* slate-800/50 */
   border: 1px solid rgba(51, 65, 85, 0.7); /* slate-700/70 */
   box-shadow: none;
 }
-.btn-crt:hover { background: rgba(51, 65, 85, 0.6); border-color: var(--accent); }
-.btn-crt--primary { background: var(--accent); border-color: var(--accent-2); color: #020617; font-weight: 600; }
-.btn-crt--primary:hover { background: var(--accent-2); }
+.btn-blueprint:hover { background: rgba(51, 65, 85, 0.6); border-color: var(--accent); }
+.btn-blueprint--primary { background: var(--accent); border-color: var(--accent-2); color: #020617; font-weight: 600; }
+.btn-blueprint--primary:hover { background: var(--accent-2); }
 
-.input-crt {
+.input-blueprint {
   @apply w-full rounded-md px-4 py-3 text-white placeholder-gray-500 outline-none transition-colors duration-200; 
   background: rgba(15, 23, 42, 0.5); /* slate-900/50 */
   border: 1px solid rgba(51, 65, 85, 0.7); /* slate-700/70 */
   box-shadow: none;
 }
-.input-crt:focus { border-color: var(--accent); background: rgba(30, 41, 59, 0.5); }
-.panel-crt { @apply rounded-lg p-4; background: rgba(15, 23, 42, 0.3); border: 1px solid rgba(51, 65, 85, 0.7); box-shadow: none; }
+.input-blueprint:focus { border-color: var(--accent); background: rgba(30, 41, 59, 0.5); }
+.panel-blueprint { @apply rounded-lg p-4; background: rgba(15, 23, 42, 0.3); border: 1px solid rgba(51, 65, 85, 0.7); box-shadow: none; }
 
 
 

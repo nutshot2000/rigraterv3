@@ -15,7 +15,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
     const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
 
     const navLinkClasses = (page: Page) => 
-        `cursor-pointer btn-crt ${currentPage === page ? 'btn-crt--primary' : ''} text-base crt-strong`;
+        `cursor-pointer btn-blueprint ${currentPage === page ? 'btn-blueprint--primary' : ''} text-base crt-strong`;
 
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">

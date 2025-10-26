@@ -18,44 +18,40 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
     };
 
     return (
-        <div className="bg-slate-900/50 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50">
+        <div className="bg-slate-900/60 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10">
             <div className="relative cursor-pointer" onClick={() => onCardClick(product)}>
-                <img 
-                    src={product.imageUrl} 
-                    alt={product.name} 
-                    className="w-full h-32 object-contain bg-gray-900/40 p-2" 
-                    onError={handleImageError} 
-                    loading="lazy" 
-                />
+                <div className="h-40 bg-slate-800/50 flex items-center justify-center p-2">
+                    <img 
+                        src={product.imageUrl} 
+                        alt={product.name} 
+                        className="max-h-full max-w-full object-contain" 
+                        onError={handleImageError} 
+                        loading="lazy" 
+                    />
+                </div>
                 {product.brand && (
-                    <span className="absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full bg-slate-900/70 border border-slate-700 text-sky-300 uppercase tracking-wider font-semibold">{product.brand}</span>
+                    <span className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-700 text-sky-300 uppercase tracking-wider font-semibold">{product.brand}</span>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
-            <div className="p-4 space-y-2">
-                <div className="flex items-center justify-between gap-2">
+            <div className="p-3 bg-slate-900">
+                <div className="flex items-start justify-between gap-2 mb-2">
                     <span className="text-xs uppercase tracking-wider font-medium text-slate-400">{product.category}</span>
-                    <span className="font-bold text-base text-sky-300">{product.price}</span>
+                    <span className="font-bold text-lg text-sky-300">{product.price}</span>
                 </div>
-                <h3 className="text-base font-bold text-white line-clamp-2 leading-snug">{product.name}</h3>
-                <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-center gap-1">
-                        <TrendBadge product={product} />
-                    </div>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); if (!isInComparison) onAddToComparison(product); }}
-                        disabled={isInComparison}
-                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
-                            isInComparison 
-                                ? 'border-green-500/30 text-green-300 bg-green-500/10' 
-                                : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-sky-500'
-                        }`}
-                        title={isInComparison ? 'Added to Comparison' : 'Add to Compare'}
-                    >
-                        {isInComparison ? <CheckCircleIcon className="w-3.5 h-3.5"/> : <CompareIcon className="w-3.5 h-3.5" />}
-                        {isInComparison ? 'ADDED' : 'COMPARE'}
-                    </button>
-                </div>
+                <h3 className="text-base font-bold text-white line-clamp-2 leading-snug h-12">{product.name}</h3>
+                <button
+                    onClick={(e) => { e.stopPropagation(); onAddToComparison(product); }}
+                    disabled={isInComparison}
+                    className={`w-full mt-3 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-2 rounded-md border font-semibold tracking-wider transition-colors ${
+                        isInComparison 
+                            ? 'border-green-500/30 text-green-300 bg-green-500/10 cursor-not-allowed' 
+                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-sky-500 hover:text-white'
+                    }`}
+                    title={isInComparison ? 'Added to Comparison' : 'Add to Compare'}
+                >
+                    {isInComparison ? <CheckCircleIcon className="w-4 h-4"/> : <CompareIcon className="w-4 h-4" />}
+                    {isInComparison ? 'ADDED' : 'ADD TO COMPARE'}
+                </button>
             </div>
         </div>
     );

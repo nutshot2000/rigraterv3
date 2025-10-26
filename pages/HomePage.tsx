@@ -204,7 +204,7 @@ const HomePage: React.FC = () => {
                             placeholder="Find your next upgrade..."
                             value={pendingSearch}
                             onChange={(e) => { setPendingSearch(e.target.value); setPage(1); }}
-                            className="input-crt font-crt"
+                            className="input-blueprint"
                         />
                         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +214,7 @@ const HomePage: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className="btn-crt font-crt flex items-center gap-2"
+                        className="btn-blueprint flex items-center gap-2"
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
