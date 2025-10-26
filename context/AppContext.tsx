@@ -159,14 +159,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             const ok = await loginWithEmailPassword(email, password);
             if (ok) {
                 setIsAuthenticated(true);
-                setPage(Page.ADMIN);
+                try { setPage(Page.ADMIN); } catch (e) { /* guard */ }
                 return true;
             }
             return false;
         }
         if (password === ADMIN_PASSWORD) {
             setIsAuthenticated(true);
-            setPage(Page.ADMIN);
+            try { setPage(Page.ADMIN); } catch (e) { /* guard */ }
             return true;
         }
         return false;
