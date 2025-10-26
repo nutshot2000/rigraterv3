@@ -7,16 +7,17 @@
 
 html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'; }
 .font-display { font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+.font-mono-display { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 
-/* Neon theme variables and utilities */
+/* PCB Copper theme variables and utilities */
 :root {
-  --accent: #14b8a6; /* teal-500 */
-  --accent-2: #60a5fa; /* blue-400 */
-  --surface: rgba(17, 24, 39, 0.6); /* gray-900/60 */
+  --accent: #84cc16; /* lime-500 */
+  --accent-2: #f59e0b; /* amber-500 for copper glow */
+  --copper: #b87333; /* copper */
+  --copper-deep: #8a5526;
+  --surface: rgba(10, 14, 22, 0.85);
 }
-.theme-teal { --accent:#14b8a6; --accent-2:#60a5fa; }
-.theme-magenta { --accent:#e879f9; --accent-2:#f472b6; }
-.theme-lime { --accent:#a3e635; --accent-2:#34d399; }
+.theme-pcb { --accent:#84cc16; --accent-2:#f59e0b; --copper:#b87333; --copper-deep:#8a5526; }
 
 .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
@@ -25,8 +26,8 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 }
 
 .neon-glow {
-  box-shadow: 0 0 0.5rem color-mix(in oklab, var(--accent) 60%, transparent),
-              0 0 2.5rem color-mix(in oklab, var(--accent) 35%, transparent);
+  box-shadow: 0 0 0.5rem color-mix(in oklab, var(--copper) 55%, transparent),
+              0 0 1.2rem color-mix(in oklab, var(--copper) 35%, transparent);
 }
 
 .neon-outline {
@@ -38,11 +39,13 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
   content: "";
   position: fixed; inset: 0; pointer-events: none;
   background-image:
-    linear-gradient(to right, rgba(255,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255,255,255,0.06) 1px, transparent 1px);
-  background-size: 32px 32px;
-  opacity: .25;
-  mask-image: radial-gradient(ellipse at 50% 15%, rgba(0,0,0,0.35), rgba(0,0,0,1) 65%);
+    radial-gradient(circle at 25% 25%, rgba(132,204,22,0.08) 2px, transparent 2px),
+    radial-gradient(circle at 75% 75%, rgba(132,204,22,0.08) 2px, transparent 2px),
+    linear-gradient(to right, rgba(184,115,51,0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(184,115,51,0.14) 1px, transparent 1px);
+  background-size: 48px 48px, 48px 48px, 24px 24px, 24px 24px;
+  opacity: .35;
+  mask-image: radial-gradient(ellipse at 50% 20%, rgba(0,0,0,0.25), rgba(0,0,0,1) 70%);
 }
 
 .bg-noise::after {
@@ -73,12 +76,17 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 }
 .gradient-border::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px;
-  background: linear-gradient(120deg, var(--accent), color-mix(in oklab, var(--accent-2) 80%, var(--accent) 20%));
+  background: linear-gradient(120deg, var(--copper), color-mix(in oklab, var(--accent) 80%, var(--copper) 20%));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; border-radius: inherit;
 }
 
-.neon-text { text-shadow: 0 0 20px color-mix(in oklab, var(--accent) 55%, transparent); }
+.neon-text { text-shadow: 0 0 16px color-mix(in oklab, var(--copper) 45%, transparent); }
+
+/* Notched corners utility for cards */
+.notch {
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+}
 
 @keyframes glowPulse { 0%,100% { box-shadow: 0 0 0.4rem color-mix(in oklab, var(--accent) 40%, transparent); } 50% { box-shadow: 0 0 1.2rem color-mix(in oklab, var(--accent) 70%, transparent); } }
 .animate-glow { animation: glowPulse 2.4s ease-in-out infinite; }
