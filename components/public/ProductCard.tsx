@@ -34,6 +34,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
         currentTarget.onerror = null; // Prevent infinite loops
     };
 
+    const primaryImageUrl = (Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
+        ? product.imageUrls[0]
+        : product.imageUrl; // Fallback to old field
+
     return (
         <div 
             className="bg-slate-900/60 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10 cursor-pointer"
@@ -42,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
             <div className="relative">
                 <div className="h-40 bg-slate-800/50 flex items-center justify-center p-2">
                     <img 
-                        src={product.imageUrl} 
+                        src={primaryImageUrl || FALLBACK_IMAGE_URL} 
                         alt={product.name} 
                         className="max-h-full max-w-full object-contain" 
                         onError={handleImageError} 

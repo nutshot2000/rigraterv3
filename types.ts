@@ -3,8 +3,9 @@ export interface Product {
     id: string;
     name: string;
     category: string;
-    imageUrl: string;
     price: string;
+    imageUrl: string; // This will be deprecated and replaced by imageUrls
+    imageUrls: string[];
     affiliateLink: string;
     review: string;
     specifications: string;
@@ -24,8 +25,8 @@ export enum Page {
 }
 
 export interface PricePoint {
-    date: string; // ISO date
-    price: number; // USD numeric
+    date: string; // ISO 8601
+    price: number;
 }
 
 export interface BlogPost {
@@ -59,18 +60,25 @@ export interface AuditEntry {
 }
 
 export interface AIProductInfo {
-    review: string;
+    name: string;
+    category: string;
     price: string;
+    imageUrl: string; // This will be deprecated and replaced by imageUrls
+    imageUrls: string[];
     affiliateLink: string;
-    imageUrl: string;
-    specifications: string;
+    review: string;
+    specifications: string; // comma-separated key:value pairs
     brand?: string;
+    slug?: string;
+    seoTitle?: string;
+    seoDescription?: string;
 }
 
 export interface AISuggestedProduct {
     name: string;
     category: string;
-    imageUrl: string;
+    imageUrl: string; // This will be deprecated and replaced by imageUrls
+    imageUrls: string[];
 }
 
 export interface ToastMessage {

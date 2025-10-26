@@ -36,27 +36,38 @@ const isLikelyImageUrl = (url: string): boolean => {
     }
 };
 
-const sanitizeProductInfo = (data: AIProductInfo): AIProductInfo => {
-    const price = (data.price || '').trim();
-    const normalizedPrice = price.startsWith('$') ? price : (price ? `$${price}` : '');
-    const affiliateLink = (() => {
-        const link = (data.affiliateLink || '').trim();
-        try {
-            const u = new URL(link);
-            if (u.protocol === 'http:' || u.protocol === 'https:') return link;
-        } catch {}
-        return '';
-    })();
-    const imageUrl = isLikelyImageUrl((data.imageUrl || '').trim()) ? (data.imageUrl || '').trim() : FALLBACK_IMAGE_URL;
-    return {
-        review: (data.review || '').trim(),
-        specifications: (data.specifications || '').trim(),
-        price: normalizedPrice || '$0.00',
-        affiliateLink: affiliateLink || '#',
-        imageUrl,
-        brand: (data.brand || '').trim(),
-    };
-};
+/**
+ * Sanitizes and validates the AI-generated product info.
+ */
+export function sanitizeProductInfo(jsonString: string): AIProductInfo {
+    const parsed = JSON.parse(jsonString);
+    const requiredKeys: Array<keyof AIProductInfo> = [
+        'name', 'category', 'price', 'affiliateLink', 'review', 'specifications', 'imageUrls'
+    ];
+
+    for (const key of requiredKeys) {
+        if (parsed[key] === undefined || parsed[key] === null) {
+            throw new Error(`Missing required field: ${key}`);
+        }
+    }
+
+    // Ensure imageUrls is an array of strings
+    if (!Array.isArray(parsed.imageUrls) || !parsed.imageUrls.every((item: any) => typeof item === 'string')) {
+        // Attempt to gracefully handle if it's a single string
+        if (typeof parsed.imageUrls === 'string') {
+            parsed.imageUrls = [parsed.imageUrls];
+        } else if (typeof parsed.imageUrl === 'string') { // Fallback to old field
+            parsed.imageUrls = [parsed.imageUrl];
+        } else {
+            throw new Error("Invalid format for 'imageUrls': must be an array of strings.");
+        }
+    }
+    
+    // Maintain backward compatibility for imageUrl for a short period
+    parsed.imageUrl = parsed.imageUrls[0] || FALLBACK_IMAGE_URL;
+
+    return parsed as AIProductInfo;
+}
 
 export const generateProductInfo = async (productName: string): Promise<AIProductInfo> => {
     try {
@@ -69,7 +80,7 @@ export const generateProductInfo = async (productName: string): Promise<AIProduc
             });
             if (!resp.ok) throw new Error('Serverless AI error');
             const data: AIProductInfo = await resp.json();
-            return sanitizeProductInfo(data);
+            return sanitizeProductInfo(JSON.stringify(data));
         }
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
         const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
@@ -78,7 +89,7 @@ export const generateProductInfo = async (productName: string): Promise<AIProduc
         );
         const jsonText = cleanJsonString(response.response.text());
         const productInfo: AIProductInfo = JSON.parse(jsonText);
-        return sanitizeProductInfo(productInfo);
+        return sanitizeProductInfo(JSON.stringify(productInfo));
 
     } catch (error) {
         console.error("Error generating product info:", error);
@@ -105,7 +116,7 @@ export const suggestNewProducts = async (category: string, count: number = 3, ex
         if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
         const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
         const response = await model.generateContent(
-            `You are a PC hardware market analyst. Suggest ${count} new and popular products in the "${category}" category. Avoid duplicates and near-duplicates of: ${existingNames.slice(0,200).join('; ')}. Return ONLY a JSON array: [{"name","category","imageUrl"}].`
+            `You are a PC hardware market analyst. Suggest ${count} new and popular products in the "${category}" category. Avoid duplicates and near-duplicates of: ${existingNames.slice(0,200).join('; ')}. Return ONLY a JSON array: [{"name","category","imageUrls"}].`
         );
         const jsonText = cleanJsonString(response.response.text());
         const suggestions: AISuggestedProduct[] = JSON.parse(jsonText);

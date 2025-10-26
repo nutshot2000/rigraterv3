@@ -12,134 +12,117 @@ interface ProductDetailModalProps {
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         const el = e.currentTarget;
-        if (el.src.includes('media-amazon') && el.src.includes('_SL')) {
-            const smaller = el.src.replace(/_SL\d+_/i, '_SL500_');
-            if (smaller !== el.src) {
-                el.src = smaller;
-                el.onerror = () => {
-                    el.src = FALLBACK_IMAGE_URL;
-                    el.onerror = null;
-                };
-                return;
-            }
-        }
         el.src = FALLBACK_IMAGE_URL;
-        el.onerror = null; // Prevent infinite loops
+        el.onerror = null;
     };
+
+    const allImages = (product.imageUrls && product.imageUrls.length > 0) 
+        ? product.imageUrls 
+        : (product.imageUrl ? [product.imageUrl] : []);
+
+    const primaryImage = allImages[0] || FALLBACK_IMAGE_URL;
+    const additionalImages = allImages.slice(1);
 
     const specificationsSafe = (product.specifications || '').split(',');
     const reviewSafe = product.review || '';
 
     return (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center z-50 p-2 sm:p-4 pt-8 sm:pt-16" onClick={onClose}>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div 
-                className="bg-gray-900/90 glass rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative border border-white/10 animate-scale-in"
+                className="bg-slate-900 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden relative border border-slate-700/50 animate-scale-in"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Close Button - Fixed Position */}
                 <button 
                     onClick={onClose} 
-                    className="absolute top-4 right-4 z-20 p-2 text-gray-400 hover:text-white hover:bg-gray-800/80 rounded-lg transition-all duration-200 backdrop-blur-sm"
+                    className="absolute top-3 right-3 z-20 p-2 text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg transition-all duration-200"
                 >
-                    <CloseIcon className="w-5 h-5" />
+                    <CloseIcon className="w-6 h-6" />
                 </button>
 
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-700/50 bg-gray-800/30">
-                    <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-sky-400 rounded-full"></div>
-                        <span className="text-sm text-gray-400 uppercase tracking-wider">{product.category}</span>
-                        {product.brand && (
-                            <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded-full border border-gray-600">
-                                {product.brand}
-                            </span>
-                        )}
+                <div className="overflow-y-auto max-h-[90vh] p-6 md:p-8">
+                    {/* Primary Image */}
+                    <div className="mb-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                        <img 
+                            src={primaryImage} 
+                            alt={product.name} 
+                            className="w-full max-h-80 object-contain rounded"
+                            onError={handleImageError}
+                        />
                     </div>
-                </div>
 
-                <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-                    <div className="grid lg:grid-cols-2 gap-0">
-                        {/* Image Section - More Compact */}
-                        <div className="p-4 bg-gradient-to-br from-gray-800/30 to-gray-900/30 flex items-center justify-center">
-                            <div className="relative group max-w-sm w-full">
-                                <img 
-                                    src={product.imageUrl} 
-                                    alt={product.name} 
-                                    className="w-full h-64 object-contain rounded-lg bg-white/5 p-3 border border-gray-700/30"
-                                    onError={handleImageError}
-                                    loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </div>
+                    {/* Header Info */}
+                    <div className="mb-6 text-center">
+                        <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight mb-2">{product.name}</h1>
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <span className="text-sm text-slate-400 uppercase tracking-wider">{product.category}</span>
+                            {product.brand && (
+                                <span className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded-full border border-slate-700">
+                                    {product.brand}
+                                </span>
+                            )}
                         </div>
+                        <div className="text-4xl font-bold text-sky-400">{product.price}</div>
+                    </div>
 
-                        {/* Content Section - Better Spacing */}
-                        <div className="p-6 space-y-5">
-                            {/* Product Info */}
-                            <div>
-                                <h1 className="text-2xl font-bold text-white leading-tight mb-3">{product.name}</h1>
-                                <div className="flex items-center gap-4 mb-4">
-                                    <div className="text-3xl font-bold text-sky-400">{product.price}</div>
-                                    <button
-                                        className="text-sm text-gray-400 hover:text-sky-400 transition-colors underline"
-                                        onClick={() => {
-                                            const params = new URLSearchParams(window.location.search);
-                                            params.set('q', product.name);
-                                            window.history.replaceState(null, '', `?${params.toString()}`);
-                                        }}
-                                    >
-                                        Share this product
-                                    </button>
-                                </div>
+                    {/* Specifications */}
+                    {specificationsSafe.length > 1 && (
+                        <ContentSection title="Specifications">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                                {specificationsSafe.map((spec, index) => {
+                                    if (!spec.trim()) return null;
+                                    const [key, ...valueParts] = spec.split(':');
+                                    const value = valueParts.join(':').trim();
+                                    return (
+                                        <div key={index} className="flex justify-between items-baseline py-1 border-b border-slate-800">
+                                            <span className="text-slate-400 font-medium text-sm">{key?.trim()}</span>
+                                            <span className="text-white font-semibold text-sm text-right">{value}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
+                        </ContentSection>
+                    )}
 
-                            {/* Specifications - More Compact */}
-                            <div className="space-y-3">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Specifications
-                                </h3>
-                                <div className="grid grid-cols-1 gap-2">
-                                    {specificationsSafe.map((spec, index) => {
-                                        if (!spec.trim()) return null;
-                                        const [key, ...valueParts] = spec.split(':');
-                                        const value = valueParts.join(':').trim();
-                                        return (
-                                            <div key={index} className="flex justify-between items-center py-2 px-3 bg-gray-800/40 rounded-lg border border-gray-700/20">
-                                                <span className="text-gray-300 font-medium text-sm">{key?.trim()}</span>
-                                                <span className="text-white font-semibold text-sm">{value}</span>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* AI Review - More Compact */}
-                            <div className="space-y-3">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                    </svg>
-                                    AI Review
-                                </h3>
-                                <div className="bg-gray-800/20 border border-gray-700/30 rounded-lg p-3">
-                                    <p className="text-gray-200 leading-relaxed text-sm">{reviewSafe}</p>
-                                </div>
-                            </div>
-
-                            {/* Buy Buttons */}
-                            <div className="pt-2">
-                                <BuyButtons affiliateLink={product.affiliateLink} />
-                            </div>
+                    {/* Additional Image 1 */}
+                    {additionalImages.length > 0 && (
+                        <div className="my-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                            <img src={additionalImages[0]} alt={`${product.name} alternate view 1`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
                         </div>
+                    )}
+
+                    {/* AI Review */}
+                    {reviewSafe && (
+                        <ContentSection title="AI Review">
+                            <p className="text-slate-300 leading-relaxed text-base whitespace-pre-wrap">{reviewSafe}</p>
+                        </ContentSection>
+                    )}
+
+                    {/* Additional Image 2 */}
+                    {additionalImages.length > 1 && (
+                        <div className="my-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                            <img src={additionalImages[1]} alt={`${product.name} alternate view 2`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
+                        </div>
+                    )}
+
+                    {/* Buy Buttons */}
+                    <div className="pt-6">
+                        <BuyButtons affiliateLink={product.affiliateLink} />
                     </div>
                 </div>
             </div>
         </div>
     );
 };
+
+const ContentSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div className="mb-8">
+        <h3 className="text-xl font-bold text-white flex items-center gap-3 mb-4">
+            <span className="w-2 h-2 bg-sky-400 rounded-full"></span>
+            {title}
+        </h3>
+        <div className="pl-5">{children}</div>
+    </div>
+);
 
 export default ProductDetailModal;
 
@@ -167,32 +150,22 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
     const ukBase = affiliateLink.includes('amazon.co.uk') ? affiliateLink : affiliateLink.replace('amazon.com', 'amazon.co.uk');
     const uk = AMAZON_TAG_UK ? enrichAmazonLink(ukBase, AMAZON_TAG_UK) : '';
     return (
-        <div className="space-y-3">
-            <h3 className="text-base font-semibold text-white flex items-center gap-2">
-                <svg className="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+        <div className="space-y-4">
+            <h3 className="text-xl font-bold text-white flex items-center gap-3">
+                <span className="w-2 h-2 bg-sky-400 rounded-full"></span>
                 Buy Now
             </h3>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="pl-5 flex flex-col sm:flex-row gap-3">
                 {preferredRegion === 'UK' && uk ? (
                     <>
-                        <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 border border-sky-400/30 text-sm">
-                            Buy on Amazon (UK)
-                        </a>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 border border-sky-400/30 text-sm">
-                            Buy on Amazon (US)
-                        </a>
+                        <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base">Buy on Amazon (UK)</a>
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base">Buy on Amazon (US)</a>
                     </>
                 ) : (
                     <>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 border border-sky-400/30 text-sm">
-                            Buy on Amazon (US)
-                        </a>
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base">Buy on Amazon (US)</a>
                         {uk && (
-                            <a href={uk} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 border border-sky-400/30 text-sm">
-                                Buy on Amazon (UK)
-                            </a>
+                            <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base">Buy on Amazon (UK)</a>
                         )}
                     </>
                 )}

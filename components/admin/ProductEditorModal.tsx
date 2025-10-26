@@ -15,7 +15,7 @@ interface ProductEditorModalProps {
 const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClose }) => {
     const { addProduct, updateProduct, addToast } = useApp();
     const [formData, setFormData] = useState<Omit<Product, 'id'>>({
-        name: '', category: '', imageUrl: '', price: '', affiliateLink: '', review: '', specifications: '', brand: '', slug: ''
+        name: '', category: '', price: '', imageUrl: '', imageUrls: [], affiliateLink: '', review: '', specifications: '', brand: '', slug: ''
     });
     const [userEditedSlug, setUserEditedSlug] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -24,12 +24,13 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
         if (product) {
             setFormData({
                 ...product,
+                imageUrls: product.imageUrls || (product.imageUrl ? [product.imageUrl] : []),
                 brand: product.brand || '',
                 slug: product.slug || ''
             });
             setUserEditedSlug(Boolean(product.slug));
         } else {
-            setFormData({ name: '', category: '', imageUrl: '', price: '', affiliateLink: '', review: '', specifications: '', brand: '', slug: '' });
+            setFormData({ name: '', category: '', price: '', imageUrl: '', imageUrls: [], affiliateLink: '', review: '', specifications: '', brand: '', slug: '' });
             setUserEditedSlug(false);
         }
     }, [product]);
@@ -98,15 +99,46 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
         } catch { return url; }
     };
 
+    const normalizeAmazonLink = (url: string): string => {
+        try {
+            const u = new URL(url);
+            if (!u.hostname.includes('amazon.')) return url;
+            // Canonicalize and apply tag
+            const canonicalized = canonicalizeAmazon(url);
+            const tagged = applyTags(canonicalized);
+            return tagged;
+        } catch (e) {
+            console.error("Error normalizing Amazon link:", e);
+            return url; // Return original if normalization fails
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const fixedLink = applyTags(canonicalizeAmazon(formData.affiliateLink));
+        
+        // Ensure imageUrls is an array, handling string from textarea
+        const finalImageUrls = Array.isArray(formData.imageUrls)
+            ? formData.imageUrls.filter(url => url.trim() !== '')
+            : (typeof formData.imageUrls === 'string' ? (formData.imageUrls as string).split('\n').filter(url => url.trim() !== '') : []);
+
+        if (finalImageUrls.length === 0) {
+            addToast('Please provide at least one image URL.', 'error');
+            return;
+        }
+
+        const dataToSave = {
+            ...formData,
+            imageUrls: finalImageUrls,
+            imageUrl: finalImageUrls[0], // Ensure legacy imageUrl is set to the primary image
+            affiliateLink: normalizeAmazonLink(formData.affiliateLink),
+        };
+
         const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
         if (product) {
-            updateProduct({ ...formData, affiliateLink: fixedLink, id: product.id });
+            updateProduct({ ...dataToSave, id: product.id });
             addToast('Product updated successfully!', 'success');
         } else {
-            addProduct({ ...formData, affiliateLink: fixedLink });
+            addProduct(dataToSave);
             addToast(backendOn ? 'Product added successfully!' : 'Saved locally (login to persist to DB)', backendOn ? 'success' : 'error');
         }
         onClose();
@@ -166,23 +198,21 @@ const ProductEditorModal: React.FC<ProductEditorModalProps> = ({ product, onClos
                             <div className="space-y-4">
                                 {renderInputField('category', 'Category', 'e.g., GPU')}
                                 <div>
-                                    <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            id="imageUrl"
-                                            name="imageUrl"
-                                            value={formData.imageUrl}
+                                    <label htmlFor="imageUrls" className="block text-sm font-medium text-gray-300 mb-1">Image URLs (one per line)</label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <textarea
+                                            name="imageUrls"
+                                            value={Array.isArray(formData.imageUrls) ? formData.imageUrls.join('\n') : formData.imageUrls}
                                             onChange={handleChange}
-                                            placeholder="https://..."
-                                            className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white focus:ring-1 focus:ring-teal-500 focus:border-teal-500 outline-none"
+                                            rows={3}
                                             required
                                         />
                                         <button
                                             type="button"
-                                            onClick={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                            onClick={() => setFormData(f => ({ ...f, imageUrls: [] }))}
                                             className="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded-md text-white text-xs"
-                                            title="Clear image URL"
+                                            title="Clear Image URLs"
                                         >
                                             Clear
                                         </button>
