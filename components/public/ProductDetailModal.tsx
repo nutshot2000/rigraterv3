@@ -27,7 +27,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     const reviewSafe = product.review || '';
 
     return (
-        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4" onClick={onClose}>
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-[80] p-4" onClick={onClose}>
             <div 
                 className="bg-slate-900 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden relative border border-slate-700/50 animate-scale-in"
                 onClick={e => e.stopPropagation()}
@@ -39,7 +39,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                     <CloseIcon className="w-6 h-6" />
                 </button>
 
-                <div className="overflow-y-auto max-h-[90vh] p-6 md:p-8">
+                <div className="overflow-y-auto max-h-[90vh] p-6 md:p-8 pt-10">
                     {/* Primary Image */}
                     <div className="mb-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                         <img 
