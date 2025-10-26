@@ -13,13 +13,33 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddToComparison, isInComparison }) => {
     
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        e.currentTarget.src = FALLBACK_IMAGE_URL;
-        e.currentTarget.onerror = null; // Prevent infinite loops
+        const currentTarget = e.currentTarget;
+        
+        // First fallback: try a smaller image size for Amazon URLs
+        if (currentTarget.src.includes('media-amazon') && currentTarget.src.includes('_SL')) {
+            const smallerImg = currentTarget.src.replace(/_SL\d+_/i, '_SL500_');
+            if (smallerImg !== currentTarget.src) {
+                currentTarget.src = smallerImg;
+                // If this also fails, the second onError will trigger the final fallback
+                currentTarget.onerror = () => {
+                    currentTarget.src = FALLBACK_IMAGE_URL;
+                    currentTarget.onerror = null;
+                };
+                return;
+            }
+        }
+
+        // Final fallback
+        currentTarget.src = FALLBACK_IMAGE_URL;
+        currentTarget.onerror = null; // Prevent infinite loops
     };
 
     return (
-        <div className="bg-slate-900/60 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10">
-            <div className="relative cursor-pointer" onClick={() => onCardClick(product)}>
+        <div 
+            className="bg-slate-900/60 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10 cursor-pointer"
+            onClick={() => onCardClick(product)}
+        >
+            <div className="relative">
                 <div className="h-40 bg-slate-800/50 flex items-center justify-center p-2">
                     <img 
                         src={product.imageUrl} 
@@ -40,7 +60,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
                 </div>
                 <h3 className="text-base font-bold text-white line-clamp-2 leading-snug h-12">{product.name}</h3>
                 <button
-                    onClick={(e) => { e.stopPropagation(); onAddToComparison(product); }}
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (!isInComparison) onAddToComparison(product); 
+                    }}
                     disabled={isInComparison}
                     className={`w-full mt-3 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-2 rounded-md border font-semibold tracking-wider transition-colors ${
                         isInComparison 
