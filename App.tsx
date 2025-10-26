@@ -31,7 +31,7 @@ const AppContent: React.FC = () => {
     };
     
     return (
-        <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100 theme-teal bg-grid bg-noise">
+        <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100 theme-teal bg-grid bg-noise bg-scanlines">
             <Header onNavigate={setPage} currentPage={page} />
             <main className="flex-grow container mx-auto px-4 py-8">
                 <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
