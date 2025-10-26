@@ -4,6 +4,8 @@ import { MOCK_PRODUCTS } from '../services/mockData';
 import { ADMIN_PASSWORD } from '../constants';
 import { isBackendEnabled } from '../services/supabaseClient';
 import { fetchProducts, createProduct as createProductApi, updateProductById, deleteProductById } from '../services/productService';
+import { fetchBlogPosts as fetchBlogPostsApi, createBlogPost as createBlogPostApi, updateBlogPostById as updateBlogPostByIdApi, deleteBlogPostById as deleteBlogPostByIdApi } from '../services/blogService';
+import { fetchComparisonDocs as fetchComparisonDocsApi, createComparisonDoc as createComparisonDocApi, updateComparisonDocById as updateComparisonDocByIdApi, deleteComparisonDocById as deleteComparisonDocByIdApi } from '../services/comparisonService';
 import { loginWithEmailPassword, logoutSession } from '../services/authService';
 
 const MAX_COMPARISON_ITEMS = 3;
@@ -215,36 +217,76 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Blog Management
     const addBlogPost = useCallback((post: Omit<BlogPost, 'id' | 'createdAt'>) => {
-        const newPost: BlogPost = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...post };
-        setBlogPosts(prev => [newPost, ...prev]);
-        recordAudit({ action: 'blog.create', targetType: 'blog', targetId: newPost.id, details: { title: newPost.title } });
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    const created = await createBlogPostApi(post);
+                    setBlogPosts(prev => [created, ...prev]);
+                    recordAudit({ action: 'blog.create', targetType: 'blog', targetId: created.id, details: { title: created.title } });
+                } catch {
+                    const newPost: BlogPost = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...post };
+                    setBlogPosts(prev => [newPost, ...prev]);
+                    recordAudit({ action: 'blog.create', targetType: 'blog', targetId: newPost.id, details: { title: newPost.title } });
+                }
+            })();
+        } else {
+            const newPost: BlogPost = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...post };
+            setBlogPosts(prev => [newPost, ...prev]);
+            recordAudit({ action: 'blog.create', targetType: 'blog', targetId: newPost.id, details: { title: newPost.title } });
+        }
     }, []);
 
     const updateBlogPost = useCallback((post: BlogPost) => {
         setBlogPosts(prev => prev.map(p => p.id === post.id ? post : p));
         recordAudit({ action: 'blog.update', targetType: 'blog', targetId: post.id, details: { title: post.title } });
+        if (isBackendEnabled) {
+            (async () => { try { await updateBlogPostByIdApi(post.id, { ...post, id: undefined as any, createdAt: undefined as any }); } catch {} })();
+        }
     }, []);
 
     const deleteBlogPost = useCallback((id: string) => {
         setBlogPosts(prev => prev.filter(p => p.id !== id));
         recordAudit({ action: 'blog.delete', targetType: 'blog', targetId: id });
+        if (isBackendEnabled) {
+            (async () => { try { await deleteBlogPostByIdApi(id); } catch {} })();
+        }
     }, []);
 
     // Comparison Docs
     const addComparisonDoc = useCallback((doc: Omit<ComparisonDoc, 'id' | 'createdAt'>) => {
-        const newDoc: ComparisonDoc = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...doc };
-        setComparisons(prev => [newDoc, ...prev]);
-        recordAudit({ action: 'comparison.create', targetType: 'comparison', targetId: newDoc.id, details: { title: newDoc.title } });
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    const created = await createComparisonDocApi(doc);
+                    setComparisons(prev => [created, ...prev]);
+                    recordAudit({ action: 'comparison.create', targetType: 'comparison', targetId: created.id, details: { title: created.title } });
+                } catch {
+                    const newDoc: ComparisonDoc = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...doc };
+                    setComparisons(prev => [newDoc, ...prev]);
+                    recordAudit({ action: 'comparison.create', targetType: 'comparison', targetId: newDoc.id, details: { title: newDoc.title } });
+                }
+            })();
+        } else {
+            const newDoc: ComparisonDoc = { id: Date.now().toString(), createdAt: new Date().toISOString(), ...doc };
+            setComparisons(prev => [newDoc, ...prev]);
+            recordAudit({ action: 'comparison.create', targetType: 'comparison', targetId: newDoc.id, details: { title: newDoc.title } });
+        }
     }, []);
 
     const updateComparisonDoc = useCallback((doc: ComparisonDoc) => {
         setComparisons(prev => prev.map(d => d.id === doc.id ? doc : d));
         recordAudit({ action: 'comparison.update', targetType: 'comparison', targetId: doc.id, details: { title: doc.title } });
+        if (isBackendEnabled) {
+            (async () => { try { await updateComparisonDocByIdApi(doc.id, { ...doc, id: undefined as any, createdAt: undefined as any }); } catch {} })();
+        }
     }, []);
 
     const deleteComparisonDoc = useCallback((id: string) => {
         setComparisons(prev => prev.filter(d => d.id !== id));
         recordAudit({ action: 'comparison.delete', targetType: 'comparison', targetId: id });
+        if (isBackendEnabled) {
+            (async () => { try { await deleteComparisonDocByIdApi(id); } catch {} })();
+        }
     }, []);
 
     // Persistence
@@ -285,6 +327,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (Array.isArray(remote) && remote.length) {
                     setProducts(remote);
                 }
+            } catch {}
+            try {
+                const remoteBlogs = await fetchBlogPostsApi();
+                if (Array.isArray(remoteBlogs)) setBlogPosts(remoteBlogs);
+            } catch {}
+            try {
+                const remoteComparisons = await fetchComparisonDocsApi();
+                if (Array.isArray(remoteComparisons)) setComparisons(remoteComparisons);
             } catch {}
         })();
     }, []);
