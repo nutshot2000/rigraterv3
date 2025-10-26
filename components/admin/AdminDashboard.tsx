@@ -25,28 +25,7 @@ const AdminDashboard: React.FC = () => {
     const [isBulkOpen, setIsBulkOpen] = useState(false);
     const [isCmdOpen, setIsCmdOpen] = useState(false);
 
-    // Keyboard shortcut Ctrl+K / Cmd+K
-    React.useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            const isK = e.key.toLowerCase() === 'k';
-            if ((e.ctrlKey || e.metaKey) && isK) {
-                e.preventDefault();
-                setIsCmdOpen(prev => !prev);
-            }
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, []);
-
-    const commands: CommandItem[] = [
-        { id: 'add-product', title: 'Add New Product', shortcut: 'A', run: handleAdd },
-        { id: 'ai-chat', title: 'Open AI Chat', shortcut: 'C', run: () => setIsChatOpen(true) },
-        { id: 'new-blog', title: 'New Blog Post', run: () => setIsBlogOpen(true) },
-        { id: 'new-comparison', title: 'New Comparison', run: () => setIsCompareOpen(true) },
-        { id: 'bulk-products', title: 'Bulk AI Products', run: () => setIsBulkOpen(true) },
-        { id: 'get-ideas', title: 'Get AI Product Ideas', run: () => { if (!isAIEnabled) { addToast('AI key missing.', 'error'); return; } void handleSuggestProducts(); } },
-    ];
-
+    // Handlers declared before usage to avoid TDZ runtime errors in production builds
     const handleEdit = (product: Product) => {
         setSelectedProduct(product);
         setIsEditorOpen(true);
@@ -86,6 +65,28 @@ const AdminDashboard: React.FC = () => {
             setIsSuggesting(false);
         }
     }, [addToast]);
+
+    // Keyboard shortcut Ctrl+K / Cmd+K
+    React.useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const isK = e.key.toLowerCase() === 'k';
+            if ((e.ctrlKey || e.metaKey) && isK) {
+                e.preventDefault();
+                setIsCmdOpen(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
+
+    const commands: CommandItem[] = [
+        { id: 'add-product', title: 'Add New Product', shortcut: 'A', run: handleAdd },
+        { id: 'ai-chat', title: 'Open AI Chat', shortcut: 'C', run: () => setIsChatOpen(true) },
+        { id: 'new-blog', title: 'New Blog Post', run: () => setIsBlogOpen(true) },
+        { id: 'new-comparison', title: 'New Comparison', run: () => setIsCompareOpen(true) },
+        { id: 'bulk-products', title: 'Bulk AI Products', run: () => setIsBulkOpen(true) },
+        { id: 'get-ideas', title: 'Get AI Product Ideas', run: () => { if (!isAIEnabled) { addToast('AI key missing.', 'error'); return; } void handleSuggestProducts(); } },
+    ];
     
     const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         e.currentTarget.src = FALLBACK_IMAGE_URL;
