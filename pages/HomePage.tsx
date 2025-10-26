@@ -183,14 +183,14 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <header className="mb-10 text-center relative crt-frame">
+            <header className="mb-10 text-center relative p-8 crt-frame">
                 <div className="hero-beam" />
-                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs uppercase tracking-wider">Rigrater • PC Parts, Rated by AI</div>
-                <h1 className="mt-4 text-5xl md:text-7xl text-white leading-tight font-crt">
-                    BUILD SMARTER WITH <span className="text-sky-300">AI‑RATED</span> PARTS
+                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300 text-xs uppercase tracking-wider font-semibold">Rigrater • PC Parts, Rated by AI</div>
+                <h1 className="mt-4 text-5xl md:text-7xl text-white leading-tight font-bold">
+                    BUILD SMARTER WITH <span className="text-sky-300">AI-RATED</span> PARTS
                 </h1>
-                <p className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto">
-                    Compare GPUs, CPUs, RAM, storage and more. Instant AI reviews, specs, and trends—so you can <span className="text-teal-300">rate, compare, and upgrade</span> faster.
+                <p className="mt-4 text-lg text-slate-300 max-w-3xl mx-auto">
+                    Compare GPUs, CPUs, RAM, and storage. Instant AI reviews, specs, and trends—so you can <span className="text-sky-300 font-semibold">rate, compare, and upgrade</span> faster.
                 </p>
             </header>
 
