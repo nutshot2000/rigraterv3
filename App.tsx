@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/public/Header';
 import Footer from './components/public/Footer';
@@ -6,7 +6,7 @@ import HomePage from './pages/HomePage';
 import CategoriesPage from './pages/CategoriesPage';
 import BlogPage from './pages/BlogPage';
 import ComparisonsPage from './pages/ComparisonsPage';
-import AdminPage from './pages/AdminPage';
+const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import { Page } from './types';
 import ToastContainer from './components/shared/ToastContainer';
 
@@ -34,7 +34,9 @@ const AppContent: React.FC = () => {
         <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100">
             <Header onNavigate={setPage} currentPage={page} />
             <main className="flex-grow container mx-auto px-4 py-8">
-                {renderPage()}
+                <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
+                    {renderPage()}
+                </Suspense>
             </main>
             <Footer />
             <ToastContainer />
