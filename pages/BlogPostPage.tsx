@@ -13,9 +13,12 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ post, onBack }) => {
 
     return (
         <div className="animate-fade-in max-w-4xl mx-auto">
-            <button onClick={onBack} className="btn-blueprint mb-8">
-                &larr; Back to All Posts
-            </button>
+            <div className="sticky top-20 z-10">
+                <button onClick={onBack} className="btn-blueprint">
+                    &larr; Back to All Posts
+                </button>
+            </div>
+            <div className="h-6" />
 
             <article className="panel-blueprint p-6 md:p-8">
                 {post.coverImageUrl && (
