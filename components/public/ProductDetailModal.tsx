@@ -29,7 +29,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     return (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-start justify-center z-[80] px-4 pt-24 pb-4" onClick={onClose}>
             <div 
-                className="bg-slate-900 rounded-lg shadow-2xl w-full max-w-4xl max-h-[calc(100vh-7rem)] overflow-hidden relative border border-slate-700/50 animate-scale-in"
+                className="bg-slate-900 rounded-lg shadow-2xl w-full max-w-5xl max-h-[calc(100vh-7rem)] overflow-hidden relative border border-slate-700/50 animate-scale-in"
                 onClick={e => e.stopPropagation()}
             >
                 <button 
