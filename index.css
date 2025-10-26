@@ -35,7 +35,7 @@ html, body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.neon-glow {
+.neon-glow { /* copper glow */
   box-shadow: 0 0 0.5rem color-mix(in oklab, var(--copper) 55%, transparent),
               0 0 1.2rem color-mix(in oklab, var(--copper) 35%, transparent);
 }
@@ -75,10 +75,7 @@ html, body {
 }
 
 /* Scanlines */
-.bg-scanlines::after {
-  content:""; position: fixed; inset: 0; pointer-events:none; opacity:.06; mix-blend: screen;
-  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 1px, transparent 1px, transparent 3px);
-}
+.bg-scanlines::after { display: none; }
 
 /* Gradient border utility */
 .gradient-border {
@@ -91,7 +88,7 @@ html, body {
   -webkit-mask-composite: xor; mask-composite: exclude; border-radius: inherit;
 }
 
-.neon-text { text-shadow: 0 0 16px color-mix(in oklab, var(--copper) 45%, transparent); }
+.neon-text { text-shadow: none; }
 
 /* Notched corners utility for cards */
 .notch {
@@ -104,14 +101,14 @@ html, body {
 /* --- CRT utilities --- */
 .bg-crt-dark { background: radial-gradient(1200px 500px at 50% -10%, rgba(24, 46, 17, 0.25), transparent), #0a0f0a; }
 .crt-scan { position: relative; }
-.crt-scan::after { content:""; position: fixed; inset:0; pointer-events:none; opacity:.08; mix-blend-mode: screen; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 3px); }
-@keyframes crtFlicker { 0%, 100% { opacity: .98; } 50% { opacity: .94; } }
-.crt-flicker { animation: crtFlicker 1.8s infinite steps(2, end); }
-.crt-chroma { text-shadow: 0.06em 0 rgba(0, 255, 170, .25), -0.06em 0 rgba(0, 160, 255, .25), 0 0 12px rgba(184, 115, 51, 0.25); }
+.crt-scan::after { display: none; }
+@keyframes crtFlicker { }
+.crt-flicker { animation: none; }
+.crt-chroma { text-shadow: none; }
 .crt-frame { border: 2px solid rgba(255,255,255,0.12); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 0 0 0 2px rgba(0,0,0,0.6), 0 15px 35px rgba(0,0,0,0.5); border-radius: 10px; background: rgba(15, 23, 18, 0.6); }
 
 /* CRT components */
-.crt-strong { text-shadow: 0.02em 0 currentColor, -0.02em 0 currentColor, 0 0.02em currentColor, 0 -0.02em currentColor; }
+.crt-strong { text-shadow: none; }
 .btn-crt {
   @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-white transition; 
   background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
