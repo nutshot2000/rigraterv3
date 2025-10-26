@@ -182,12 +182,13 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <header className="mb-8 text-center">
-                <h1 className="text-4xl md:text-5xl font-extrabold text-white">
-                    Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">Next Upgrade</span>
+            <header className="mb-10 text-center">
+                <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs uppercase tracking-wider">Rigrater • PC Parts, Rated by AI</div>
+                <h1 className="mt-4 text-4xl md:text-6xl font-extrabold text-white leading-tight">
+                    Build smarter with <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-blue-500">AI‑rated</span> parts
                 </h1>
-                <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
-                    AI-curated reviews and specs for the latest and greatest PC components on the market.
+                <p className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto">
+                    Compare GPUs, CPUs, RAM, storage and more. Instant AI reviews, specs, and trends—so you can <span className="text-teal-300">rate, compare, and upgrade</span> faster.
                 </p>
             </header>
 

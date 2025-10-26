@@ -18,45 +18,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
     };
 
     return (
-        <div 
-            className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-teal-500/20 border border-gray-700 transition-all duration-300 group"
-            style={{ perspective: '1000px' }}
-        >
-            <div 
-                className="relative cursor-pointer transition-transform duration-300 group-hover:[transform:rotateY(10deg)_rotateX(5deg)_scale(1.05)]"
-                onClick={() => onCardClick(product)}
-            >
-                <img 
-                    src={product.imageUrl} 
-                    alt={product.name} 
-                    className="w-full h-48 object-cover"
-                    onError={handleImageError}
-                    loading="lazy"
-                />
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <EyeIcon className="w-12 h-12 text-white/80" />
-                </div>
+        <div className="bg-gray-850/60 rounded-xl overflow-hidden border border-gray-700 hover:border-teal-500/40 transition shadow-sm hover:shadow-teal-500/20 group">
+            <div className="relative cursor-pointer" onClick={() => onCardClick(product)}>
+                <img src={product.imageUrl} alt={product.name} className="w-full h-44 object-cover bg-gray-900" onError={handleImageError} loading="lazy" />
+                {product.brand && (
+                    <span className="absolute top-2 left-2 text-[10px] px-2 py-1 rounded-full bg-black/60 border border-white/10 text-white uppercase tracking-wider">{product.brand}</span>
+                )}
             </div>
             <div className="p-4">
-                <p className="text-sm text-teal-400 uppercase tracking-wider">{product.category}</p>
-                <h3 className="text-lg font-bold text-white mt-1 h-14">{product.name}</h3>
-                <div className="flex justify-between items-center mt-4">
-                    <div className="flex items-center gap-2">
-                        <p className="text-xl font-bold text-teal-400">{product.price}</p>
+                <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-teal-300/90 uppercase tracking-wider">{product.category}</span>
+                    <span className="text-teal-400 font-semibold">{product.price}</span>
+                </div>
+                <h3 className="mt-1 text-base font-bold text-white line-clamp-2 min-h-[40px]">{product.name}</h3>
+                <div className="mt-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
                         <TrendBadge product={product} />
+                        <span className="hidden sm:inline">View details</span>
                     </div>
-                    <button 
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            if (!isInComparison) {
-                                onAddToComparison(product);
-                            }
-                        }}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); if (!isInComparison) onAddToComparison(product); }}
                         disabled={isInComparison}
-                        className="flex items-center gap-2 text-sm text-gray-300 hover:text-teal-400 transition-colors disabled:text-green-400 disabled:cursor-not-allowed"
-                        title={isInComparison ? "Added to Comparison" : "Add to Compare"}
+                        className="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md border border-gray-600 hover:border-teal-500 text-gray-300 hover:text-teal-300 disabled:text-green-400 disabled:border-green-600"
+                        title={isInComparison ? 'Added to Comparison' : 'Add to Compare'}
                     >
-                       {isInComparison ? <CheckCircleIcon className="w-6 h-6"/> : <CompareIcon className="w-6 h-6" />}
+                        {isInComparison ? <CheckCircleIcon className="w-4 h-4"/> : <CompareIcon className="w-4 h-4" />}
+                        {isInComparison ? 'Added' : 'Compare'}
                     </button>
                 </div>
             </div>

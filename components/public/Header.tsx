@@ -28,7 +28,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                             onClick={() => onNavigate(Page.HOME)}
                         >
                            <ChipIcon className="h-8 w-8 text-teal-400" />
-                           <span className="text-white text-xl font-bold">AI PC Parts</span>
+                           <span className="text-white text-xl font-extrabold tracking-tight">Rigrater</span>
+                           <span className="hidden sm:inline text-xs text-teal-300/80 ml-1">rate. compare. upgrade.</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
