@@ -1,5 +1,6 @@
 /* Fonts must be imported before any other statements */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,6 +9,7 @@
 html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Apple Color Emoji','Segoe UI Emoji'; }
 .font-display { font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
 .font-mono-display { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+.font-crt { font-family: 'VT323', ui-monospace, monospace; letter-spacing: 1px; }
 
 /* PCB Copper theme variables and utilities */
 :root {
@@ -90,6 +92,15 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 
 @keyframes glowPulse { 0%,100% { box-shadow: 0 0 0.4rem color-mix(in oklab, var(--accent) 40%, transparent); } 50% { box-shadow: 0 0 1.2rem color-mix(in oklab, var(--accent) 70%, transparent); } }
 .animate-glow { animation: glowPulse 2.4s ease-in-out infinite; }
+
+/* --- CRT utilities --- */
+.bg-crt-dark { background: radial-gradient(1200px 500px at 50% -10%, rgba(24, 46, 17, 0.25), transparent), #0a0f0a; }
+.crt-scan { position: relative; }
+.crt-scan::after { content:""; position: fixed; inset:0; pointer-events:none; opacity:.08; mix-blend-mode: screen; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.2) 0, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 3px); }
+@keyframes crtFlicker { 0%, 100% { opacity: .98; } 50% { opacity: .94; } }
+.crt-flicker { animation: crtFlicker 1.8s infinite steps(2, end); }
+.crt-chroma { text-shadow: 0.06em 0 rgba(0, 255, 170, .25), -0.06em 0 rgba(0, 160, 255, .25), 0 0 12px rgba(184, 115, 51, 0.25); }
+.crt-frame { border: 2px solid rgba(255,255,255,0.12); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6), 0 0 0 2px rgba(0,0,0,0.6), 0 15px 35px rgba(0,0,0,0.5); border-radius: 10px; background: rgba(15, 23, 18, 0.6); }
 
 
 

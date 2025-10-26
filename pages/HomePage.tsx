@@ -183,11 +183,11 @@ const HomePage: React.FC = () => {
 
     return (
         <div className="animate-fade-in">
-            <header className="mb-10 text-center relative">
+            <header className="mb-10 text-center relative crt-frame">
                 <div className="hero-beam" />
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-teal-500/30 bg-teal-500/10 text-teal-300 text-xs uppercase tracking-wider">Rigrater • PC Parts, Rated by AI</div>
-                <h1 className="mt-4 text-4xl md:text-6xl font-extrabold text-white leading-tight drop-shadow-[0_0_25px_rgba(132,204,22,0.25)] font-mono-display neon-text" style={{textShadow: '0 0 24px #b87333, 0 0 48px #b87333'}}>
-                    Build smarter with <span className="text-transparent bg-clip-text bg-gradient-to-r from-lime-400 via-amber-400 to-lime-500 animate-glow" style={{textShadow: '0 0 20px #b87333, 0 0 36px #84cc16'}}>AI‑rated</span> parts
+                <h1 className="mt-4 text-4xl md:text-6xl font-extrabold text-white leading-tight font-crt crt-chroma">
+                    BUILD SMARTER WITH <span className="text-lime-400">AI‑RATED</span> PARTS
                 </h1>
                 <p className="mt-4 text-lg text-gray-300 max-w-3xl mx-auto">
                     Compare GPUs, CPUs, RAM, storage and more. Instant AI reviews, specs, and trends—so you can <span className="text-teal-300">rate, compare, and upgrade</span> faster.
