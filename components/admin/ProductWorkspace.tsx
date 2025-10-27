@@ -48,6 +48,8 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
     const [productUrl, setProductUrl] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
     const [rivals, setRivals] = useState<string[]>([]);
+    const [imageCandidates, setImageCandidates] = useState<string[]>([]);
+    const [isExtractingImages, setIsExtractingImages] = useState(false);
 
     useEffect(() => {
         if (mode === 'manual_product' && !currentProduct) {
@@ -156,6 +158,28 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
         setRivals([]);
     };
 
+    const extractImages = async () => {
+        if (!productUrl) return;
+        setIsExtractingImages(true);
+        try {
+            const resp = await fetch('/api/extract-images', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productUrl }) });
+            const data = await resp.json();
+            const imgs: string[] = Array.isArray(data.images) ? data.images : [];
+            setImageCandidates(imgs);
+            if (imgs.length === 0) addToast('No images found on page.', 'error');
+        } catch (e) {
+            addToast('Failed to extract images.', 'error');
+        } finally {
+            setIsExtractingImages(false);
+        }
+    };
+
+    const addImage = (url: string) => {
+        if (!currentProduct) return;
+        const list = currentProduct.imageUrls || [];
+        if (!list.includes(url)) setCurrentProduct({ ...currentProduct, imageUrls: [...list, url] });
+    };
+
     const renderEditableForm = () => {
         if (!currentProduct) return null;
         return (
@@ -188,13 +212,26 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Image URLs (one per line)</label>
+                    <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-slate-300">Image URLs (one per line)</label>
+                        <button onClick={extractImages} className="btn-blueprint text-xs" disabled={isExtractingImages}> {isExtractingImages ? 'Scanning…' : 'Scan Page for Images'} </button>
+                    </div>
                     <textarea
                         value={(currentProduct.imageUrls || []).join('\n')}
                         onChange={(e) => handleFieldChange('imageUrls', e.target.value.split('\n'))}
                         className="input-blueprint min-h-[100px] w-full"
                         rows={4}
                     />
+                    {imageCandidates.length > 0 && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            {imageCandidates.slice(0, 12).map((src) => (
+                                <button key={src} type="button" className="bg-slate-800/50 border border-slate-700 rounded p-2 hover:border-sky-500"
+                                    title="Add to images" onClick={() => addImage(src)}>
+                                    <img src={src} alt="candidate" className="w-full h-28 object-contain" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 <EditableField label="AI Review" value={currentProduct.review || ''} onChange={(val) => handleFieldChange('review', val)} type="textarea" />
                 <EditableField label="Specifications" value={currentProduct.specifications || ''} onChange={(val) => handleFieldChange('specifications', val)} type="textarea" />
