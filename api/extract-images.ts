@@ -1,30 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-function unique<T>(arr: T[]): T[] {
-    return Array.from(new Set(arr));
-}
-
-function normalizeAmazonUrl(url: string): string[] {
-    // Generate candidate variants by removing size tokens like ._SL1500_ or ._AC_SL1500_
-    const variants: string[] = [];
-    const base = url
-        .replace(/\._AC_SL\d+_/i, '')
-        .replace(/\._SL\d+_/i, '')
-        .replace(/\._SX\d+_/i, '')
-        .replace(/\._UX\d+_/i, '')
-        .replace(/\._UY\d+_/i, '')
-        .replace(/\._SS\d+_/i, '')
-        .replace(/\._SR\d+,\d+_/i, '')
-        .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
-    variants.push(base);
-    // Also offer a reasonable size variant
-    const sized1000 = base.replace(/(\.[a-z]+)$/i, '._SL1000_$1');
-    const sized500 = base.replace(/(\.[a-z]+)$/i, '._SL500_$1');
-    variants.push(sized1000, sized500);
-    return unique(variants);
-}
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     try {
         const { productUrl } = req.body || {};
@@ -53,6 +27,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.error('extract-images error', e);
         return res.status(500).json({ error: 'failed to extract images', details: e?.message || String(e) });
     }
+}
+
+function unique<T>(arr: T[]): T[] {
+    return Array.from(new Set(arr));
+}
+
+function normalizeAmazonUrl(url: string): string[] {
+    // Generate candidate variants by removing size tokens like ._SL1500_ or ._AC_SL1500_
+    const variants: string[] = [];
+    const base = url
+        .replace(/\._AC_SL\d+_/i, '')
+        .replace(/\._SL\d+_/i, '')
+        .replace(/\._SX\d+_/i, '')
+        .replace(/\._UX\d+_/i, '')
+        .replace(/\._UY\d+_/i, '')
+        .replace(/\._SS\d+_/i, '')
+        .replace(/\._SR\d+,\d+_/i, '')
+        .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
+    variants.push(base);
+    // Also offer a reasonable size variant
+    const sized1000 = base.replace(/(\.[a-z]+)$/i, '._SL1000_$1');
+    const sized500 = base.replace(/(\.[a-z]+)$/i, '._SL500_$1');
+    variants.push(sized1000, sized500);
+    return unique(variants);
 }
 
 export const config = { runtime: 'nodejs' };
