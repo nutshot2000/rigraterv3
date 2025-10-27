@@ -88,8 +88,23 @@ export async function fetchProducts(params?: ProductQueryParams): Promise<Produc
     };
 }
 
+function ensureSlug(name: string, slug?: string): string {
+    if (slug && slug.trim()) return slug.trim();
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 export async function createProduct(input: Omit<Product, 'id'>): Promise<Product> {
     if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
+    const slug = ensureSlug(input.name, input.slug);
+
+    // Prevent duplicates: if a product with same slug exists, update it instead of inserting
+    try {
+        const existing = await supabase.from('products').select('id').eq('slug', slug).maybeSingle();
+        if ((existing as any)?.data?.id) {
+            return await updateProductById(String((existing as any).data.id), { ...input, slug });
+        }
+    } catch {}
+
     const payload = {
         name: input.name,
         category: input.category,
@@ -99,7 +114,7 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         review: input.review,
         specifications: input.specifications,
         brand: input.brand ?? null,
-        slug: input.slug ?? null,
+        slug: slug ?? null,
     };
     const { data, error } = await supabase.from('products').insert(payload).select('*').single();
     if (error) throw error;

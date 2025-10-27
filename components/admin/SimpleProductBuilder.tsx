@@ -13,6 +13,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
     const { addToast } = useApp();
     const [input, setInput] = useState('');
     const [isBuilding, setIsBuilding] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [builtProduct, setBuiltProduct] = useState<Partial<Product> | null>(null);
 
     const handleBuild = async () => {
@@ -53,6 +54,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         if (!builtProduct) return;
         
         try {
+            setIsSaving(true);
             const payload: Omit<Product, 'id'> = {
                 name: builtProduct.name || 'Untitled Product',
                 category: builtProduct.category || 'Misc',
@@ -75,6 +77,8 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         } catch (error: any) {
             const message = error?.message || 'Failed to save product';
             addToast(message, 'error');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -242,9 +246,10 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                         </button>
                         <button
                             onClick={handleSave}
+                            disabled={isSaving}
                             className="btn-blueprint btn-blueprint--primary"
                         >
-                            Save Product
+                            {isSaving ? 'Saving...' : 'Save Product'}
                         </button>
                     </div>
                 </div>

@@ -203,31 +203,37 @@ function extractPrice(html: string): string {
     // JSON-LD offers price
     try {
         const json = extractJsonLdProduct(html);
-        const price = json?.offers?.price;
-        const currency = json?.offers?.priceCurrency || 'USD';
+        const offer = Array.isArray(json?.offers) ? json?.offers[0] : json?.offers;
+        const price = offer?.price || offer?.lowPrice || offer?.highPrice;
+        const currency = offer?.priceCurrency || json?.offers?.priceCurrency || 'USD';
         if (price) {
             const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
             return `${symbol}${String(price)}`;
         }
     } catch {}
 
-    // Common price blocks
+    // Common price blocks (Amazon)
     const candidates = [
         /id=["']priceblock_ourprice["'][^>]*>\s*([^<]+)/i,
         /id=["']priceblock_dealprice["'][^>]*>\s*([^<]+)/i,
         /id=["']apex_desktop_qualifiedBuybox_price["'][^>]*>\s*([^<]+)/i,
+        /class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
         /class=["'][^"']*a-price-whole[^"']*["'][^>]*>\s*([^<]+)/i
     ];
     for (const re of candidates) {
         const m = html.match(re);
         if (m && m[1]) {
-            const raw = m[1].replace(/\s/g, '').replace(/&nbsp;/g, '');
+            const raw = m[1]
+                .replace(/\s/g, '')
+                .replace(/&nbsp;/g, '')
+                // remove thousand separators like 1.299,00 or 1,299.00 safely
+                .replace(/\.(?=\d{3}(\D|$))/g, '');
             if (/^£|^\$|^€/.test(raw)) return raw;
             if (/^\d/.test(raw)) return `$${raw}`;
         }
     }
-    // fallback: first currency-like token
-    const currency = html.match(/(£|\$|€)\s?(\d+[,.]?\d{0,2})/);
+    // fallback: first currency-like token allowing thousands separators
+    const currency = html.match(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/);
     if (currency) return `${currency[1]}${currency[2]}`;
     return '$0.00';
 }
