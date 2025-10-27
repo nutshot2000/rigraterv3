@@ -8,6 +8,7 @@ import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
+import AdminLogin from '../components/admin/AdminLogin';
 
 const AdminPage: React.FC = () => {
     const { isAuthenticated, currentUserEmail, logout } = useApp();
@@ -26,8 +27,7 @@ const AdminPage: React.FC = () => {
     }, []);
 
     if (!isAuthenticated) {
-        // This should be handled by the protected route, but as a fallback:
-        return <div className="text-white">Redirecting to login...</div>;
+        return <AdminLogin />;
     }
 
     const renderWorkspace = () => {
