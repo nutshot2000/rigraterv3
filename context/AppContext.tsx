@@ -160,6 +160,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             if (ok) {
                 setIsAuthenticated(true);
                 try { setPage(Page.ADMIN); } catch (e) { /* guard */ }
+                try { localStorage.setItem('adminAuthed', '1'); } catch {}
                 return true;
             }
             return false;
@@ -167,6 +168,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (password === ADMIN_PASSWORD) {
             setIsAuthenticated(true);
             try { setPage(Page.ADMIN); } catch (e) { /* guard */ }
+            try { localStorage.setItem('adminAuthed', '1'); } catch {}
             return true;
         }
         return false;
@@ -178,6 +180,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (isBackendEnabled) {
             void logoutSession();
         }
+        try { localStorage.removeItem('adminAuthed'); } catch {}
     };
     
     // Toast Notifications
@@ -318,15 +321,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Backend bootstrap
     useEffect(() => {
-        if (!isBackendEnabled) return;
         (async () => {
-            try {
-                const { data } = await (await import('../services/supabaseClient')).supabase!.auth.getUser();
-                setCurrentUserEmail(data.user?.email || undefined);
-                (await import('../services/supabaseClient')).supabase!.auth.onAuthStateChange((_e, session) => {
-                    setCurrentUserEmail(session?.user?.email || undefined);
-                });
-            } catch {}
+            if (isBackendEnabled) {
+                try {
+                    const client = (await import('../services/supabaseClient')).supabase!;
+                    const { data: sessionData } = await client.auth.getSession();
+                    setIsAuthenticated(Boolean(sessionData.session));
+                    setCurrentUserEmail(sessionData.session?.user?.email || undefined);
+                    client.auth.onAuthStateChange((_e, session) => {
+                        setCurrentUserEmail(session?.user?.email || undefined);
+                        setIsAuthenticated(Boolean(session));
+                    });
+                } catch {}
+            } else {
+                // Local fallback auth persistence
+                try {
+                    const flag = localStorage.getItem('adminAuthed');
+                    if (flag === '1') setIsAuthenticated(true);
+                } catch {}
+            }
             try {
                 const remoteResponse = await fetchProducts({ page: 1, pageSize: 100, sortBy: 'created_at', sortDirection: 'desc' });
                 if (remoteResponse && Array.isArray(remoteResponse.products)) {
