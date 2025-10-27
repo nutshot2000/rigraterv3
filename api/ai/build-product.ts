@@ -374,26 +374,20 @@ export default async function handler(req: any, res: any) {
                 // Validate images
                 imageUrls = await validateImages(imageUrls);
 
-                // De-duplicate Amazon images, keeping the highest resolution found
+                // De-duplicate Amazon images, keeping the highest resolution found for each unique image
                 const uniqueImages = new Map<string, string>();
                 const getSize = (url: string): number => {
                     const match = url.match(/\._S[LXY](\d+)_/i);
                     // Treat base images (no size token) as highest priority/resolution
-                    return match ? parseInt(match[1], 10) : 9999;
+                    return match ? parseInt(match[1], 10) : 0;
                 };
 
                 for (const url of imageUrls) {
                     const base = getAmazonImageBase(url);
                     const existingUrl = uniqueImages.get(base);
 
-                    if (!existingUrl) {
+                    if (!existingUrl || getSize(url) > getSize(existingUrl)) {
                         uniqueImages.set(base, url);
-                    } else {
-                        const existingSize = getSize(existingUrl);
-                        const newSize = getSize(url);
-                        if (newSize > existingSize) {
-                            uniqueImages.set(base, url);
-                        }
                     }
                 }
                 imageUrls = Array.from(uniqueImages.values());
