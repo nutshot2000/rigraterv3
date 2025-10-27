@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Product } from '../../types';
 import { useApp } from '../../context/AppContext';
+import { createProduct } from '../../services/productService';
 
 interface SimpleProductBuilderProps {
     onProductBuilt: (product: Partial<Product>) => void;
@@ -50,21 +51,28 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         if (!builtProduct) return;
         
         try {
-            const response = await fetch('/api/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(builtProduct)
-            });
+            const payload: Omit<Product, 'id'> = {
+                name: builtProduct.name || 'Untitled Product',
+                category: builtProduct.category || 'Misc',
+                price: builtProduct.price || '$0.00',
+                imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0]) || builtProduct.imageUrl || '',
+                imageUrls: builtProduct.imageUrls || [],
+                affiliateLink: builtProduct.affiliateLink || '',
+                review: builtProduct.review || '',
+                specifications: builtProduct.specifications || '',
+                brand: builtProduct.brand,
+                slug: builtProduct.slug,
+                seoTitle: builtProduct.seoTitle,
+                seoDescription: builtProduct.seoDescription,
+            };
 
-            if (response.ok) {
-                addToast('Product saved!', 'success');
-                setBuiltProduct(null);
-                setInput('');
-            } else {
-                addToast('Failed to save product', 'error');
-            }
-        } catch (error) {
-            addToast('Failed to save product', 'error');
+            const saved = await createProduct(payload);
+            addToast('Product saved!', 'success');
+            setBuiltProduct(null);
+            setInput('');
+        } catch (error: any) {
+            const message = error?.message || 'Failed to save product';
+            addToast(message, 'error');
         }
     };
 
@@ -162,7 +170,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                                         alt={`Product ${index + 1}`}
                                         className="w-full h-24 object-cover rounded border border-slate-600"
                                         onError={(e) => {
-                                            e.currentTarget.src = '/placeholder.jpg';
+                                            (e.currentTarget as HTMLImageElement).src = '/placeholder.jpg';
                                         }}
                                     />
                                     <button
