@@ -158,6 +158,17 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
         setRivals([]);
     };
 
+    const validateCandidates = async (candidates: string[]) => {
+        try {
+            const resp = await fetch('/api/resolve-images', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ urls: candidates }) });
+            const data = await resp.json();
+            const valid: string[] = Array.isArray(data.valid) ? data.valid : [];
+            return valid;
+        } catch {
+            return candidates;
+        }
+    };
+
     const extractImages = async () => {
         if (!productUrl) return;
         setIsExtractingImages(true);
@@ -165,8 +176,13 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
             const resp = await fetch('/api/extract-images', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productUrl }) });
             const data = await resp.json();
             const imgs: string[] = Array.isArray(data.images) ? data.images : [];
-            setImageCandidates(imgs);
-            if (imgs.length === 0) addToast('No images found on page.', 'error');
+            const valid = await validateCandidates(imgs);
+            setImageCandidates(valid);
+            if (valid.length === 0) addToast('No valid images found on page.', 'error');
+            // If we already have a product, optionally seed its imageUrls with the first few
+            if (currentProduct && valid.length > 0 && (!currentProduct.imageUrls || currentProduct.imageUrls.length === 0)) {
+                setCurrentProduct({ ...currentProduct, imageUrls: valid.slice(0, 3) });
+            }
         } catch (e) {
             addToast('Failed to extract images.', 'error');
         } finally {
