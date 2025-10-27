@@ -202,28 +202,29 @@ export default async function handler(req: any, res: any) {
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-                        const prompt = `You are a product research expert. Analyze this Amazon product page and extract comprehensive product information.
+                        const prompt = `You are a tech product expert and reviewer. Analyze this Amazon product page and create comprehensive product information based on your knowledge and the page content.
 
 URL: ${input}
 Page Title: ${title}
 Extracted Price: ${price}
 Extracted Brand: ${brand}
 
-From the HTML content below, extract and research:
-1. Product name (clean, marketing-friendly)
-2. Brand (if not clear, infer from name/context)
-3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
-4. Price in USD format like "$XXX.XX"
-5. Detailed specifications (look for technical specs, dimensions, features, connectivity, compatibility - format as "Key: Value, Key: Value")
-6. Professional review (150-250 words, highlight key features, performance, build quality, value proposition, who it's for)
-7. SEO title (under 60 chars, include brand and key feature)
-8. SEO description (under 155 chars, compelling summary)
-9. URL-friendly slug (lowercase, hyphens, no special chars)
+Your task:
+1. Identify the product name (clean, marketing-friendly)
+2. Determine the brand (if not clear, infer from name/context)
+3. Categorize it (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
+4. Note the price in USD format like "$XXX.XX"
+5. Create detailed specifications based on your knowledge of this product type and any specs found on the page (format as "Key: Value, Key: Value")
+6. Write a professional review (150-250 words) based on your expertise about this product type, highlighting performance, build quality, value, target users, and how it compares to alternatives
+7. Create an SEO title (under 60 chars, include brand and key feature)
+8. Write an SEO description (under 155 chars, compelling summary)
+9. Generate a URL-friendly slug (lowercase, hyphens, no special chars)
 
 IMPORTANT: 
-- Look for specification tables, feature lists, and technical details in the HTML
-- Write a detailed, informative review that helps users understand the product
-- Extract real specifications from the page content, don't make them up
+- Use your knowledge as a tech expert to write an informed review, not just copy page text
+- Create meaningful specifications based on what this product type typically offers
+- Write as if you're a professional reviewer who has tested this product
+- Be analytical about performance, value, and who should buy it
 
 HTML Content (first 40k chars):
 ${html.substring(0, 40000)}
