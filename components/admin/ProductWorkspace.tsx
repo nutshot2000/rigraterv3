@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Product } from '../../types';
 import { generateProductInfo, isAIEnabled } from '../../services/geminiService';
 import { useApp } from '../../context/AppContext';
@@ -20,7 +20,7 @@ const EditableField = ({ label, value, onChange, type = 'input' }: { label: stri
             <div className="relative">
                 <InputComponent
                     value={value}
-                    onChange={(e) => onChange(e.target.value)}
+                    onChange={(e) => onChange((e.target as HTMLInputElement).value)}
                     className="input-blueprint w-full"
                     rows={type === 'textarea' ? 6 : undefined}
                 />
@@ -36,11 +36,16 @@ const EditableField = ({ label, value, onChange, type = 'input' }: { label: stri
     );
 }
 
-
 const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduct, setCurrentProduct }) => {
-    const { addToast, addProduct, products, deleteProduct, updateProduct } = useApp();
+    const { addToast, addProduct, products, deleteProduct } = useApp();
     const [productUrl, setProductUrl] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+
+    useEffect(() => {
+        if (mode === 'manual_product' && !currentProduct) {
+            setCurrentProduct({ name: '', category: '', imageUrls: [] });
+        }
+    }, [mode]);
 
     const handleGenerate = async () => {
         if (!productUrl) {
@@ -68,7 +73,7 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
 
     const handleFieldChange = (field: keyof Product, value: string | string[]) => {
         if (currentProduct) {
-            setCurrentProduct({ ...currentProduct, [field]: value });
+            setCurrentProduct({ ...currentProduct, [field]: value as any });
         }
     };
 
@@ -78,7 +83,6 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
             return;
         }
 
-        // Add default values for any missing required fields before saving
         const productToSave: Omit<Product, 'id'> = {
             name: currentProduct.name,
             category: currentProduct.category,
@@ -93,44 +97,20 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
 
         addProduct(productToSave);
         addToast('Product saved successfully!', 'success');
-        setCurrentProduct(null); // Clear form after saving
+        setCurrentProduct(null);
         setProductUrl('');
-    };
-
-    const handleEditProduct = (product: Product) => {
-        setCurrentProduct(product);
-    };
-
-    const handleDeleteProduct = (productId: string) => {
-        if (window.confirm('Are you sure you want to delete this product?')) {
-            deleteProduct(productId);
-            addToast('Product deleted.', 'success');
-        }
     };
 
     const renderEditableForm = () => {
         if (!currentProduct) return null;
-
         return (
             <div className="mt-8 space-y-6 animate-fade-in">
-                <EditableField
-                    label="Product Name"
-                    value={currentProduct.name || ''}
-                    onChange={(val) => handleFieldChange('name', val)}
-                />
+                <EditableField label="Product Name" value={currentProduct.name || ''} onChange={(val) => handleFieldChange('name', val)} />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EditableField
-                        label="Category"
-                        value={currentProduct.category || ''}
-                        onChange={(val) => handleFieldChange('category', val)}
-                    />
-                    <EditableField
-                        label="Brand"
-                        value={currentProduct.brand || ''}
-                        onChange={(val) => handleFieldChange('brand', val)}
-                    />
+                    <EditableField label="Category" value={currentProduct.category || ''} onChange={(val) => handleFieldChange('category', val)} />
+                    <EditableField label="Brand" value={currentProduct.brand || ''} onChange={(val) => handleFieldChange('brand', val)} />
                 </div>
-                 <div>
+                <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Image URLs (one per line)</label>
                     <textarea
                         value={(currentProduct.imageUrls || []).join('\n')}
@@ -139,25 +119,11 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                         rows={4}
                     />
                 </div>
-                <EditableField
-                    label="AI Review"
-                    value={currentProduct.review || ''}
-                    onChange={(val) => handleFieldChange('review', val)}
-                    type="textarea"
-                />
-                <EditableField
-                    label="Specifications"
-                    value={currentProduct.specifications || ''}
-                    onChange={(val) => handleFieldChange('specifications', val)}
-                    type="textarea"
-                />
+                <EditableField label="AI Review" value={currentProduct.review || ''} onChange={(val) => handleFieldChange('review', val)} type="textarea" />
+                <EditableField label="Specifications" value={currentProduct.specifications || ''} onChange={(val) => handleFieldChange('specifications', val)} type="textarea" />
                 <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
-                    <button onClick={() => setCurrentProduct(null)} className="btn-blueprint">
-                        Cancel
-                    </button>
-                    <button onClick={handleSave} className="btn-blueprint btn-blueprint--primary">
-                        Save Product
-                    </button>
+                    <button onClick={() => setCurrentProduct(null)} className="btn-blueprint">Cancel</button>
+                    <button onClick={handleSave} className="btn-blueprint btn-blueprint--primary">Save Product</button>
                 </div>
             </div>
         );
@@ -182,26 +148,24 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                                     <th scope="row" className="px-6 py-4 font-medium text-white whitespace-nowrap">{product.name}</th>
                                     <td className="px-6 py-4">{product.category}</td>
                                     <td className="px-6 py-4 text-right">
-                                        <button onClick={() => handleEditProduct(product)} className="font-medium text-teal-400 hover:underline mr-4">Edit</button>
-                                        <button onClick={() => handleDeleteProduct(product.id)} className="font-medium text-red-500 hover:underline">Delete</button>
+                                        <button onClick={() => setCurrentProduct(product)} className="font-medium text-teal-400 hover:underline mr-4">Edit</button>
+                                        <button onClick={() => { if (window.confirm('Delete this product?')) { deleteProduct(product.id); addToast('Product deleted.', 'success'); } }} className="font-medium text-red-500 hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
+                {currentProduct && (
+                    <div className="mt-8 pt-6 border-t border-slate-700">
+                        {renderEditableForm()}
+                    </div>
+                )}
             </div>
         );
     };
 
-
     const renderContent = () => {
-        // The editable form is now rendered outside the switch,
-        // so it can be displayed whenever a product is being edited.
-        if (currentProduct) {
-            return renderEditableForm();
-        }
-
         switch (mode) {
             case 'ai_url':
                 return (
@@ -233,14 +197,19 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                                 <p className="mt-4 text-slate-400">AI is analyzing the page... this can take a moment.</p>
                             </div>
                         )}
+                        {renderEditableForm()}
                     </div>
                 );
             case 'manual_product':
-                // When in manual mode, we create a blank product to start editing immediately.
-                if (!currentProduct) {
-                    setCurrentProduct({});
-                }
-                return renderEditableForm();
+                return (
+                    <div>
+                        <div className="bg-slate-800/50 p-6 rounded-lg border border-slate-700">
+                            <h2 className="text-xl font-bold text-white mb-4">Manual Product Entry</h2>
+                            <p className="text-slate-400">Fill in the details for the new product below.</p>
+                        </div>
+                        {renderEditableForm()}
+                    </div>
+                );
             case 'manage_products':
                 return renderManageProducts();
             default:
