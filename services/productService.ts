@@ -1,11 +1,70 @@
 import { supabase, isBackendEnabled } from './supabaseClient';
 import { Product } from '../types';
 
-export async function fetchProducts(): Promise<Product[]> {
+export interface ProductQueryParams {
+    page?: number;
+    pageSize?: number;
+    sortBy?: string;
+    sortDirection?: 'asc' | 'desc';
+    search?: string;
+    category?: string;
+}
+
+export interface ProductsResponse {
+    products: Product[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
+
+export async function fetchProducts(params?: ProductQueryParams): Promise<ProductsResponse> {
     if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
-    const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+    
+    const {
+        page = 1,
+        pageSize = 20,
+        sortBy = 'created_at',
+        sortDirection = 'desc',
+        search = '',
+        category = ''
+    } = params || {};
+
+    // Calculate range for pagination
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    
+    // Start building the query
+    let query = supabase.from('products').select('*', { count: 'exact' });
+    
+    // Add filters if provided
+    if (search) {
+        query = query.or(`name.ilike.%${search}%,brand.ilike.%${search}%,category.ilike.%${search}%`);
+    }
+    
+    if (category) {
+        query = query.eq('category', category);
+    }
+    
+    // Add sorting
+    const dbSortBy = sortBy === 'imageUrl' ? 'image_url' : 
+                    sortBy === 'affiliateLink' ? 'affiliate_link' : 
+                    sortBy || 'created_at';
+    
+    query = query.order(dbSortBy, { ascending: sortDirection === 'asc' });
+    
+    // Add pagination
+    query = query.range(from, to);
+    
+    // Execute the query
+    const { data, error, count } = await query;
+    
     if (error) throw error;
-    return (data as any[]).map(row => ({
+    
+    const totalCount = count || 0;
+    const totalPages = Math.ceil(totalCount / pageSize);
+    
+    const products = (data as any[]).map(row => ({
         id: String(row.id),
         name: row.name,
         category: row.category,
@@ -16,7 +75,17 @@ export async function fetchProducts(): Promise<Product[]> {
         specifications: row.specifications,
         brand: row.brand ?? undefined,
         slug: row.slug ?? undefined,
+        seoTitle: row.seo_title ?? undefined,
+        seoDescription: row.seo_description ?? undefined,
     }));
+    
+    return {
+        products,
+        totalCount,
+        page,
+        pageSize,
+        totalPages
+    };
 }
 
 export async function createProduct(input: Omit<Product, 'id'>): Promise<Product> {
