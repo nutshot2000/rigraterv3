@@ -5,6 +5,14 @@ import { BlogPost } from '../../types';
 import { FALLBACK_IMAGE_URL } from '../../constants';
 import { CalendarIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 
+// Helper function to proxy image URLs
+const getProxiedImageUrl = (url: string) => {
+    if (!url) return FALLBACK_IMAGE_URL;
+    if (url.startsWith('/api/proxy-image')) return url;
+    if (url.startsWith('http')) return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    return url;
+};
+
 interface BlogPreviewProps {
   post: Partial<BlogPost> | null;
 }
@@ -34,7 +42,7 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({ post }) => {
       <div className="p-1">
         <div className="bg-slate-800 rounded-lg shadow-lg overflow-hidden">
           <img 
-            src={cover_image_url || FALLBACK_IMAGE_URL} 
+            src={getProxiedImageUrl(cover_image_url || FALLBACK_IMAGE_URL)} 
             alt={title || 'Blog Post Cover'} 
             className="w-full h-48 object-cover" 
             onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}

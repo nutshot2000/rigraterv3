@@ -4,6 +4,15 @@ import { ArrowPathIcon, DocumentPlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { createBlogPost, updateBlogPostById } from '../../services/blogService';
 import { EditableField } from './EditableField';
+import { FALLBACK_IMAGE_URL } from '../../constants';
+
+// Helper function to proxy image URLs
+const getProxiedImageUrl = (url: string) => {
+    if (!url) return FALLBACK_IMAGE_URL;
+    if (url.startsWith('/api/proxy-image')) return url;
+    if (url.startsWith('http')) return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    return url;
+};
 
 interface BlogWorkspaceProps {
   user: User;
@@ -152,12 +161,25 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
               isTextarea
               rows={15}
             />
-            <EditableField
-              label="Cover Image URL"
-              value={currentPost.cover_image_url || ''}
-              onChange={(v) => updateField('cover_image_url', v)}
-              helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
-            />
+            <div className="space-y-4">
+              <EditableField
+                label="Cover Image URL"
+                value={currentPost.cover_image_url || ''}
+                onChange={(v) => updateField('cover_image_url', v)}
+                helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
+              />
+              {currentPost.cover_image_url && (
+                <div className="mt-2">
+                  <p className="text-sm text-slate-400 mb-2">Cover Image Preview:</p>
+                  <img
+                    src={getProxiedImageUrl(currentPost.cover_image_url)}
+                    alt="Cover Preview"
+                    className="max-h-40 object-cover rounded border border-slate-700"
+                    onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* SEO Section */}
             <details className="form-section" open>

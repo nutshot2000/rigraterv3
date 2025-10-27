@@ -2,7 +2,7 @@ import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/ge
 import { stripHtml } from 'string-strip-html';
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
   maxDuration: 180,
 };
 
