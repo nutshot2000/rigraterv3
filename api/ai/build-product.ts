@@ -360,15 +360,9 @@ export default async function handler(req: any, res: any) {
                 const html = await pageResponse.text();
                 const cleanHtml = sanitizeHtml(html);
 
-                // Extract ASIN for Amazon images
-                const asin = extractASIN(input);
-                if (asin) {
-                    imageUrls = generateAmazonImages(asin);
-                }
-
-                // Extract images from HTML
+                // Extract images from HTML only (avoid guessing Amazon image URLs from ASIN which often 404)
                 const htmlImages = extractImagesFromHTML(html);
-                imageUrls = [...imageUrls, ...htmlImages];
+                imageUrls = [...htmlImages];
 
                 // Validate images
                 imageUrls = await validateImages(imageUrls);

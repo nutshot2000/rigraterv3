@@ -22,7 +22,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
         .replace(/\._SR\d+,\d+_/i, '')
         .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
 
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const handleImageError = async (e: React.SyntheticEvent<HTMLImageElement>) => {
         const el = e.currentTarget;
         const src = el.src;
         const stripped = stripAmazonSize(src);
@@ -30,6 +30,22 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
             el.src = stripped;
             return;
         }
+        // Try resolving a working variant via API
+        try {
+            const resp = await fetch('/api/resolve-images', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: [src] })
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const candidate = Array.isArray(data.valid) && data.valid[0];
+                if (candidate) {
+                    el.src = candidate;
+                    return;
+                }
+            }
+        } catch {}
         el.src = FALLBACK_IMAGE_URL;
         el.onerror = null;
     };

@@ -10,8 +10,25 @@ interface ProductDetailModalProps {
 }
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const handleImageError = async (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         const el = e.currentTarget;
+        const src = el.src;
+        // Try resolving a working variant via API first
+        try {
+            const resp = await fetch('/api/resolve-images', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ urls: [src] })
+            });
+            if (resp.ok) {
+                const data = await resp.json();
+                const candidate = Array.isArray(data.valid) && data.valid[0];
+                if (candidate && candidate !== src) {
+                    el.src = candidate;
+                    return;
+                }
+            }
+        } catch {}
         el.src = FALLBACK_IMAGE_URL;
         el.onerror = null;
     };
