@@ -212,7 +212,28 @@ function extractPrice(html: string): string {
         }
     } catch {}
 
-    // Common price blocks (Amazon)
+    // Prefer the Buy Box/core price block (Amazon)
+    try {
+        const coreBlock = html.match(/id=["']corePrice_feature_div["'][\s\S]*?<\/div>/i)?.[0] || '';
+        if (coreBlock) {
+            const offscreen = coreBlock.match(/class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i)?.[1];
+            if (offscreen) {
+                const val = offscreen.replace(/\s+/g, '').replace(/&nbsp;/g, '');
+                if (/^£|^\$|^€/.test(val)) return val;
+            }
+            // Assemble from whole + fraction if needed
+            const whole = coreBlock.match(/a-price-whole[^>]*>\s*([\d,.]+)/i)?.[1];
+            const frac = coreBlock.match(/a-price-fraction[^>]*>\s*(\d{2})/i)?.[1];
+            if (whole) {
+                // Guess currency by page locale symbol near core block
+                const near = coreBlock.match(/(£|\$|€)/)?.[1] || (html.includes('£') ? '£' : html.includes('€') ? '€' : '$');
+                const normalizedWhole = whole.replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,/g, '');
+                return `${near}${normalizedWhole}${frac ? '.' + frac : ''}`;
+            }
+        }
+    } catch {}
+
+    // Common price blocks (Amazon) fallback
     const candidates = [
         /id=["']priceblock_ourprice["'][^>]*>\s*([^<]+)/i,
         /id=["']priceblock_dealprice["'][^>]*>\s*([^<]+)/i,
