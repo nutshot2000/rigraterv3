@@ -84,30 +84,36 @@ export function sanitizeProductInfo(input: unknown): AIProductInfo {
     return out as AIProductInfo;
 }
 
-export const generateProductInfo = async (productName: string): Promise<AIProductInfo> => {
+export const generateProductInfo = async (productUrl: string): Promise<AIProductInfo> => {
     try {
-        const useServerless = (process.env.SERVERLESS_AI || '').trim();
-        if (useServerless) {
-            const resp = await fetch('/api/ai/product-info', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ productName })
-            });
-            if (!resp.ok) throw new Error('Serverless AI error');
-            const data: any = await resp.json();
-            const sanitized = sanitizeProductInfo(data);
-            // Fill missing name from the user input, if needed
-            if (!sanitized.name || sanitized.name === 'Unknown Product') sanitized.name = productName;
-            return sanitized;
+        // ALWAYS use the serverless function now for page scraping
+        const resp = await fetch('/api/ai/product-info', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productUrl })
+        });
+        
+        if (!resp.ok) {
+            const errorBody = await resp.json().catch(() => ({ error: "Serverless AI error with non-JSON response" }));
+            console.error("Serverless AI error:", errorBody);
+            throw new Error(`Serverless AI error: ${errorBody.error || resp.statusText}`);
         }
-        if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-        const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-        const response = await model.generateContent(
-            `You are an expert affiliate marketer specializing in PC components. Given the product name "${productName}", generate a compelling product review, a list of key technical specifications (as a single comma-separated string), a realistic current market price in USD (e.g., '$XXX.XX'), the product BRAND (manufacturer), and a standard Amazon affiliate link. Then, find a high-quality, official product image URL. CRITICAL: The URL must point directly to an image file (e.g., ending in .jpg, .webp, or .png), not an HTML page. Respond with ONLY a JSON object: {"review","price","affiliateLink","imageUrl","specifications","brand"}.`
-        );
-        const jsonText = cleanJsonString(response.response.text());
-        const productInfo: any = JSON.parse(jsonText);
-        const sanitized = sanitizeProductInfo(productInfo);
-        if (!sanitized.name || sanitized.name === 'Unknown Product') sanitized.name = productName;
+        
+        const data: any = await resp.json();
+        const sanitized = sanitizeProductInfo(data);
+        
+        // If the AI failed to extract a name, use a fallback from the URL
+        if (!sanitized.name || sanitized.name === 'Unknown Product') {
+            try {
+                const url = new URL(productUrl);
+                const pathParts = url.pathname.split('/');
+                const lastPart = pathParts.find(p => p.length > 5 && !/\d/.test(p)); // Heuristic for product name part
+                sanitized.name = lastPart ? lastPart.replace(/-/g, ' ') : 'Product from URL';
+            } catch {
+                sanitized.name = 'Product from URL';
+            }
+        }
+        
         return sanitized;
 
     } catch (error) {
