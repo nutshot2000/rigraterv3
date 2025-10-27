@@ -3,6 +3,14 @@ import { Product } from '../../types';
 import { EyeIcon, CompareIcon, CheckCircleIcon } from './Icons';
 import { FALLBACK_IMAGE_URL } from '../../constants';
 
+// Helper function to proxy image URLs
+const getProxiedImageUrl = (url: string) => {
+    if (!url) return FALLBACK_IMAGE_URL;
+    if (url.startsWith('/api/proxy-image')) return url;
+    if (url.startsWith('http')) return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    return url;
+};
+
 interface ProductCardProps {
     product: Product;
     onCardClick: (product: Product) => void;
@@ -62,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
             <div className="relative">
                 <div className="h-40 bg-slate-800/50 flex items-center justify-center p-2">
                 <img 
-                        src={primaryImageUrl || FALLBACK_IMAGE_URL} 
+                        src={getProxiedImageUrl(primaryImageUrl || FALLBACK_IMAGE_URL)} 
                     alt={product.name} 
                         className="max-h-full max-w-full object-contain" 
                     onError={handleImageError}

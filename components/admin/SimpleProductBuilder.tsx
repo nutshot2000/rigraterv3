@@ -83,7 +83,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         name: builtProduct.name || 'Product Name',
         category: builtProduct.category || 'Category',
         price: builtProduct.price || '$0.00',
-        imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0]) || builtProduct.imageUrl || FALLBACK_IMAGE_URL,
+        imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0]) ? `/api/proxy-image?url=${encodeURIComponent(builtProduct.imageUrls[0])}` : (builtProduct.imageUrl || FALLBACK_IMAGE_URL),
         imageUrls: builtProduct.imageUrls || [],
         affiliateLink: builtProduct.affiliateLink || '#',
         review: builtProduct.review || '',
@@ -204,7 +204,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                                         {(builtProduct.imageUrls || []).map((url, index) => (
                                             <div key={index} className="relative">
                                                 <img
-                                                    src={url}
+                                                    src={`/api/proxy-image?url=${encodeURIComponent(url)}`}
                                                     alt={`Product ${index + 1}`}
                                                     className="w-full h-24 object-cover rounded border border-slate-600"
                                                     onError={(e) => {

@@ -4,6 +4,14 @@ import { Product } from '../../types';
 import { CloseIcon } from './Icons';
 import { FALLBACK_IMAGE_URL, AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
 
+// Helper function to proxy image URLs
+const getProxiedImageUrl = (url: string) => {
+    if (!url) return FALLBACK_IMAGE_URL;
+    if (url.startsWith('/api/proxy-image')) return url;
+    if (url.startsWith('http')) return `/api/proxy-image?url=${encodeURIComponent(url)}`;
+    return url;
+};
+
 interface ProductDetailModalProps {
     product: Product;
     onClose: () => void;
@@ -60,7 +68,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                     {/* Primary Image */}
                     <div className="mb-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
                       <img 
-                            src={primaryImage} 
+                            src={getProxiedImageUrl(primaryImage)} 
                         alt={product.name} 
                             className="w-full max-h-80 object-contain rounded"
                         onError={handleImageError}
@@ -103,7 +111,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                     {/* Additional Image 1 */}
                     {additionalImages.length > 0 && (
                         <div className="my-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                            <img src={additionalImages[0]} alt={`${product.name} alternate view 1`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
+                            <img src={getProxiedImageUrl(additionalImages[0])} alt={`${product.name} alternate view 1`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
                         </div>
                     )}
 
@@ -117,7 +125,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                     {/* Additional Image 2 */}
                     {additionalImages.length > 1 && (
                         <div className="my-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                            <img src={additionalImages[1]} alt={`${product.name} alternate view 2`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
+                            <img src={getProxiedImageUrl(additionalImages[1])} alt={`${product.name} alternate view 2`} className="w-full max-h-80 object-contain rounded" onError={handleImageError} />
                         </div>
                     )}
 
