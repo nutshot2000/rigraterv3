@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../context/AppContext';
 import { AdminSidebar, AdminMode } from '../../components/admin/AdminSidebar';
 import { ProductWorkspace } from '../../components/admin/ProductWorkspace';
 import { ProductPreview } from '../../components/admin/ProductPreview';
