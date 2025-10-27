@@ -1,37 +1,29 @@
-
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import AdminLogin from '../components/admin/AdminLogin';
-import AdminSidebar, { AdminMode } from '../components/admin/AdminSidebar';
-import ProductWorkspace from '../components/admin/ProductWorkspace';
-import ProductPreview from '../components/admin/ProductPreview';
+import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
 import { Product } from '../types';
 
 const AdminPage: React.FC = () => {
     const { isAuthenticated, logout } = useApp();
-    const [mode, setMode] = useState<AdminMode>('ai_url');
     const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
-
 
     if (!isAuthenticated) {
         return <AdminLogin />;
     }
 
     return (
-        <div className="flex h-[calc(100vh-4rem)]">
-            <div className="w-64 flex-shrink-0">
-                <AdminSidebar mode={mode} setMode={setMode} onLogout={logout} />
+        <div className="min-h-[calc(100vh-4rem)] bg-slate-900">
+            <div className="flex justify-between items-center p-6 border-b border-slate-700">
+                <h1 className="text-2xl font-bold text-white">Admin - Build Products</h1>
+                <button
+                    onClick={logout}
+                    className="btn-blueprint"
+                >
+                    Logout
+                </button>
             </div>
-            <main className="flex-1 p-8 overflow-y-auto">
-                <ProductWorkspace 
-                    mode={mode}
-                    currentProduct={currentProduct} 
-                    setCurrentProduct={setCurrentProduct} 
-                />
-            </main>
-            <aside className="w-96 flex-shrink-0 bg-slate-900/50 p-6 border-l border-slate-700/50">
-                <ProductPreview product={currentProduct} />
-            </aside>
+            <SimpleProductBuilder onProductBuilt={setCurrentProduct} />
         </div>
     );
 };
