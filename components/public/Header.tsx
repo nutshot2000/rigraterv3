@@ -109,8 +109,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                             title={isAuthenticated ? 'Admin Panel' : 'Login required'}
                         >
                             <span className="flex items-center gap-2">
-                                {isAuthenticated && <span className="w-2 h-2 rounded-full bg-green-400"></span>}
-                                Admin Panel
+                               {isAuthenticated && <span className="w-2 h-2 rounded-full bg-green-400"></span>}
+                               Admin Panel
                             </span>
                         </button>
                         <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border neon-outline "
