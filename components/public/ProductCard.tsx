@@ -12,26 +12,26 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddToComparison, isInComparison }) => {
     
-    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-        const currentTarget = e.currentTarget;
-        
-        // First fallback: try a smaller image size for Amazon URLs
-        if (currentTarget.src.includes('media-amazon') && currentTarget.src.includes('_SL')) {
-            const smallerImg = currentTarget.src.replace(/_SL\d+_/i, '_SL500_');
-            if (smallerImg !== currentTarget.src) {
-                currentTarget.src = smallerImg;
-                // If this also fails, the second onError will trigger the final fallback
-                currentTarget.onerror = () => {
-                    currentTarget.src = FALLBACK_IMAGE_URL;
-                    currentTarget.onerror = null;
-                };
-                return;
-            }
-        }
+    const stripAmazonSize = (url: string) => url
+        .replace(/\._AC_SL\d+_/i, '')
+        .replace(/\._SL\d+_/i, '')
+        .replace(/\._SX\d+_/i, '')
+        .replace(/\._UX\d+_/i, '')
+        .replace(/\._UY\d+_/i, '')
+        .replace(/\._SS\d+_/i, '')
+        .replace(/\._SR\d+,\d+_/i, '')
+        .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
 
-        // Final fallback
-        currentTarget.src = FALLBACK_IMAGE_URL;
-        currentTarget.onerror = null; // Prevent infinite loops
+    const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+        const el = e.currentTarget;
+        const src = el.src;
+        const stripped = stripAmazonSize(src);
+        if (src !== stripped) {
+            el.src = stripped;
+            return;
+        }
+        el.src = FALLBACK_IMAGE_URL;
+        el.onerror = null;
     };
 
     const primaryImageUrl = (Array.isArray(product.imageUrls) && product.imageUrls.length > 0)
