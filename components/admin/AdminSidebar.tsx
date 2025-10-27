@@ -1,70 +1,108 @@
 import React from 'react';
-import { PlusIcon, SparklesIcon, TrashIcon, PencilIcon, LogoutIcon } from '../public/Icons';
+import { 
+    Cog6ToothIcon, 
+    CpuChipIcon, 
+    RectangleStackIcon, 
+    BookOpenIcon, 
+    NewspaperIcon,
+    LightBulbIcon 
+} from '@heroicons/react/24/outline';
 
-export type AdminMode = 'ai_url' | 'manual_product' | 'manage_products' | 'manage_blog' | 'manage_comparisons' | 'bulk_ai';
+export type AdminMode =
+  | 'ai_product'
+  | 'manage_products'
+  | 'ai_blog'
+  | 'manage_posts'
+  | 'settings';
 
 interface AdminSidebarProps {
   mode: AdminMode;
-  setMode: (mode: AdminMode) => void;
+  onModeChange: (mode: AdminMode) => void;
   onLogout: () => void;
+  onOpenIdeas: () => void;
 }
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ mode, setMode, onLogout }) => {
-  const navItemClasses = (itemMode: AdminMode) =>
-    `flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-      mode === itemMode
-        ? 'bg-sky-500/10 text-sky-300'
-        : 'text-slate-300 hover:bg-slate-800/60'
-    }`;
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ mode, onModeChange, onLogout, onOpenIdeas }) => {
+
+  const getButtonClass = (buttonMode: AdminMode) => {
+    const baseClass = "w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors duration-150";
+    if (mode === buttonMode) {
+      return `${baseClass} bg-sky-500/20 text-sky-400 border border-sky-500/30`;
+    }
+    return `${baseClass} text-slate-300 hover:bg-slate-700/50`;
+  };
 
   return (
-    <div className="bg-slate-900/80 border-r border-slate-700/50 p-4 flex flex-col h-full">
-      <div className="flex-grow">
-        <h2 className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-4">Content Creation</h2>
-        <div className="space-y-2">
-          <button className={navItemClasses('ai_url')} onClick={() => setMode('ai_url')}>
-            <SparklesIcon className="w-5 h-5" />
-            <span>New from URL (AI)</span>
-          </button>
-          <button className={navItemClasses('manual_product')} onClick={() => setMode('manual_product')}>
-            <PlusIcon className="w-5 h-5" />
-            <span>Manual Product Entry</span>
-          </button>
-          <button className={navItemClasses('bulk_ai')} onClick={() => setMode('bulk_ai')}>
-            <SparklesIcon className="w-5 h-5" />
-            <span>Bulk AI Generation</span>
-          </button>
+    <div className="w-64 bg-slate-900/80 backdrop-blur-sm border-r border-slate-700/50 p-4 flex flex-col">
+      <div className="space-y-2 flex-grow">
+        <button
+          className={getButtonClass('ai_product')}
+          onClick={() => onModeChange('ai_product')}
+        >
+          <CpuChipIcon className="h-6 w-6" />
+          <span>AI Product Builder</span>
+        </button>
+
+        <button
+          className={getButtonClass('manage_products')}
+          onClick={() => onModeChange('manage_products')}
+        >
+          <RectangleStackIcon className="h-6 w-6" />
+          <span>Manage Products</span>
+        </button>
+
+        <div className="px-4">
+            <div className="border-t border-slate-700/60 my-2"></div>
         </div>
 
-        <h2 className="text-xs text-slate-400 uppercase tracking-wider font-bold mt-8 mb-4">Management</h2>
-        <div className="space-y-2">
-          <button className={navItemClasses('manage_products')} onClick={() => setMode('manage_products')}>
-            <PencilIcon className="w-5 h-5" />
-            <span>Manage Products</span>
-          </button>
-          {/* Future items can be added here */}
-          {/* <button className={navItemClasses('manage_blog')} onClick={() => setMode('manage_blog')}>
-            <PencilIcon className="w-5 h-5" />
-            <span>Manage Blog Posts</span>
-          </button>
-          <button className={navItemClasses('manage_comparisons')} onClick={() => setMode('manage_comparisons')}>
-            <PencilIcon className="w-5 h-5" />
-            <span>Manage Comparisons</span>
-          </button> */}
+        <button
+          className={getButtonClass('ai_blog')}
+          onClick={() => onModeChange('ai_blog')}
+        >
+          <BookOpenIcon className="h-6 w-6" />
+          <span>AI Blog Builder</span>
+        </button>
+
+        <button
+          className={getButtonClass('manage_posts')}
+          onClick={() => onModeChange('manage_posts')}
+        >
+          <NewspaperIcon className="h-6 w-6" />
+          <span>Manage Posts</span>
+        </button>
+
+        <div className="px-4">
+            <div className="border-t border-slate-700/60 my-2"></div>
         </div>
+        
+        <button
+          onClick={onOpenIdeas}
+          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md transition-colors duration-150 text-slate-300 hover:bg-slate-700/50"
+        >
+          <LightBulbIcon className="h-6 w-6" />
+          <span>AI Ideas</span>
+        </button>
+
+        <button
+          className={getButtonClass('settings')}
+          onClick={() => onModeChange('settings')}
+        >
+          <Cog6ToothIcon className="h-6 w-6" />
+          <span>Settings</span>
+        </button>
       </div>
 
       <div className="mt-auto">
-         <button
-            onClick={onLogout}
-            className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors text-red-400 hover:bg-red-500/10"
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-md text-slate-300 hover:bg-red-500/20 hover:text-red-400 transition-colors duration-150"
         >
-            <LogoutIcon className="w-5 h-5" />
-            <span>Logout</span>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Logout</span>
         </button>
       </div>
     </div>
   );
 };
-
-export default AdminSidebar;

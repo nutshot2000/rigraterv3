@@ -1,31 +1,103 @@
-import React, { useState } from 'react';
-import { useApp } from '../context/AppContext';
-import AdminLogin from '../components/admin/AdminLogin';
-import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
-import { Product } from '../types';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { AdminSidebar, AdminMode } from '../../components/admin/AdminSidebar';
+import { ProductWorkspace } from '../../components/admin/ProductWorkspace';
+import { ProductPreview } from '../../components/admin/ProductPreview';
+import { SimpleProductBuilder } from '../../components/admin/SimpleProductBuilder';
+import { BlogWorkspace } from '../../components/admin/BlogWorkspace';
+import { BlogPreview } from '../../components/admin/BlogPreview';
+import { IdeasModal } from '../../components/admin/IdeasModal';
+import { Product, BlogPost } from '../../types';
 
-const AdminPage: React.FC = () => {
-    const { isAuthenticated, logout } = useApp();
+export const AdminPage: React.FC = () => {
+    const { user, loading, logout } = useAuth();
+    const [mode, setMode] = useState<AdminMode>('ai_product');
     const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
+    const [currentBlogPost, setCurrentBlogPost] = useState<Partial<BlogPost> | null>(null);
+    const [refreshProducts, setRefreshProducts] = useState(false);
+    const [isIdeasModalOpen, setIsIdeasModalOpen] = useState(false);
 
-    if (!isAuthenticated) {
-        return <AdminLogin />;
+    const handleProductSave = useCallback(() => {
+        setRefreshProducts(prev => !prev);
+    }, []);
+
+    const handlePostSave = useCallback(() => {
+        // Add logic to refresh post list if needed
+    }, []);
+
+    if (loading) {
+        return <div className="text-white">Loading...</div>;
     }
 
+    if (!user) {
+        // This should be handled by the protected route, but as a fallback:
+        return <div className="text-white">Redirecting to login...</div>;
+    }
+
+    const renderWorkspace = () => {
+        switch (mode) {
+            case 'ai_product':
+                return (
+                    <SimpleProductBuilder 
+                        currentProduct={currentProduct}
+                        setCurrentProduct={setCurrentProduct}
+                        onProductSaved={handleProductSave}
+                    />
+                );
+            case 'ai_blog':
+                return (
+                    <BlogWorkspace 
+                        user={user}
+                        currentPost={currentBlogPost}
+                        setCurrentPost={setCurrentBlogPost}
+                        onPostSaved={handlePostSave}
+                    />
+                );
+            case 'manage_products':
+                return <h1 className="text-white p-8">Manage Products - Coming Soon</h1>;
+            case 'manage_posts':
+                return <h1 className="text-white p-8">Manage Blog Posts - Coming Soon</h1>;
+            case 'settings':
+                 return <h1 className="text-white p-8">Settings - Coming Soon</h1>;
+            default:
+                return null;
+        }
+    };
+    
+    const renderPreview = () => {
+        switch (mode) {
+            case 'ai_product':
+                return <ProductPreview product={currentProduct} />;
+            case 'ai_blog':
+                return <BlogPreview post={currentBlogPost} />;
+            default:
+                return null;
+        }
+    };
+
+    const handleModeChange = (newMode: AdminMode) => {
+        setMode(newMode);
+        // Clear workspace when switching modes to avoid showing stale data
+        setCurrentProduct(null);
+        setCurrentBlogPost(null);
+    };
+
     return (
-        <div className="min-h-[calc(100vh-4rem)] bg-slate-900">
-            <div className="flex justify-between items-center p-6 border-b border-slate-700">
-                <h1 className="text-2xl font-bold text-white">Admin - Build Products</h1>
-                <button
-                    onClick={logout}
-                    className="btn-blueprint"
-                >
-                    Logout
-                </button>
-            </div>
-            <SimpleProductBuilder onProductBuilt={setCurrentProduct} />
+        <div className="flex h-[calc(100vh-4rem)] bg-slate-900 text-white">
+            <AdminSidebar 
+                mode={mode} 
+                onModeChange={handleModeChange} 
+                onLogout={logout}
+                onOpenIdeas={() => setIsIdeasModalOpen(true)}
+            />
+            <main className="flex-1 flex overflow-hidden">
+                {renderWorkspace()}
+                {renderPreview()}
+            </main>
+            <IdeasModal 
+                isOpen={isIdeasModalOpen} 
+                onClose={() => setIsIdeasModalOpen(false)} 
+            />
         </div>
     );
 };
-
-export default AdminPage;
