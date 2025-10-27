@@ -188,22 +188,81 @@ export default async function handler(req: any, res: any) {
                 // Validate images
                 imageUrls = await validateImages(imageUrls);
 
-                // AI extraction
+                // Extract basic data from HTML first
+                const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
+                const title = titleMatch ? titleMatch[1].replace(/\s*:\s*Amazon\.co\.uk.*$/i, '').trim() : '';
+                
+                const priceMatch = html.match(/£(\d+(?:\.\d{2})?)/i) || html.match(/\$(\d+(?:\.\d{2})?)/i);
+                const price = priceMatch ? `$${priceMatch[1]}` : '$0.00';
+                
+                const brandMatch = title.match(/^([^,\s]+)/);
+                const brand = brandMatch ? brandMatch[1] : '';
+                
+                // AI extraction with better context
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-                        const prompt = `Extract product data from this HTML. Return ONLY valid JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars), slug (URL-friendly), affiliateLink.
+                        const prompt = `You are a product research expert. Analyze this Amazon product page and extract comprehensive product information.
 
-HTML:\n${html.substring(0, 30000)}`;
+URL: ${input}
+Page Title: ${title}
+Extracted Price: ${price}
+Extracted Brand: ${brand}
+
+From the HTML content below, extract and research:
+1. Product name (clean, marketing-friendly)
+2. Brand (if not clear, infer from name/context)
+3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", etc.)
+4. Price in USD format like "$XXX.XX"
+5. Detailed specifications (key technical specs, dimensions, features)
+6. Professional review (120-200 words, highlight key features, performance, value)
+7. SEO title (under 60 chars, include brand and key feature)
+8. SEO description (under 155 chars, compelling summary)
+9. URL-friendly slug (lowercase, hyphens, no special chars)
+
+HTML Content (first 40k chars):
+${html.substring(0, 40000)}
+
+Return ONLY valid JSON with these exact keys: name, brand, category, price, specifications, review, seoTitle, seoDescription, slug, affiliateLink`;
+                        
                         const result = await model.generateContent(prompt);
                         const jsonText = result.response.text().replace(/```json|```/g, '').trim();
                         productData = JSON.parse(jsonText);
+                        
+                        // Ensure we have a good product name
+                        if (!productData.name || productData.name.length < 3) {
+                            productData.name = title || 'Product from URL';
+                        }
+                        
                     } catch (e) {
                         console.error('AI extraction failed:', e);
-                        productData = heuristicComplete('Product from URL');
+                        // Fallback with extracted data
+                        productData = {
+                            name: title || 'Product from URL',
+                            brand: brand || 'Unknown',
+                            category: 'Misc',
+                            price: price,
+                            specifications: '',
+                            review: `The ${title || 'product'} offers solid performance and features. This ${brand || 'brand'} product provides good value for its price point.`,
+                            seoTitle: `${title || 'Product'} | Review & Specs`,
+                            seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
+                            slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                            affiliateLink: input
+                        };
                     }
                 } else {
-                    productData = heuristicComplete('Product from URL');
+                    productData = {
+                        name: title || 'Product from URL',
+                        brand: brand || 'Unknown',
+                        category: 'Misc',
+                        price: price,
+                        specifications: '',
+                        review: `The ${title || 'product'} offers solid performance and features.`,
+                        seoTitle: `${title || 'Product'} | Review & Specs`,
+                        seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
+                        slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                        affiliateLink: input
+                    };
                 }
             } catch (e) {
                 console.error('URL processing failed:', e);
