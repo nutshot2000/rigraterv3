@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BlogPost, User } from '../../types';
 import { ArrowPathIcon, DocumentPlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { blogService } from '../../services/blogService';
+import { createBlogPost, updateBlogPostById } from '../../services/blogService';
 import { EditableField } from './EditableField';
 
 interface BlogWorkspaceProps {
@@ -60,9 +60,18 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
     toast.loading('Saving blog post...');
     try {
       const { id, ...postData } = currentPost;
+      // Map field names to match service expectations
+      const mappedPostData = {
+        title: postData.title || '',
+        slug: postData.slug || '',
+        coverImageUrl: postData.cover_image_url || '',
+        summary: postData.summary || '',
+        content: postData.content || '',
+        tags: postData.tags || [],
+      };
       const savedPost = id
-        ? await blogService.updatePost(id, postData)
-        : await blogService.createPost(postData);
+        ? await updateBlogPostById(id, mappedPostData)
+        : await createBlogPost(mappedPostData);
       
       setCurrentPost(savedPost);
       onPostSaved(); // This will refetch the list of posts in the parent

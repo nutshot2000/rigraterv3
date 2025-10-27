@@ -126,7 +126,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             })();
         } else {
             const newProduct: Product = { id: Date.now().toString(), ...productData };
-            setProducts(prev => [newProduct, ...prev]);
+        setProducts(prev => [newProduct, ...prev]);
             recordAudit({ action: 'product.create', targetType: 'product', targetId: newProduct.id, details: { name: newProduct.name } });
         }
     }, [isBackendEnabled, recordAudit]);

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../context/AppContext';
+import { useApp } from '../context/AppContext';
 import { AdminSidebar, AdminMode } from '../components/admin/AdminSidebar';
 import { ProductWorkspace } from '../components/admin/ProductWorkspace';
-import { ProductPreview } from '../components/admin/ProductPreview';
-import { SimpleProductBuilder } from '../components/admin/SimpleProductBuilder';
+import ProductPreview from '../components/admin/ProductPreview';
+import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
 import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
 
 export const AdminPage: React.FC = () => {
-    const { user, loading, logout } = useAuth();
+    const { isAuthenticated, currentUserEmail, logout } = useApp();
     const [mode, setMode] = useState<AdminMode>('ai_product');
     const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
     const [currentBlogPost, setCurrentBlogPost] = useState<Partial<BlogPost> | null>(null);
@@ -25,11 +25,7 @@ export const AdminPage: React.FC = () => {
         // Add logic to refresh post list if needed
     }, []);
 
-    if (loading) {
-        return <div className="text-white">Loading...</div>;
-    }
-
-    if (!user) {
+    if (!isAuthenticated) {
         // This should be handled by the protected route, but as a fallback:
         return <div className="text-white">Redirecting to login...</div>;
     }
@@ -39,15 +35,16 @@ export const AdminPage: React.FC = () => {
             case 'ai_product':
                 return (
                     <SimpleProductBuilder 
-                        currentProduct={currentProduct}
-                        setCurrentProduct={setCurrentProduct}
-                        onProductSaved={handleProductSave}
+                        onProductBuilt={(product) => {
+                            setCurrentProduct(product);
+                            handleProductSave();
+                        }}
                     />
                 );
             case 'ai_blog':
                 return (
                     <BlogWorkspace 
-                        user={user}
+                        user={{ id: 'admin', email: currentUserEmail || 'admin@rigrater.com' }}
                         currentPost={currentBlogPost}
                         setCurrentPost={setCurrentBlogPost}
                         onPostSaved={handlePostSave}

@@ -65,7 +65,7 @@ const AppContent: React.FC = () => {
             <Header onNavigate={setPage} currentPage={page} />
             <main className="flex-grow container mx-auto px-4 py-8">
                 <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
-                    {renderPage()}
+                {renderPage()}
                 </Suspense>
             </main>
             <Footer />

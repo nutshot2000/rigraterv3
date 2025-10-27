@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { BlogPost } from '../../types';
-import { FALLBACK_IMAGE_URL } from '../../config';
+import { FALLBACK_IMAGE_URL } from '../../constants';
 import { CalendarIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 
 interface BlogPreviewProps {
