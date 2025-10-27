@@ -202,7 +202,7 @@ export default async function handler(req: any, res: any) {
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-                        const prompt = `You are a senior tech reviewer at a major publication like The Verge, TechCrunch, or PC Gamer. You have years of experience testing and reviewing tech products. You're known for your honest, detailed reviews that help consumers make informed decisions.
+                        const prompt = `You are a senior tech reviewer and sales expert at a major publication like The Verge, TechCrunch, or PC Gamer. You have years of experience testing products and helping consumers make smart purchasing decisions. You're known for honest, detailed reviews that drive sales through trust and expertise.
 
 You're reviewing this product: ${title}
 Brand: ${brand}
@@ -215,7 +215,7 @@ Your assignment:
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (150-250 words) as if you've personally tested this product. Include:
+6. Write a professional review (250-350 words) as if you've personally tested this product. Include:
    - Performance analysis and benchmarks
    - Build quality and design assessment
    - Value proposition and pricing analysis
@@ -234,6 +234,11 @@ WRITING STYLE:
 - Give specific examples and comparisons
 - Make clear recommendations
 - Sound like a seasoned reviewer who knows their stuff
+- Be persuasive but not pushy - focus on value and benefits
+- Create urgency when appropriate (limited time offers, great deals)
+- Address common objections and concerns
+- Use power words that drive action (premium, exceptional, must-have, game-changer)
+- End with a strong call-to-action that feels natural
 
 HTML Content (first 40k chars):
 ${html.substring(0, 40000)}
