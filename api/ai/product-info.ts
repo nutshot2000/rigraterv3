@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AIProductInfo } from '../../types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
 if (!GEMINI_KEY) {
@@ -90,15 +90,15 @@ function fallbackParse(html: string, url: string) {
     };
 }
 
-export default async (req: Request): Promise<Response> => {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
-        const { productUrl } = await req.json();
+        const { productUrl } = req.body || {};
         if (!productUrl) {
-            return new Response(JSON.stringify({ error: 'productUrl is required' }), { status: 400 });
+            return res.status(400).json({ error: 'productUrl is required' });
         }
 
         const pageResponse = await fetch(productUrl, {
@@ -109,7 +109,7 @@ export default async (req: Request): Promise<Response> => {
         // If AI key missing, return fallback parse immediately
         if (!ai) {
             const basic = fallbackParse(html, productUrl);
-            return new Response(JSON.stringify(basic), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            return res.status(200).json(basic);
         }
 
         // Try AI extraction, fall back to meta parsing if anything fails
@@ -119,18 +119,18 @@ export default async (req: Request): Promise<Response> => {
             const result = await model.generateContent(prompt);
             const jsonText = cleanJsonString(result.response.text());
             const productInfo = JSON.parse(jsonText);
-            return new Response(JSON.stringify(productInfo), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            return res.status(200).json(productInfo);
         } catch (e) {
             const basic = fallbackParse(html, productUrl);
-            return new Response(JSON.stringify(basic), { status: 200, headers: { 'Content-Type': 'application/json' } });
+            return res.status(200).json(basic);
         }
 
     } catch (error: any) {
         console.error('Error in product-info API:', error);
-        return new Response(JSON.stringify({ error: 'Failed to process request', details: error?.message || String(error) }), { status: 500 });
+        return res.status(500).json({ error: 'Failed to process request', details: error?.message || String(error) });
     }
-};
+}
 
 export const config = {
-  runtime: 'nodejs18.x',
+  runtime: 'nodejs',
 };
