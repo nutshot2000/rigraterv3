@@ -202,29 +202,38 @@ export default async function handler(req: any, res: any) {
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-                        const prompt = `You are a tech product expert and reviewer. Analyze this Amazon product page and create comprehensive product information based on your knowledge and the page content.
+                        const prompt = `You are a senior tech reviewer at a major publication like The Verge, TechCrunch, or PC Gamer. You have years of experience testing and reviewing tech products. You're known for your honest, detailed reviews that help consumers make informed decisions.
 
+You're reviewing this product: ${title}
+Brand: ${brand}
+Price: ${price}
 URL: ${input}
-Page Title: ${title}
-Extracted Price: ${price}
-Extracted Brand: ${brand}
 
-Your task:
-1. Identify the product name (clean, marketing-friendly)
-2. Determine the brand (if not clear, infer from name/context)
-3. Categorize it (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
-4. Note the price in USD format like "$XXX.XX"
-5. Create detailed specifications based on your knowledge of this product type and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (150-250 words) based on your expertise about this product type, highlighting performance, build quality, value, target users, and how it compares to alternatives
-7. Create an SEO title (under 60 chars, include brand and key feature)
-8. Write an SEO description (under 155 chars, compelling summary)
-9. Generate a URL-friendly slug (lowercase, hyphens, no special chars)
+Your assignment:
+1. Product name (clean, marketing-friendly)
+2. Brand identification
+3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
+4. Price in USD format like "$XXX.XX"
+5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
+6. Write a professional review (150-250 words) as if you've personally tested this product. Include:
+   - Performance analysis and benchmarks
+   - Build quality and design assessment
+   - Value proposition and pricing analysis
+   - Target audience and use cases
+   - Comparison to competitors
+   - Pros and cons
+   - Final verdict and recommendation
+7. SEO title (under 60 chars, include brand and key feature)
+8. SEO description (under 155 chars, compelling summary)
+9. URL-friendly slug (lowercase, hyphens, no special chars)
 
-IMPORTANT: 
-- Use your knowledge as a tech expert to write an informed review, not just copy page text
-- Create meaningful specifications based on what this product type typically offers
-- Write as if you're a professional reviewer who has tested this product
-- Be analytical about performance, value, and who should buy it
+WRITING STYLE:
+- Write with authority and expertise
+- Be honest about strengths and weaknesses
+- Use technical language appropriately
+- Give specific examples and comparisons
+- Make clear recommendations
+- Sound like a seasoned reviewer who knows their stuff
 
 HTML Content (first 40k chars):
 ${html.substring(0, 40000)}
