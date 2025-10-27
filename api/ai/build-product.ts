@@ -154,6 +154,126 @@ async function testImageUrl(url: string): Promise<boolean> {
     }
 }
 
+// Extract structured Product JSON-LD when present
+function extractJsonLdProduct(html: string): any {
+    const scripts = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+    for (const m of scripts) {
+        const text = m[1].trim();
+        try {
+            const cleaned = text.replace(/\u0000/g, '');
+            const parsed = JSON.parse(cleaned);
+            const candidates = Array.isArray(parsed) ? parsed : [parsed];
+            for (const node of candidates) {
+                if (!node) continue;
+                if ((node['@type'] === 'Product') || (Array.isArray(node['@type']) && node['@type'].includes('Product'))) {
+                    return node;
+                }
+            }
+        } catch {}
+    }
+    return null;
+}
+
+// Extract brand from Amazon byline and title
+function extractBrand(html: string, title: string): string {
+    const byline = html.match(/id=["']bylineInfo["'][^>]*>([^<]+)</i)?.[1]?.trim() || '';
+    if (byline) {
+        const visit = byline.replace(/Visit the\s+|Store/gi, '').trim();
+        if (visit) return visit;
+    }
+    const json = extractJsonLdProduct(html);
+    const fromJson = typeof json?.brand === 'string' ? json.brand : (json?.brand?.name || '');
+    if (fromJson) return fromJson;
+    const fromTitle = title.split(' ')[0] || '';
+    return fromTitle;
+}
+
+// Extract price from common Amazon locations and JSON-LD
+function extractPrice(html: string): string {
+    // JSON-LD offers price
+    try {
+        const json = extractJsonLdProduct(html);
+        const price = json?.offers?.price;
+        const currency = json?.offers?.priceCurrency || 'USD';
+        if (price) {
+            const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+            return `${symbol}${String(price)}`;
+        }
+    } catch {}
+
+    // Common price blocks
+    const candidates = [
+        /id=["']priceblock_ourprice["'][^>]*>\s*([^<]+)/i,
+        /id=["']priceblock_dealprice["'][^>]*>\s*([^<]+)/i,
+        /id=["']apex_desktop_qualifiedBuybox_price["'][^>]*>\s*([^<]+)/i,
+        /class=["'][^"']*a-price-whole[^"']*["'][^>]*>\s*([^<]+)/i
+    ];
+    for (const re of candidates) {
+        const m = html.match(re);
+        if (m && m[1]) {
+            const raw = m[1].replace(/\s/g, '').replace(/&nbsp;/g, '');
+            if (/^£|^\$|^€/.test(raw)) return raw;
+            if (/^\d/.test(raw)) return `$${raw}`;
+        }
+    }
+    // fallback: first currency-like token
+    const currency = html.match(/(£|\$|€)\s?(\d+[,.]?\d{0,2})/);
+    if (currency) return `${currency[1]}${currency[2]}`;
+    return '$0.00';
+}
+
+// Extract specifications from Amazon detail tables and product overview
+function extractAmazonSpecs(html: string): Record<string, string> {
+    const specs: Record<string, string> = {};
+
+    // product overview table
+    const overview = html.match(/id=["']productOverview_feature_div["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+    if (overview) {
+        const rows = [...overview.matchAll(/<tr[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
+        for (const r of rows) {
+            const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            const val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            if (key && val) specs[key] = val;
+        }
+    }
+
+    // tech spec tables
+    const tech1 = html.match(/id=["']productDetails_techSpec_section_1["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+    const tech2 = html.match(/id=["']productDetails_techSpec_section_2["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+    for (const block of [tech1, tech2]) {
+        if (!block) continue;
+        const rows = [...block.matchAll(/<tr[\s\S]*?<th[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
+        for (const r of rows) {
+            const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            const val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            if (key && val) specs[key] = val;
+        }
+    }
+
+    // feature bullets as Features
+    const bulletsBlock = html.match(/id=["']feature-bullets["'][\s\S]*?<ul[\s\S]*?<\/ul>/i)?.[0] || '';
+    if (bulletsBlock) {
+        const bullets = [...bulletsBlock.matchAll(/<li[^>]*>\s*<span[^>]*>([\s\S]*?)<\/span>\s*<\/li>/gi)]
+            .map(b => b[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim())
+            .filter(Boolean);
+        if (bullets.length) specs['Features'] = bullets.slice(0, 6).join('; ');
+    }
+
+    return specs;
+}
+
+// Compose a review if AI returns short/missing content
+function expandReviewIfShort(review: string, name: string, brand: string, category: string, specs: Record<string,string>): string {
+    const wordCount = (review || '').split(/\s+/).filter(Boolean).length;
+    if (wordCount >= 180) return review;
+    const highlights = Object.entries(specs).slice(0, 6).map(([k,v]) => `${k}: ${v}`).join(', ');
+    const intro = `The ${brand ? brand + ' ' : ''}${name} is a compelling ${category || 'tech'} option designed for buyers who want dependable performance without breaking the bank.`;
+    const body = ` In day-to-day use it delivers consistent results, and the spec sheet backs that up (${highlights || 'balanced specifications for its class'}). Build quality is solid and the overall design feels considered.`;
+    const value = ` Value-wise, it stacks up well against popular alternatives in its price bracket, and will suit most users looking for a hassle-free upgrade.`;
+    const close = ` If you want a quick recommendation: if the price is right and the features above match your needs, this is an easy product to shortlist.`;
+    return [intro, body, value, close].join(' ');
+}
+
 // Heuristic completion for name-only
 function heuristicComplete(name: string) {
     const category = /gpu|graphics|rtx|gtx/i.test(name) ? 'GPU' : 
@@ -215,12 +335,10 @@ export default async function handler(req: any, res: any) {
                 // Extract basic data from HTML first
                 const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
                 const title = titleMatch ? titleMatch[1].replace(/\s*:\s*Amazon\.co\.uk.*$/i, '').trim() : '';
-                
-                const priceMatch = html.match(/£(\d+(?:\.\d{2})?)/i) || html.match(/\$(\d+(?:\.\d{2})?)/i);
-                const price = priceMatch ? `$${priceMatch[1]}` : '$0.00';
-                
-                const brandMatch = title.match(/^([^,\s]+)/);
-                const brand = brandMatch ? brandMatch[1] : '';
+                const brand = extractBrand(html, title);
+                const price = extractPrice(html);
+                const specMap = extractAmazonSpecs(html);
+                const specsInline = Object.entries(specMap).map(([k,v]) => `${k}: ${v}`).join(', ');
                 
                 // AI extraction with better context
                 if (ai) {
@@ -232,6 +350,7 @@ You're reviewing this product: ${title}
 Brand: ${brand}
 Price: ${price}
 URL: ${input}
+Parsed Specifications (from page): ${specsInline || 'None detected'}
 
 Your assignment:
 1. Product name (clean, marketing-friendly)
@@ -273,11 +392,15 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         const jsonText = result.response.text().replace(/```json|```/g, '').trim();
                         productData = JSON.parse(jsonText);
                         
-                        // Ensure we have a good product name
-                        if (!productData.name || productData.name.length < 3) {
-                            productData.name = title || 'Product from URL';
+                        // Ensure essential fields and merge extracted specs/price when missing
+                        if (!productData.name || productData.name.length < 3) productData.name = title || 'Product from URL';
+                        if (!productData.brand) productData.brand = brand || productData.name.split(' ')[0] || '';
+                        if (!productData.price || !/^[£$€]/.test(productData.price)) productData.price = price;
+                        if (!productData.specifications && specsInline) productData.specifications = specsInline;
+                        if (!productData.slug) productData.slug = (productData.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        if (!productData.review || productData.review.split(/\s+/).length < 160) {
+                            productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, productData.category || 'tech', specMap);
                         }
-                        
                     } catch (e) {
                         console.error('AI extraction failed:', e);
                         // Fallback with extracted data
@@ -286,8 +409,8 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                             brand: brand || 'Unknown',
                             category: 'Misc',
                             price: price,
-                            specifications: 'Specifications: Check product page for detailed specs',
-                            review: `The ${title || 'product'} from ${brand || 'this brand'} offers solid performance and features. This product provides good value for its price point and is suitable for users looking for reliable performance. The build quality and design are well-executed, making it a solid choice in its category.`,
+                            specifications: specsInline || 'Specifications: Check product page for detailed specs',
+                            review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
                             slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
@@ -300,8 +423,8 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         brand: brand || 'Unknown',
                         category: 'Misc',
                         price: price,
-                        specifications: 'Specifications: Check product page for detailed specs',
-                        review: `The ${title || 'product'} from ${brand || 'this brand'} offers solid performance and features. This product provides good value for its price point and is suitable for users looking for reliable performance. The build quality and design are well-executed, making it a solid choice in its category.`,
+                        specifications: specsInline || 'Specifications: Check product page for detailed specs',
+                        review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
                         slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
