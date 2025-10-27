@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AppContext';
-import { AdminSidebar, AdminMode } from '../../components/admin/AdminSidebar';
-import { ProductWorkspace } from '../../components/admin/ProductWorkspace';
-import { ProductPreview } from '../../components/admin/ProductPreview';
-import { SimpleProductBuilder } from '../../components/admin/SimpleProductBuilder';
-import { BlogWorkspace } from '../../components/admin/BlogWorkspace';
-import { BlogPreview } from '../../components/admin/BlogPreview';
-import { IdeasModal } from '../../components/admin/IdeasModal';
-import { Product, BlogPost } from '../../types';
+import { AdminSidebar, AdminMode } from '../components/admin/AdminSidebar';
+import { ProductWorkspace } from '../components/admin/ProductWorkspace';
+import { ProductPreview } from '../components/admin/ProductPreview';
+import { SimpleProductBuilder } from '../components/admin/SimpleProductBuilder';
+import { BlogWorkspace } from '../components/admin/BlogWorkspace';
+import { BlogPreview } from '../components/admin/BlogPreview';
+import { IdeasModal } from '../components/admin/IdeasModal';
+import { Product, BlogPost } from '../types';
 
 export const AdminPage: React.FC = () => {
     const { user, loading, logout } = useAuth();
