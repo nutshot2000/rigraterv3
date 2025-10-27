@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
 const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
+const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_US || '').trim();
+const AMAZON_TAG_UK = (process.env.AMAZON_TAG_UK || process.env.VITE_AMAZON_TAG_UK || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 // Extract ASIN from Amazon URL
@@ -328,6 +330,24 @@ function cleanAiOutput(text: string): string {
         .trim();
 }
 
+// Generate a clean affiliate link with the correct tag
+function generateAffiliateLink(url: string): string {
+    const asin = extractASIN(url);
+    if (!asin) return url; // Return original if no ASIN found
+
+    if (url.includes('amazon.co.uk')) {
+        const tag = AMAZON_TAG_UK;
+        return `https://www.amazon.co.uk/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    }
+    
+    if (url.includes('amazon.com')) {
+        const tag = AMAZON_TAG_US;
+        return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+    }
+
+    return url; // Return original for other domains
+}
+
 export default async function handler(req: any, res: any) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     
@@ -438,6 +458,8 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         if (!productData.review || productData.review.split(/\s+/).length < 160) {
                             productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, productData.category || 'tech', specMap);
                         }
+                        // Always generate our clean affiliate link
+                        productData.affiliateLink = generateAffiliateLink(input);
                     } catch (e) {
                         console.error('AI extraction failed:', e);
                         // Fallback with extracted data
@@ -451,7 +473,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
                             slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-                            affiliateLink: input
+                            affiliateLink: generateAffiliateLink(input)
                         };
                     }
                 } else {
@@ -465,7 +487,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
                         slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-                        affiliateLink: input
+                        affiliateLink: generateAffiliateLink(input)
                     };
                 }
             } catch (e) {
@@ -482,6 +504,8 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
                     const result = await model.generateContent(prompt);
                     const jsonText = result.response.text().replace(/```json|```/g, '').trim();
                     productData = JSON.parse(jsonText);
+                    // Name-only doesn't have a URL, so clear affiliate link
+                    productData.affiliateLink = '';
                 } catch (e) {
                     console.error('AI name generation failed:', e);
                     productData = heuristicComplete(input);
@@ -502,7 +526,7 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
             seoTitle: productData.seoTitle || `${productData.name} | Review & Specs`,
             seoDescription: productData.seoDescription || `Explore ${productData.name}: key specs, pricing, and quick AI-style summary.`,
             slug: productData.slug || productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
-            affiliateLink: productData.affiliateLink || '',
+            affiliateLink: productData.affiliateLink || (isUrl ? generateAffiliateLink(input) : ''),
             imageUrls: imageUrls.slice(0, 10) // Limit to 10 images
         };
 
