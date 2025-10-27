@@ -20,9 +20,31 @@ function heuristicComplete(product: any) {
 export default async function handler(req: any, res: any) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     try {
-        const { productUrl, product } = req.body || {};
-        if (!product && !productUrl) return res.status(400).json({ error: 'product or productUrl required' });
+        const { productUrl, product, productName } = req.body || {};
+        if (!product && !productUrl && !productName) return res.status(400).json({ error: 'product or productUrl or productName required' });
 
+        // Path 1: Build from just a product name (no URL)
+        if (productName && !productUrl) {
+            if (!ai) {
+                return res.status(200).json(heuristicComplete({ name: productName }));
+            }
+            try {
+                const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+                const prompt = `Generate product details for: ${productName}.
+Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars).`;
+                const resp = await model.generateContent(prompt);
+                const text = clean(resp.response.text());
+                const data = JSON.parse(text);
+                // Ensure required fields exist
+                const merged = { name: productName, ...data };
+                return res.status(200).json(merged);
+            } catch (e: any) {
+                console.error('name-only AI error', e?.message || e);
+                return res.status(200).json(heuristicComplete({ name: productName }));
+            }
+        }
+
+        // Path 2: From URL/product (existing logic)
         let html = '';
         try {
             if (productUrl) {

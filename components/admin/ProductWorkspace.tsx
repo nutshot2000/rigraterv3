@@ -50,6 +50,7 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
     const [rivals, setRivals] = useState<string[]>([]);
     const [imageCandidates, setImageCandidates] = useState<string[]>([]);
     const [isExtractingImages, setIsExtractingImages] = useState(false);
+    const [nameOnly, setNameOnly] = useState('');
 
     useEffect(() => {
         if (mode === 'manual_product' && !currentProduct) {
@@ -212,6 +213,22 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
         }
     };
 
+    const buildFromName = async () => {
+        if (!nameOnly.trim()) { addToast('Enter a product name.', 'error'); return; }
+        try {
+            const resp = await fetch('/api/ai/complete-product', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productName: nameOnly }) });
+            const data = await resp.json();
+            if (resp.ok) {
+                setCurrentProduct({ imageUrls: [], ...data });
+                addToast('Generated from name.', 'success');
+            } else {
+                addToast(data?.error || 'Failed to generate from name.', 'error');
+            }
+        } catch {
+            addToast('Failed to generate from name.', 'error');
+        }
+    };
+
     const renderEditableForm = () => {
         if (!currentProduct) return null;
         return (
@@ -363,6 +380,16 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                                 <p className="mt-4 text-slate-400">AI is analyzing the page... this can take a moment.</p>
                             </div>
                         )}
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input
+                                type="text"
+                                value={nameOnly}
+                                onChange={(e) => setNameOnly(e.target.value)}
+                                placeholder="Or type a product name (e.g., RTX 4070 Super)"
+                                className="input-blueprint md:col-span-2"
+                            />
+                            <button onClick={buildFromName} className="btn-blueprint">Build from Name</button>
+                        </div>
                         {renderEditableForm()}
                     </div>
                 );
