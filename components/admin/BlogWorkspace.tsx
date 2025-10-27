@@ -196,6 +196,30 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
                         onChange={(v) => updateField('seo_description', v)}
                         isTextarea
                     />
+                  <button
+                    className="btn-blueprint mt-2"
+                    onClick={async () => {
+                      try {
+                        const text = `${currentPost.title || ''}\n\n${currentPost.summary || ''}\n\n${(currentPost.content || '').slice(0, 800)}`;
+                        const resp = await fetch('/api/ai/chat', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ message: `Generate:
+SEO Title (<=60 chars)
+SEO Description (<=155 chars)
+for this blog post content. Return JSON { seo_title, seo_description } only.\n\n${text}` })
+                        });
+                        if (resp.ok) {
+                          const data = await resp.json();
+                          const parsed = typeof data.response === 'string' ? JSON.parse(data.response.replace(/```json|```/g, '').trim()) : data;
+                          if (parsed.seo_title) updateField('seo_title', parsed.seo_title);
+                          if (parsed.seo_description) updateField('seo_description', parsed.seo_description);
+                        }
+                      } catch {}
+                    }}
+                  >
+                    Auto-generate SEO
+                  </button>
                 </div>
             </details>
             

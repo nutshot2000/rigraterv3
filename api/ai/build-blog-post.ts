@@ -60,12 +60,37 @@ export default async function handler(req: any, res: any) {
   }
 
   let context = '';
+  let extractedCoverUrl: string | null = null;
   if (type === 'url') {
     const htmlContent = await fetchPageContent(source);
     if (!htmlContent) {
-      return new Response(JSON.stringify({ error: 'Failed to fetch content from URL' }), { status: 500 });
+      return res.status(500).json({ error: 'Failed to fetch content from URL' });
     }
     context = `Based on the following article content: ${sanitizeHtml(htmlContent)}`;
+    try {
+      const candidates = extractImagesFromHTML(htmlContent);
+      // validate first working image
+      for (const url of candidates) {
+        let candidate = url;
+        if (candidate.includes('amazon.com/images/I/')) {
+          const stripped = candidate
+            .replace(/\._AC_SL\d+_/i, '')
+            .replace(/\._SL\d+_/i, '')
+            .replace(/\._SX\d+_/i, '')
+            .replace(/\._SY\d+_/i, '')
+            .replace(/\._UX\d+_/i, '')
+            .replace(/\._UY\d+_/i, '')
+            .replace(/\._SS\d+_/i, '')
+            .replace(/\._SR\d+,\d+_/i, '')
+            .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
+          if (stripped !== candidate) candidate = stripped;
+        }
+        try {
+          const ok = await fetch(candidate, { method: 'HEAD' });
+          if (ok.ok && (ok.headers.get('content-type') || '').startsWith('image/')) { extractedCoverUrl = candidate; break; }
+        } catch {}
+      }
+    } catch {}
   } else {
     context = `Based on the following topic: "${source}"`;
   }
@@ -108,6 +133,9 @@ export default async function handler(req: any, res: any) {
     // Clean the response text to ensure it's valid JSON
     const cleanJson = responseText.replace(/```json|```/g, '').trim();
     const blogPost = JSON.parse(cleanJson);
+    if ((!blogPost.cover_image_url || /^\w+(?:\s|$)/.test(blogPost.cover_image_url)) && extractedCoverUrl) {
+      blogPost.cover_image_url = extractedCoverUrl;
+    }
 
     return res.status(200).json(blogPost);
   } catch (error: any) {
