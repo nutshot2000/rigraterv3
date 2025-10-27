@@ -212,13 +212,18 @@ Extracted Brand: ${brand}
 From the HTML content below, extract and research:
 1. Product name (clean, marketing-friendly)
 2. Brand (if not clear, infer from name/context)
-3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", etc.)
+3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
-5. Detailed specifications (key technical specs, dimensions, features)
-6. Professional review (120-200 words, highlight key features, performance, value)
+5. Detailed specifications (look for technical specs, dimensions, features, connectivity, compatibility - format as "Key: Value, Key: Value")
+6. Professional review (150-250 words, highlight key features, performance, build quality, value proposition, who it's for)
 7. SEO title (under 60 chars, include brand and key feature)
 8. SEO description (under 155 chars, compelling summary)
 9. URL-friendly slug (lowercase, hyphens, no special chars)
+
+IMPORTANT: 
+- Look for specification tables, feature lists, and technical details in the HTML
+- Write a detailed, informative review that helps users understand the product
+- Extract real specifications from the page content, don't make them up
 
 HTML Content (first 40k chars):
 ${html.substring(0, 40000)}
@@ -242,8 +247,8 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                             brand: brand || 'Unknown',
                             category: 'Misc',
                             price: price,
-                            specifications: '',
-                            review: `The ${title || 'product'} offers solid performance and features. This ${brand || 'brand'} product provides good value for its price point.`,
+                            specifications: 'Specifications: Check product page for detailed specs',
+                            review: `The ${title || 'product'} from ${brand || 'this brand'} offers solid performance and features. This product provides good value for its price point and is suitable for users looking for reliable performance. The build quality and design are well-executed, making it a solid choice in its category.`,
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
                             slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
@@ -256,8 +261,8 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         brand: brand || 'Unknown',
                         category: 'Misc',
                         price: price,
-                        specifications: '',
-                        review: `The ${title || 'product'} offers solid performance and features.`,
+                        specifications: 'Specifications: Check product page for detailed specs',
+                        review: `The ${title || 'product'} from ${brand || 'this brand'} offers solid performance and features. This product provides good value for its price point and is suitable for users looking for reliable performance. The build quality and design are well-executed, making it a solid choice in its category.`,
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
                         slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
