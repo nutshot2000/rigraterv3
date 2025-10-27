@@ -83,10 +83,10 @@ export default async function handler(req: Request) {
       "title": "string",
       "slug": "string (kebab-case, based on title)",
       "summary": "string (A concise, compelling summary of the article, 2-3 sentences max).",
-      "content": "string (Full blog post content in Markdown format. It should be well-structured with headings, paragraphs, lists, etc. At least 500 words.)",
+      "content": "string (Full blog post content in Markdown format. It should be well-structured with headings, paragraphs, lists, etc. Keep it tight: 700-900 words.)",
       "seoTitle": "string (An SEO-optimized title, 60 characters max).",
       "seoDescription": "string (An SEO-optimized meta description, 160 characters max).",
-      "coverImageUrl": "string (A suggested Unsplash or Pexels search query for a relevant, high-quality cover image. For example: 'gaming keyboard RGB' or 'man building custom PC')."
+      "cover_image_url": "string (A suggested Unsplash or Pexels search query for a relevant, high-quality cover image. For example: 'gaming keyboard RGB' or 'man building custom PC')."
     }
 
     Guidelines for the content:
@@ -97,7 +97,7 @@ export default async function handler(req: Request) {
       - Ensure the information is accurate and up-to-date.
       - If rewriting from a URL, do not plagiarize. Synthesize the information and present it in your own unique voice and structure.
       - End with a strong conclusion and a call-to-action if appropriate (e.g., "Check out our latest reviews" or "What do you think? Let us know in the comments!").
-      - Make it comprehensive. It must be a minimum of 500 words.
+      - Aim for 700-900 words (concise, no fluff).
     - **SEO:** Title and description should be optimized for search engines, using relevant keywords naturally.
   `;
 

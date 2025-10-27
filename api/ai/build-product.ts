@@ -299,16 +299,16 @@ function extractAmazonSpecs(html: string): Record<string, string> {
     return specs;
 }
 
-// Compose a review if AI returns short/missing content
+// Compose a slightly shorter review if AI returns short/missing content
 function expandReviewIfShort(review: string, name: string, brand: string, category: string, specs: Record<string,string>): string {
     const wordCount = (review || '').split(/\s+/).filter(Boolean).length;
-    if (wordCount >= 180) return review;
-    const highlights = Object.entries(specs).slice(0, 6).map(([k,v]) => `${k}: ${v}`).join(', ');
-    const intro = `The ${brand ? brand + ' ' : ''}${name} is a compelling ${category || 'tech'} option designed for buyers who want dependable performance without breaking the bank.`;
-    const body = ` In day-to-day use it delivers consistent results, and the spec sheet backs that up (${highlights || 'balanced specifications for its class'}). Build quality is solid and the overall design feels considered.`;
-    const value = ` Value-wise, it stacks up well against popular alternatives in its price bracket, and will suit most users looking for a hassle-free upgrade.`;
-    const close = ` If you want a quick recommendation: if the price is right and the features above match your needs, this is an easy product to shortlist.`;
-    return [intro, body, value, close].join(' ');
+    if (wordCount >= 140) return review;
+    const bullets = Object.entries(specs).slice(0, 4).map(([k,v]) => `${k}: ${v}`);
+    const pieces: string[] = [];
+    pieces.push(`The ${brand ? brand + ' ' : ''}${name} is a solid ${category || 'tech'} pick with strong value.`);
+    if (bullets.length) pieces.push(`Highlights — ${bullets.join('; ')}.`);
+    pieces.push(`Overall: balanced performance, tidy design, and easy to recommend if the price fits.`);
+    return pieces.join(' ');
 }
 
 // Heuristic completion for name-only
@@ -446,7 +446,7 @@ Your assignment:
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (250-350 words) as if you've personally tested this product. Include:
+6. Write a professional review (150-220 words) as if you've personally tested this product. Include:
    - Performance analysis and benchmarks
    - Build quality and design assessment
    - Value proposition and pricing analysis
@@ -494,7 +494,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         if (!productData.price || !/^[£$€]/.test(productData.price)) productData.price = price;
                         if (!productData.specifications && specsInline) productData.specifications = specsInline;
                         if (!productData.slug) productData.slug = (productData.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                        if (!productData.review || productData.review.split(/\s+/).length < 160) {
+                        if (!productData.review || productData.review.split(/\s+/).length < 90) {
                             productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, productData.category || 'tech', specMap);
                         }
                         // Always generate our clean affiliate link

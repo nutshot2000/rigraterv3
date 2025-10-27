@@ -117,9 +117,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
                     {/* AI Review */}
                     {reviewSafe && (
-                        <ContentSection title="AI Review">
-                            <p className="text-slate-300 leading-relaxed text-base whitespace-pre-wrap">{reviewSafe}</p>
-                        </ContentSection>
+                        <details className="form-section" open>
+                            <summary>AI Review</summary>
+                            <div className="form-section-content">
+                                <p className="text-slate-300 leading-relaxed text-base whitespace-pre-wrap">{reviewSafe}</p>
+                            </div>
+                        </details>
                     )}
 
                     {/* Additional Image 2 */}
