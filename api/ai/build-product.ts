@@ -6,6 +6,13 @@ const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_
 const AMAZON_TAG_UK = (process.env.AMAZON_TAG_UK || process.env.VITE_AMAZON_TAG_UK || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
+function getAmazonImageBase(url: string): string {
+    // Extracts the unique part of an Amazon image URL, like '710bB5V1jPL'
+    // from https://m.media-amazon.com/images/I/710bB5V1jPL._SL1500_.jpg
+    const match = url.match(/\/images\/I\/([a-zA-Z0-9]+)/);
+    return match ? match[1] : url;
+}
+
 // Extract ASIN from Amazon URL
 function extractASIN(url: string): string | null {
     const match = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
@@ -366,6 +373,31 @@ export default async function handler(req: any, res: any) {
 
                 // Validate images
                 imageUrls = await validateImages(imageUrls);
+
+                // De-duplicate Amazon images, keeping the highest resolution found
+                const uniqueImages = new Map<string, string>();
+                const getSize = (url: string): number => {
+                    const match = url.match(/\._S[LXY](\d+)_/i);
+                    // Treat base images (no size token) as highest priority/resolution
+                    return match ? parseInt(match[1], 10) : 9999;
+                };
+
+                for (const url of imageUrls) {
+                    const base = getAmazonImageBase(url);
+                    const existingUrl = uniqueImages.get(base);
+
+                    if (!existingUrl) {
+                        uniqueImages.set(base, url);
+                    } else {
+                        const existingSize = getSize(existingUrl);
+                        const newSize = getSize(url);
+                        if (newSize > existingSize) {
+                            uniqueImages.set(base, url);
+                        }
+                    }
+                }
+                imageUrls = Array.from(uniqueImages.values());
+
 
                 // Extract basic data from HTML first
                 const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
