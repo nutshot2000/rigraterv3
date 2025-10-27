@@ -17,7 +17,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
     const navLinkClasses = (page: Page) => 
         `btn-blueprint ${currentPage === page ? 'btn-blueprint--primary' : ''} text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400`;
 
-    const navOrder: Page[] = [Page.HOME, Page.CATEGORIES, Page.BLOG, Page.COMPARISONS, Page.ADMIN];
+    // Remove Admin from visible tab order; we'll keep a hidden shortcut instead
+    const navOrder: Page[] = [Page.HOME, Page.CATEGORIES, Page.BLOG, Page.COMPARISONS];
     const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
     const handleKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (e) => {
@@ -99,20 +100,18 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, currentPage }) => {
                         >
                             Comparisons
                         </button>
-                        <button
-                            className={navLinkClasses(Page.ADMIN)}
-                            role="tab"
-                            aria-selected={currentPage === Page.ADMIN}
-                            tabIndex={currentPage === Page.ADMIN ? 0 : -1}
-                            ref={el => (tabRefs.current[4] = el)}
-                            onClick={() => onNavigate(Page.ADMIN)}
-                            title={isAuthenticated ? 'Admin Panel' : 'Login required'}
-                        >
-                            <span className="flex items-center gap-2">
-                               {isAuthenticated && <span className="w-2 h-2 rounded-full bg-green-400"></span>}
-                               Admin Panel
-                            </span>
-                        </button>
+                        {/* Hidden admin entry: Cmd/Ctrl+Shift+A */}
+                        <span
+                            className="sr-only"
+                            aria-hidden
+                            onKeyDown={(e) => {
+                                const isMac = navigator.platform.toUpperCase().includes('MAC');
+                                const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+                                if (ctrlOrCmd && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
+                                    onNavigate(Page.ADMIN);
+                                }
+                            }}
+                        />
                         <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border neon-outline "
                              title={backendOn ? (isAuthenticated ? 'Connected to Supabase as admin' : 'Connected to Supabase - not logged in') : 'Local-only mode'}
                         >

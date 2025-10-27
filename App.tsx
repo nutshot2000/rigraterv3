@@ -48,7 +48,10 @@ const AppContent: React.FC = () => {
             case Page.HOME:
                 return <HomePage />;
             case Page.ADMIN:
-                return <AdminPage />;
+                // Keep admin route, but set noindex header to discourage indexing
+                return <>
+                    <AdminPage />
+                </>;
             case Page.CATEGORIES:
                 return <CategoriesPage />;
             case Page.BLOG:
