@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 // Extract ASIN from Amazon URL
@@ -343,7 +344,7 @@ export default async function handler(req: any, res: any) {
                 // AI extraction with better context
                 if (ai) {
                     try {
-                        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+                        const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                         const prompt = `You are a senior tech reviewer and sales expert at a major publication like The Verge, TechCrunch, or PC Gamer. You have years of experience testing products and helping consumers make smart purchasing decisions. You're known for honest, detailed reviews that drive sales through trust and expertise.
 
 You're reviewing this product: ${title}
@@ -439,7 +440,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
             // Name-only path
             if (ai) {
                 try {
-                    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+                    const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                     const prompt = `Generate product details for: ${input}.
 Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars), slug (URL-friendly), affiliateLink.`;
                     const result = await model.generateContent(prompt);

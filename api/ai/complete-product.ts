@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 const clean = (s: string) => s?.replace(/```json|```/g, '').trim();
@@ -29,7 +30,7 @@ export default async function handler(req: any, res: any) {
                 return res.status(200).json(heuristicComplete({ name: productName }));
             }
             try {
-                const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+                const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                 const prompt = `Generate product details for: ${productName}.
 Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars).`;
                 const resp = await model.generateContent(prompt);
@@ -60,7 +61,7 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
         }
 
         try {
-            const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+            const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
             const prompt = `You complete missing product fields for an e-commerce admin tool. Use the provided data as truth; only fill blanks or obviously wrong values. Be concise and precise.
 Return ONLY JSON with keys: name, brand, category, price (USD formatted like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words, readable paragraphs), seoTitle (<=60 chars), seoDescription (<=155 chars).
 

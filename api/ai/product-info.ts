@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
 if (!GEMINI_KEY) {
     console.warn('GEMINI_API_KEY is not set; AI extraction will be skipped and fallback parser used.');
 }
@@ -113,7 +114,7 @@ export default async function handler(req: any, res: any) {
 
         // Try AI extraction, fall back to meta parsing if anything fails
         try {
-            const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
             const prompt = `You extract structured product data from HTML. Return ONLY valid JSON with keys: name, brand, category, price, imageUrls (array), review, specifications, affiliateLink, slug, seoTitle, seoDescription. HTML:\n${html.substring(0, 30000)}`;
             const result = await model.generateContent(prompt);
             const jsonText = cleanJsonString(result.response.text());
