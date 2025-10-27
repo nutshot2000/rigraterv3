@@ -10,7 +10,7 @@ import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
 import AdminLogin from '../components/admin/AdminLogin';
 
-const AdminPage: React.FC = () => {
+export const AdminPage: React.FC = () => {
     const { isAuthenticated, currentUserEmail, logout } = useApp();
     const [mode, setMode] = useState<AdminMode>('ai_product');
     const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
@@ -61,17 +61,6 @@ const AdminPage: React.FC = () => {
         }
     };
     
-    const renderPreview = () => {
-        switch (mode) {
-            case 'ai_product':
-                return <ProductPreview product={currentProduct} />;
-            case 'ai_blog':
-                return <BlogPreview post={currentBlogPost} />;
-            default:
-                return null;
-        }
-    };
-
     const handleModeChange = (newMode: AdminMode) => {
         setMode(newMode);
         // Clear workspace when switching modes to avoid showing stale data
@@ -89,7 +78,6 @@ const AdminPage: React.FC = () => {
             />
             <main className="flex-1 flex overflow-hidden">
                 {renderWorkspace()}
-                {renderPreview()}
             </main>
             <IdeasModal 
                 isOpen={isIdeasModalOpen} 

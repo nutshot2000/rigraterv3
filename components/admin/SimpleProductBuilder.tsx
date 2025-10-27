@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Product } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { createProduct } from '../../services/productService';
+import ProductCard from '../public/ProductCard';
+import { FALLBACK_IMAGE_URL } from '../../constants';
 
 interface SimpleProductBuilderProps {
     onProductBuilt: (product: Partial<Product>) => void;
@@ -76,6 +78,22 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         }
     };
 
+    const previewProduct: Product | null = builtProduct ? {
+        id: 'preview',
+        name: builtProduct.name || 'Product Name',
+        category: builtProduct.category || 'Category',
+        price: builtProduct.price || '$0.00',
+        imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0]) || builtProduct.imageUrl || FALLBACK_IMAGE_URL,
+        imageUrls: builtProduct.imageUrls || [],
+        affiliateLink: builtProduct.affiliateLink || '#',
+        review: builtProduct.review || '',
+        specifications: builtProduct.specifications || '',
+        brand: builtProduct.brand || 'Brand',
+        slug: builtProduct.slug || '',
+        seoTitle: builtProduct.seoTitle || '',
+        seoDescription: builtProduct.seoDescription || ''
+    } : null;
+
     return (
         <div className="flex-1 flex flex-col overflow-hidden">
             {/* Main Content - Scrollable */}
@@ -102,91 +120,109 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                     </div>
 
                     {builtProduct && (
-                        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6">
-                            <h2 className="text-xl font-bold text-white mb-4">Edit Product</h2>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Product Name</label>
-                                    <input
-                                        value={builtProduct.name || ''}
-                                        onChange={(e) => handleEdit('name', e.target.value)}
-                                        className="input-blueprint w-full"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Brand</label>
-                                    <input
-                                        value={builtProduct.brand || ''}
-                                        onChange={(e) => handleEdit('brand', e.target.value)}
-                                        className="input-blueprint w-full"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
-                                    <input
-                                        value={builtProduct.category || ''}
-                                        onChange={(e) => handleEdit('category', e.target.value)}
-                                        className="input-blueprint w-full"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Price</label>
-                                    <input
-                                        value={builtProduct.price || ''}
-                                        onChange={(e) => handleEdit('price', e.target.value)}
-                                        className="input-blueprint w-full"
-                                    />
+                        <div className="space-y-6">
+                            {/* Product Card Preview */}
+                            <div>
+                                <h2 className="text-xl font-bold text-white mb-4">Generated Card Preview</h2>
+                                <div className="max-w-xs">
+                                    {previewProduct && (
+                                        <ProductCard 
+                                            product={previewProduct} 
+                                            onCardClick={() => {}} 
+                                            onAddToComparison={() => {}}
+                                            isInComparison={false}
+                                        />
+                                    )}
                                 </div>
                             </div>
+                        
+                            {/* Edit Form */}
+                            <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6">
+                                <h2 className="text-xl font-bold text-white mb-4">Edit Product Details</h2>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Product Name</label>
+                                        <input
+                                            value={builtProduct.name || ''}
+                                            onChange={(e) => handleEdit('name', e.target.value)}
+                                            className="input-blueprint w-full"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Brand</label>
+                                        <input
+                                            value={builtProduct.brand || ''}
+                                            onChange={(e) => handleEdit('brand', e.target.value)}
+                                            className="input-blueprint w-full"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+                                        <input
+                                            value={builtProduct.category || ''}
+                                            onChange={(e) => handleEdit('category', e.target.value)}
+                                            className="input-blueprint w-full"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Price</label>
+                                        <input
+                                            value={builtProduct.price || ''}
+                                            onChange={(e) => handleEdit('price', e.target.value)}
+                                            className="input-blueprint w-full"
+                                        />
+                                    </div>
+                                </div>
 
-                            <div className="mt-6">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Review</label>
-                                <textarea
-                                    value={builtProduct.review || ''}
-                                    onChange={(e) => handleEdit('review', e.target.value)}
-                                    className="input-blueprint w-full"
-                                    rows={4}
-                                />
-                            </div>
+                                <div className="mt-6">
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Review</label>
+                                    <textarea
+                                        value={builtProduct.review || ''}
+                                        onChange={(e) => handleEdit('review', e.target.value)}
+                                        className="input-blueprint w-full"
+                                        rows={4}
+                                    />
+                                </div>
 
-                            <div className="mt-6">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Specifications</label>
-                                <textarea
-                                    value={builtProduct.specifications || ''}
-                                    onChange={(e) => handleEdit('specifications', e.target.value)}
-                                    className="input-blueprint w-full"
-                                    rows={3}
-                                />
-                            </div>
+                                <div className="mt-6">
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Specifications</label>
+                                    <textarea
+                                        value={builtProduct.specifications || ''}
+                                        onChange={(e) => handleEdit('specifications', e.target.value)}
+                                        className="input-blueprint w-full"
+                                        rows={3}
+                                    />
+                                </div>
 
-                            <div className="mt-6">
-                                <label className="block text-sm font-medium text-slate-300 mb-2">Images</label>
-                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                                    {(builtProduct.imageUrls || []).map((url, index) => (
-                                        <div key={index} className="relative">
-                                            <img
-                                                src={url}
-                                                alt={`Product ${index + 1}`}
-                                                className="w-full h-24 object-cover rounded border border-slate-600"
-                                                onError={(e) => {
-                                                    (e.currentTarget as HTMLImageElement).src = '/placeholder.jpg';
-                                                }}
-                                            />
-                                            <button
-                                                onClick={() => {
-                                                    const newUrls = (builtProduct.imageUrls || []).filter((_, i) => i !== index);
-                                                    handleEdit('imageUrls', newUrls);
-                                                }}
-                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))}
+                                <div className="mt-6">
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">Images</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {(builtProduct.imageUrls || []).map((url, index) => (
+                                            <div key={index} className="relative">
+                                                <img
+                                                    src={url}
+                                                    alt={`Product ${index + 1}`}
+                                                    className="w-full h-24 object-cover rounded border border-slate-600"
+                                                    onError={(e) => {
+                                                        (e.currentTarget as HTMLImageElement).src = '/placeholder.jpg';
+                                                    }}
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        const newUrls = (builtProduct.imageUrls || []).filter((_, i) => i !== index);
+                                                        handleEdit('imageUrls', newUrls);
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
