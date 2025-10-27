@@ -77,7 +77,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
     };
 
     return (
-        <div className="max-w-4xl mx-auto p-6">
+        <div className="flex-1 flex flex-col overflow-y-auto p-6 max-w-5xl mx-auto">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-white mb-4">Build Product</h1>
                 <div className="flex gap-3">
@@ -188,6 +188,25 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                     </div>
 
                     <div className="mt-8 flex justify-end gap-4">
+                        <button
+                            onClick={() => setBuiltProduct(null)}
+                            className="btn-blueprint"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            className="btn-blueprint btn-blueprint--primary"
+                        >
+                            Save Product
+                        </button>
+                    </div>
+                    <div className="h-24" />
+                </div>
+            )}
+            {builtProduct && (
+                <div className="sticky bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur border-t border-slate-700 mt-4">
+                    <div className="max-w-5xl mx-auto px-4 py-3 flex justify-end gap-4">
                         <button
                             onClick={() => setBuiltProduct(null)}
                             className="btn-blueprint"
