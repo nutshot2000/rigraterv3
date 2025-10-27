@@ -330,22 +330,14 @@ function cleanAiOutput(text: string): string {
         .trim();
 }
 
-// Generate a clean affiliate link with the correct tag
+// Generate a clean affiliate link with the correct tag for OneLink
 function generateAffiliateLink(url: string): string {
     const asin = extractASIN(url);
     if (!asin) return url; // Return original if no ASIN found
 
-    if (url.includes('amazon.co.uk')) {
-        const tag = AMAZON_TAG_UK;
-        return `https://www.amazon.co.uk/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    }
-    
-    if (url.includes('amazon.com')) {
-        const tag = AMAZON_TAG_US;
-        return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-    }
-
-    return url; // Return original for other domains
+    // Always generate the amazon.com link and use the US tag for OneLink to handle redirection
+    const tag = AMAZON_TAG_US;
+    return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 }
 
 export default async function handler(req: any, res: any) {
