@@ -9,7 +9,7 @@ import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
 
-export const AdminPage: React.FC = () => {
+const AdminPage: React.FC = () => {
     const { isAuthenticated, currentUserEmail, logout } = useApp();
     const [mode, setMode] = useState<AdminMode>('ai_product');
     const [currentProduct, setCurrentProduct] = useState<Partial<Product> | null>(null);
@@ -98,3 +98,5 @@ export const AdminPage: React.FC = () => {
         </div>
     );
 };
+
+export default AdminPage;
