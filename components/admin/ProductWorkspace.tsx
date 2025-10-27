@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Product } from '../../types';
-import { generateProductInfo, isAIEnabled } from '../../services/geminiService';
+import { generateProductInfo, isAIEnabled, generateProductSEO, suggestRivals } from '../../services/geminiService';
 import { useApp } from '../../context/AppContext';
 import Spinner from '../shared/Spinner';
 import { SparklesIcon } from '../public/Icons';
@@ -12,18 +12,19 @@ interface ProductWorkspaceProps {
     setCurrentProduct: (product: Partial<Product> | null) => void;
 }
 
-const EditableField = ({ label, value, onChange, type = 'input' }: { label: string, value: string, onChange: (value: string) => void, type?: 'input' | 'textarea' }) => {
-    const InputComponent = type === 'textarea' ? 'textarea' : 'input';
+const EditableField = ({ label, value, onChange, type = 'input', rightAdornment }: { label: string, value: string, onChange: (value: string) => void, type?: 'input' | 'textarea', rightAdornment?: React.ReactNode }) => {
+    const InputComponent: any = type === 'textarea' ? 'textarea' : 'input';
     return (
         <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
             <div className="relative">
                 <InputComponent
                     value={value}
-                    onChange={(e) => onChange((e.target as HTMLInputElement).value)}
-                    className="input-blueprint w-full"
+                    onChange={(e: any) => onChange((e.target as HTMLInputElement).value)}
+                    className="input-blueprint w-full pr-10"
                     rows={type === 'textarea' ? 6 : undefined}
                 />
+                {rightAdornment}
                 {value && (
                     <button onClick={() => onChange('')} className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-500 hover:text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,10 +37,17 @@ const EditableField = ({ label, value, onChange, type = 'input' }: { label: stri
     );
 }
 
+const slugify = (s: string) => s.toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
 const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduct, setCurrentProduct }) => {
     const { addToast, addProduct, products, deleteProduct } = useApp();
     const [productUrl, setProductUrl] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [rivals, setRivals] = useState<string[]>([]);
 
     useEffect(() => {
         if (mode === 'manual_product' && !currentProduct) {
@@ -77,6 +85,49 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
         }
     };
 
+    const handleAutoSlug = () => {
+        if (!currentProduct) return;
+        const base = `${currentProduct.brand ? currentProduct.brand + ' ' : ''}${currentProduct.name || ''}`;
+        handleFieldChange('slug' as any, slugify(base));
+    };
+
+    const handleGenerateSEO = async () => {
+        if (!currentProduct) return;
+        try {
+            if (!isAIEnabled) {
+                // Fallback heuristics
+                const title = `${currentProduct.name || 'Product'} | ${currentProduct.category || 'PC Parts'} Review & Specs`;
+                const desc = `Explore ${currentProduct.name || 'this product'}: key specs, pricing, and our quick AI review. Compare and upgrade smarter.`;
+                handleFieldChange('seoTitle' as any, title);
+                handleFieldChange('seoDescription' as any, desc);
+                addToast('SEO generated with defaults (AI disabled).', 'info');
+                return;
+            }
+            const { seoTitle, seoDescription } = await generateProductSEO(
+                currentProduct.name || '',
+                currentProduct.category || '',
+                currentProduct.review || ''
+            );
+            handleFieldChange('seoTitle' as any, seoTitle || '');
+            handleFieldChange('seoDescription' as any, seoDescription || '');
+            addToast('SEO generated.', 'success');
+        } catch (e) {
+            console.error(e);
+            addToast('Failed to generate SEO.', 'error');
+        }
+    };
+
+    const handleGenerateRivals = async () => {
+        if (!currentProduct) return;
+        try {
+            const list = await suggestRivals(currentProduct.name || '', currentProduct.specifications || '', 3);
+            setRivals(list);
+        } catch (e) {
+            console.error(e);
+            addToast('Failed to suggest rivals.', 'error');
+        }
+    };
+
     const handleSave = () => {
         if (!currentProduct || !currentProduct.name || !currentProduct.category) {
             addToast('Product name and category are required.', 'error');
@@ -93,12 +144,16 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
             review: currentProduct.review || '',
             specifications: currentProduct.specifications || '',
             brand: currentProduct.brand || '',
+            slug: currentProduct.slug || slugify(`${currentProduct.brand ? currentProduct.brand + ' ' : ''}${currentProduct.name}`),
+            seoTitle: currentProduct.seoTitle || '',
+            seoDescription: currentProduct.seoDescription || '',
         };
 
         addProduct(productToSave);
         addToast('Product saved successfully!', 'success');
         setCurrentProduct(null);
         setProductUrl('');
+        setRivals([]);
     };
 
     const renderEditableForm = () => {
@@ -109,6 +164,28 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <EditableField label="Category" value={currentProduct.category || ''} onChange={(val) => handleFieldChange('category', val)} />
                     <EditableField label="Brand" value={currentProduct.brand || ''} onChange={(val) => handleFieldChange('brand', val)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EditableField label="Price" value={currentProduct.price || ''} onChange={(val) => handleFieldChange('price' as any, val)} />
+                    <EditableField label="Affiliate Link" value={currentProduct.affiliateLink || ''} onChange={(val) => handleFieldChange('affiliateLink' as any, val)} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <EditableField 
+                        label="Slug"
+                        value={currentProduct.slug || ''}
+                        onChange={(val) => handleFieldChange('slug' as any, val)}
+                        rightAdornment={
+                            <button onClick={handleAutoSlug} className="absolute top-1/2 right-9 -translate-y-1/2 text-sky-300 text-xs">Auto</button>
+                        }
+                    />
+                    <div />
+                </div>
+                <EditableField label="SEO Title" value={currentProduct.seoTitle || ''} onChange={(val) => handleFieldChange('seoTitle' as any, val)} />
+                <div className="relative">
+                    <EditableField label="SEO Description" value={currentProduct.seoDescription || ''} onChange={(val) => handleFieldChange('seoDescription' as any, val)} type="textarea" />
+                    <div className="flex justify-end mt-2">
+                        <button onClick={handleGenerateSEO} className="btn-blueprint text-sm">Generate SEO</button>
+                    </div>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Image URLs (one per line)</label>
@@ -121,6 +198,16 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                 </div>
                 <EditableField label="AI Review" value={currentProduct.review || ''} onChange={(val) => handleFieldChange('review', val)} type="textarea" />
                 <EditableField label="Specifications" value={currentProduct.specifications || ''} onChange={(val) => handleFieldChange('specifications', val)} type="textarea" />
+
+                <div className="pt-4">
+                    <button onClick={handleGenerateRivals} className="btn-blueprint text-sm">Suggest Rivals</button>
+                    {rivals.length > 0 && (
+                        <ul className="mt-3 list-disc list-inside text-slate-300 text-sm">
+                            {rivals.map((r, i) => (<li key={i}>{r}</li>))}
+                        </ul>
+                    )}
+                </div>
+
                 <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
                     <button onClick={() => setCurrentProduct(null)} className="btn-blueprint">Cancel</button>
                     <button onClick={handleSave} className="btn-blueprint btn-blueprint--primary">Save Product</button>

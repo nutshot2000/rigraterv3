@@ -19,13 +19,16 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({ product }) => {
         review: product?.review || 'Awaiting AI review...',
         specifications: product?.specifications || 'Awaiting AI specs...',
         brand: product?.brand || 'Brand',
+        slug: product?.slug || '',
+        seoTitle: product?.seoTitle || '',
+        seoDescription: product?.seoDescription || ''
     };
 
     return (
         <div>
             <h2 className="text-xl font-bold text-white mb-4">Live Preview</h2>
-            <div className="sticky top-24">
-                <p className="text-sm text-slate-400 mb-4">This is how your product will appear on the storefront.</p>
+            <div className="sticky top-24 space-y-6">
+                <p className="text-sm text-slate-400">Storefront card</p>
                 {product ? (
                      <ProductCard 
                         product={previewProduct} 
@@ -38,6 +41,15 @@ const ProductPreview: React.FC<ProductPreviewProps> = ({ product }) => {
                         <p className="text-slate-500">Waiting for product data...</p>
                     </div>
                 )}
+
+                <div className="pt-2">
+                    <p className="text-sm text-slate-400 mb-2">SEO preview</p>
+                    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
+                        <div className="text-sky-300 text-sm font-semibold truncate">{previewProduct.seoTitle || previewProduct.name}</div>
+                        <div className="text-slate-400 text-xs mt-1 truncate">/{previewProduct.slug || 'your-product-slug'}</div>
+                        <div className="text-slate-300 text-sm mt-2 line-clamp-3">{previewProduct.seoDescription || 'Meta description preview will appear here.'}</div>
+                    </div>
+                </div>
             </div>
         </div>
     );
