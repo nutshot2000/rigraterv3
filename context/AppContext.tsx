@@ -328,9 +328,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 });
             } catch {}
             try {
-                const remote = await fetchProducts();
-                if (Array.isArray(remote) && remote.length) {
-                    setProducts(remote);
+                const remoteResponse = await fetchProducts({ page: 1, pageSize: 100, sortBy: 'created_at', sortDirection: 'desc' });
+                if (remoteResponse && Array.isArray(remoteResponse.products)) {
+                    setProducts(remoteResponse.products);
                 }
             } catch {}
             try {
