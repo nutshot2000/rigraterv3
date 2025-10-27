@@ -4,6 +4,7 @@ import { AdminSidebar, AdminMode } from '../components/admin/AdminSidebar';
 import { ProductWorkspace } from '../components/admin/ProductWorkspace';
 import ProductPreview from '../components/admin/ProductPreview';
 import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
+import ProductManagement from '../components/admin/ProductManagement';
 import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
@@ -51,7 +52,7 @@ export const AdminPage: React.FC = () => {
                     />
                 );
             case 'manage_products':
-                return <h1 className="text-white p-8">Manage Products - Coming Soon</h1>;
+                return <ProductManagement />;
             case 'manage_posts':
                 return <h1 className="text-white p-8">Manage Blog Posts - Coming Soon</h1>;
             case 'settings':
