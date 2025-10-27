@@ -48,15 +48,15 @@ function sanitizeHtml(html: string): string {
 }
 
 
-export default async function handler(req: Request) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { source, type } = await req.json(); // source can be URL or topic
+  const { source, type } = req.body || {}; // source can be URL or topic
 
   if (!source || !type) {
-    return new Response(JSON.stringify({ error: 'Missing source or type' }), { status: 400 });
+    return res.status(400).json({ error: 'Missing source or type' });
   }
 
   let context = '';
@@ -104,22 +104,14 @@ export default async function handler(req: Request) {
   try {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
-    
+
     // Clean the response text to ensure it's valid JSON
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
-    const cleanJson = jsonMatch ? jsonMatch[1] : responseText;
-    
+    const cleanJson = responseText.replace(/```json|```/g, '').trim();
     const blogPost = JSON.parse(cleanJson);
 
-    return new Response(JSON.stringify(blogPost), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error("Error generating blog post:", error);
-    return new Response(JSON.stringify({ error: 'Failed to generate blog post content from AI.' }), {
-      status: 500,
-    });
+    return res.status(200).json(blogPost);
+  } catch (error: any) {
+    console.error('Error generating blog post:', error);
+    return res.status(500).json({ error: 'Failed to generate blog post content from AI.', details: error?.message || String(error) });
   }
 }
