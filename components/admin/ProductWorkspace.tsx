@@ -180,6 +180,22 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
         if (!list.includes(url)) setCurrentProduct({ ...currentProduct, imageUrls: [...list, url] });
     };
 
+    const aiCompleteFields = async () => {
+        if (!currentProduct && !productUrl) return;
+        try {
+            const resp = await fetch('/api/ai/complete-product', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ productUrl, product: currentProduct }) });
+            const data = await resp.json();
+            if (resp.ok) {
+                setCurrentProduct({ ...(currentProduct || {}), ...data });
+                addToast('AI completed missing fields.', 'success');
+            } else {
+                addToast(data?.error || 'AI completion failed.', 'error');
+            }
+        } catch (e) {
+            addToast('AI completion failed.', 'error');
+        }
+    };
+
     const renderEditableForm = () => {
         if (!currentProduct) return null;
         return (
@@ -243,6 +259,12 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
                             {rivals.map((r, i) => (<li key={i}>{r}</li>))}
                         </ul>
                     )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <button onClick={handleGenerateSEO} className="btn-blueprint text-sm">Generate SEO</button>
+                    <button onClick={handleGenerateRivals} className="btn-blueprint text-sm">Suggest Rivals</button>
+                    <button onClick={aiCompleteFields} className="btn-blueprint btn-blueprint--primary text-sm">AI Complete Fields</button>
                 </div>
 
                 <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
