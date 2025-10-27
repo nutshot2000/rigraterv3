@@ -301,6 +301,33 @@ function heuristicComplete(name: string) {
     };
 }
 
+// Sanitize HTML by removing script, style, and other non-content tags
+function sanitizeHtml(html: string): string {
+    return html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<svg[^>]*>[\s\S]*?<\/svg>/gi, '')
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<[^>]+>/g, ' ') // a bit aggressive, but removes leftover tags
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+// Clean up AI-generated text from common code artifacts
+function cleanAiOutput(text: string): string {
+    if (!text) return '';
+    return text
+        .replace(/P\.when\([^)]+\)\.execute\([^)]+\);?/gi, '')
+        .replace(/var\s+\w+\s*=\s*[^;]+;/gi, '')
+        .replace(/A\.declarative\([^)]+\);?/gi, '')
+        .replace(/if\s*\([^)]+\)\s*\{[^}]+\}/gi, '')
+        .replace(/ue\.count\([^)]+\);?/gi, '')
+        .replace(/window\.ue\s*=\s*window\.ue\s*\|\|\s*\{\};/gi, '')
+        .replace(/4\.5 out of 5 stars/gi, '') // common noise
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 export default async function handler(req: any, res: any) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
     
@@ -319,6 +346,7 @@ export default async function handler(req: any, res: any) {
                     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
                 });
                 const html = await pageResponse.text();
+                const cleanHtml = sanitizeHtml(html);
 
                 // Extract ASIN for Amazon images
                 const asin = extractASIN(input);
@@ -385,7 +413,7 @@ WRITING STYLE:
 - End with a strong call-to-action that feels natural
 
 HTML Content (first 40k chars):
-${html.substring(0, 40000)}
+${cleanHtml.substring(0, 40000)}
 
 Return ONLY valid JSON with these exact keys: name, brand, category, price, specifications, review, seoTitle, seoDescription, slug, affiliateLink`;
                         
@@ -393,6 +421,14 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         const jsonText = result.response.text().replace(/```json|```/g, '').trim();
                         productData = JSON.parse(jsonText);
                         
+                        // Clean up potential code garbage in specs and review
+                        if (productData.specifications) {
+                            productData.specifications = cleanAiOutput(productData.specifications);
+                        }
+                        if (productData.review) {
+                            productData.review = cleanAiOutput(productData.review);
+                        }
+
                         // Ensure essential fields and merge extracted specs/price when missing
                         if (!productData.name || productData.name.length < 3) productData.name = title || 'Product from URL';
                         if (!productData.brand) productData.brand = brand || productData.name.split(' ')[0] || '';

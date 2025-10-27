@@ -199,8 +199,8 @@ const HomePage: React.FC = () => {
                 {/* Main Search Bar */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 relative">
-                        <input
-                            type="text"
+                <input
+                    type="text"
                             placeholder="Find your next upgrade..."
                             value={pendingSearch}
                             onChange={(e) => { setPendingSearch(e.target.value); setPage(1); }}
@@ -234,15 +234,15 @@ const HomePage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                                <select
-                                    value={selectedCategory}
+                <select
+                    value={selectedCategory}
                                     onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
                                     className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                                >
-                                    {categories.map(category => (
-                                        <option key={category} value={category}>{category}</option>
-                                    ))}
-                                </select>
+                >
+                    {categories.map(category => (
+                        <option key={category} value={category}>{category}</option>
+                    ))}
+                </select>
                             </div>
                             
                             <div>

@@ -42,12 +42,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                 <div className="overflow-y-auto max-h-[calc(100vh-7rem)] p-6 md:p-8">
                     {/* Primary Image */}
                     <div className="mb-6 bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-                        <img 
+                      <img 
                             src={primaryImage} 
-                            alt={product.name} 
+                        alt={product.name} 
                             className="w-full max-h-80 object-contain rounded"
-                            onError={handleImageError}
-                        />
+                        onError={handleImageError}
+                      />
                     </div>
 
                     {/* Header Info */}
