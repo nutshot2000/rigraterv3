@@ -71,7 +71,7 @@ const AppContent: React.FC = () => {
                 {renderPage()}
                 </Suspense>
             </main>
-            <Footer />
+            <Footer onNavigate={setPage} />
             <ToastContainer />
         </div>
     );
