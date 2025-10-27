@@ -48,23 +48,86 @@ function extractImagesFromHTML(html: string): string[] {
     return Array.from(urls).slice(0, 20);
 }
 
-// Validate image URLs
+// Validate image URLs with multiple attempts
 async function validateImages(urls: string[]): Promise<string[]> {
     const valid: string[] = [];
     
     for (const url of urls) {
-        try {
-            const response = await fetch(url, { 
-                method: 'HEAD',
-                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
-                valid.push(url);
+        // Try original URL first
+        if (await testImageUrl(url)) {
+            valid.push(url);
+            continue;
+        }
+        
+        // For Amazon URLs, try stripping size tokens
+        if (url.includes('amazon.com/images/I/')) {
+            const stripped = url
+                .replace(/\._AC_SL\d+_/i, '')
+                .replace(/\._SL\d+_/i, '')
+                .replace(/\._SX\d+_/i, '')
+                .replace(/\._SY\d+_/i, '')
+                .replace(/\._UX\d+_/i, '')
+                .replace(/\._UY\d+_/i, '')
+                .replace(/\._SS\d+_/i, '')
+                .replace(/\._SR\d+,\d+_/i, '')
+                .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
+            
+            if (stripped !== url && await testImageUrl(stripped)) {
+                valid.push(stripped);
+                continue;
             }
-        } catch {}
+            
+            // Try different Amazon sizes
+            const baseMatch = url.match(/^(.+?)_SL\d+_(.+)$/i);
+            if (baseMatch) {
+                const [, base, ext] = baseMatch;
+                const sizes = ['1500', '1200', '1000', '800', '600', '500', '400', '300', '200'];
+                for (const size of sizes) {
+                    const testUrl = `${base}_SL${size}_${ext}`;
+                    if (await testImageUrl(testUrl)) {
+                        valid.push(testUrl);
+                        break;
+                    }
+                }
+            }
+        }
     }
     
-    return valid;
+    return valid.slice(0, 8); // Limit to 8 images max
+}
+
+async function testImageUrl(url: string): Promise<boolean> {
+    try {
+        const response = await fetch(url, { 
+            method: 'HEAD',
+            headers: { 
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'
+            }
+        });
+        
+        if (response.ok) {
+            const contentType = response.headers.get('content-type') || '';
+            return contentType.startsWith('image/');
+        }
+        
+        // Some servers reject HEAD, try GET with small range
+        if (response.status === 405 || response.status === 403) {
+            const getResponse = await fetch(url, {
+                method: 'GET',
+                headers: { 
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                    'Range': 'bytes=0-1023'
+                }
+            });
+            return getResponse.ok && (getResponse.headers.get('content-type') || '').startsWith('image/');
+        }
+        
+        return false;
+    } catch {
+        return false;
+    }
 }
 
 // Heuristic completion for name-only
