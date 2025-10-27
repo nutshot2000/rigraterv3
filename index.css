@@ -119,3 +119,31 @@ html, body {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* Styles for admin form accordions */
+.form-section {
+  @apply bg-slate-800/60 border border-slate-700 rounded-lg overflow-hidden;
+}
+.form-section summary {
+  @apply px-4 py-3 font-semibold cursor-pointer text-white list-none bg-slate-800/70 hover:bg-slate-700/50;
+  display: flex;
+  align-items: center;
+}
+.form-section summary::-webkit-details-marker {
+    display: none;
+}
+.form-section summary::before {
+    content: '▶';
+    margin-right: 0.75rem;
+    font-size: 0.7em;
+    transition: transform 0.2s ease-in-out;
+}
+.form-section[open] > summary {
+    @apply border-b border-slate-700;
+}
+.form-section[open] > summary::before {
+    transform: rotate(90deg);
+}
+.form-section-content {
+    @apply p-6 space-y-6;
+}
+

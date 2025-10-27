@@ -215,75 +215,79 @@ const ProductWorkspace: React.FC<ProductWorkspaceProps> = ({ mode, currentProduc
     const renderEditableForm = () => {
         if (!currentProduct) return null;
         return (
-            <div className="mt-8 space-y-6 animate-fade-in">
-                <EditableField label="Product Name" value={currentProduct.name || ''} onChange={(val) => handleFieldChange('name', val)} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EditableField label="Category" value={currentProduct.category || ''} onChange={(val) => handleFieldChange('category', val)} />
-                    <EditableField label="Brand" value={currentProduct.brand || ''} onChange={(val) => handleFieldChange('brand', val)} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EditableField label="Price" value={currentProduct.price || ''} onChange={(val) => handleFieldChange('price' as any, val)} />
-                    <EditableField label="Affiliate Link" value={currentProduct.affiliateLink || ''} onChange={(val) => handleFieldChange('affiliateLink' as any, val)} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <EditableField 
-                        label="Slug"
-                        value={currentProduct.slug || ''}
-                        onChange={(val) => handleFieldChange('slug' as any, val)}
-                        rightAdornment={
-                            <button onClick={handleAutoSlug} className="absolute top-1/2 right-9 -translate-y-1/2 text-sky-300 text-xs">Auto</button>
-                        }
-                    />
-                    <div />
-                </div>
-                <EditableField label="SEO Title" value={currentProduct.seoTitle || ''} onChange={(val) => handleFieldChange('seoTitle' as any, val)} />
-                <div className="relative">
-                    <EditableField label="SEO Description" value={currentProduct.seoDescription || ''} onChange={(val) => handleFieldChange('seoDescription' as any, val)} type="textarea" />
-                    <div className="flex justify-end mt-2">
-                        <button onClick={handleGenerateSEO} className="btn-blueprint text-sm">Generate SEO</button>
-                    </div>
-                </div>
-                <div>
-                    <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-slate-300">Image URLs (one per line)</label>
-                        <button onClick={extractImages} className="btn-blueprint text-xs" disabled={isExtractingImages}> {isExtractingImages ? 'Scanning…' : 'Scan Page for Images'} </button>
-                    </div>
-                    <textarea
-                        value={(currentProduct.imageUrls || []).join('\n')}
-                        onChange={(e) => handleFieldChange('imageUrls', e.target.value.split('\n'))}
-                        className="input-blueprint min-h-[100px] w-full"
-                        rows={4}
-                    />
-                    {imageCandidates.length > 0 && (
-                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            {imageCandidates.slice(0, 12).map((src) => (
-                                <button key={src} type="button" className="bg-slate-800/50 border border-slate-700 rounded p-2 hover:border-sky-500"
-                                    title="Add to images" onClick={() => addImage(src)}>
-                                    <img src={src} alt="candidate" className="w-full h-28 object-contain" />
-                                </button>
-                            ))}
-                        </div>
-                    )}
-                </div>
-                <EditableField label="AI Review" value={currentProduct.review || ''} onChange={(val) => handleFieldChange('review', val)} type="textarea" />
-                <EditableField label="Specifications" value={currentProduct.specifications || ''} onChange={(val) => handleFieldChange('specifications', val)} type="textarea" />
+            <div className="mt-8 space-y-4 animate-fade-in">
 
-                <div className="pt-4">
-                    <button onClick={handleGenerateRivals} className="btn-blueprint text-sm">Suggest Rivals</button>
-                    {rivals.length > 0 && (
-                        <ul className="mt-3 list-disc list-inside text-slate-300 text-sm">
-                            {rivals.map((r, i) => (<li key={i}>{r}</li>))}
-                        </ul>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-3">
+                <div className="p-3 bg-slate-800/50 border border-slate-700 rounded-lg flex items-center justify-end gap-3">
+                    <span className="text-sm text-slate-400 mr-auto">AI Tools</span>
+                    <button onClick={aiCompleteFields} className="btn-blueprint btn-blueprint--primary text-sm">AI Complete Fields</button>
                     <button onClick={handleGenerateSEO} className="btn-blueprint text-sm">Generate SEO</button>
                     <button onClick={handleGenerateRivals} className="btn-blueprint text-sm">Suggest Rivals</button>
-                    <button onClick={aiCompleteFields} className="btn-blueprint btn-blueprint--primary text-sm">AI Complete Fields</button>
                 </div>
 
-                <div className="flex justify-end gap-4 pt-6 border-t border-slate-700">
+                <details className="form-section" open>
+                    <summary>Core Details</summary>
+                    <div className="form-section-content">
+                        <EditableField label="Product Name" value={currentProduct.name || ''} onChange={(val) => handleFieldChange('name', val)} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <EditableField label="Category" value={currentProduct.category || ''} onChange={(val) => handleFieldChange('category', val)} />
+                            <EditableField label="Brand" value={currentProduct.brand || ''} onChange={(val) => handleFieldChange('brand', val)} />
+                            <EditableField label="Price" value={currentProduct.price || ''} onChange={(val) => handleFieldChange('price' as any, val)} />
+                            <EditableField label="Affiliate Link" value={currentProduct.affiliateLink || ''} onChange={(val) => handleFieldChange('affiliateLink' as any, val)} />
+                        </div>
+                    </div>
+                </details>
+
+                <details className="form-section">
+                    <summary>Images</summary>
+                    <div className="form-section-content">
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-slate-300">Image URLs (one per line)</label>
+                            <button onClick={extractImages} className="btn-blueprint text-xs" disabled={isExtractingImages}> {isExtractingImages ? 'Scanning…' : 'Scan Page for Images'} </button>
+                        </div>
+                        <textarea
+                            value={(currentProduct.imageUrls || []).join('\n')}
+                            onChange={(e) => handleFieldChange('imageUrls', e.target.value.split('\n'))}
+                            className="input-blueprint min-h-[100px] w-full"
+                            rows={4}
+                        />
+                        {imageCandidates.length > 0 && (
+                            <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                {imageCandidates.slice(0, 12).map((src) => (
+                                    <button key={src} type="button" className="bg-slate-800/50 border border-slate-700 rounded p-2 hover:border-sky-500"
+                                        title="Add to images" onClick={() => addImage(src)}>
+                                        <img src={src} alt="candidate" className="w-full h-28 object-contain" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </details>
+
+                <details className="form-section">
+                    <summary>Content</summary>
+                    <div className="form-section-content">
+                        <EditableField label="AI Review" value={currentProduct.review || ''} onChange={(val) => handleFieldChange('review', val)} type="textarea" />
+                        <EditableField label="Specifications" value={currentProduct.specifications || ''} onChange={(val) => handleFieldChange('specifications', val)} type="textarea" />
+                    </div>
+                </details>
+
+                <details className="form-section">
+                    <summary>SEO & Publishing</summary>
+                    <div className="form-section-content">
+                         <EditableField 
+                            label="Slug"
+                            value={currentProduct.slug || ''}
+                            onChange={(val) => handleFieldChange('slug' as any, val)}
+                            rightAdornment={
+                                <button onClick={handleAutoSlug} className="absolute top-1/2 right-9 -translate-y-1/2 text-sky-300 text-xs">Auto</button>
+                            }
+                        />
+                        <EditableField label="SEO Title" value={currentProduct.seoTitle || ''} onChange={(val) => handleFieldChange('seoTitle' as any, val)} />
+                        <EditableField label="SEO Description" value={currentProduct.seoDescription || ''} onChange={(val) => handleFieldChange('seoDescription' as any, val)} type="textarea" />
+                    </div>
+                </details>
+
+                <div className="flex justify-end gap-4 pt-4">
                     <button onClick={() => setCurrentProduct(null)} className="btn-blueprint">Cancel</button>
                     <button onClick={handleSave} className="btn-blueprint btn-blueprint--primary">Save Product</button>
                 </div>
