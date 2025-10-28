@@ -47,6 +47,33 @@ function sanitizeHtml(html: string): string {
     return result.replace(/\s\s+/g, ' ').trim();
 }
 
+// Extract candidate image URLs from HTML (Amazon-aware)
+function extractImagesFromHTML(html: string): string[] {
+  const urls = new Set<string>();
+  // Amazon data-old-hires
+  const oldHiresMatches = [...html.matchAll(/data-old-hires\s*=\s*"(https?:\/\/[^"']+\.(?:jpg|jpeg|png|webp))"/gi)];
+  oldHiresMatches.forEach(m => urls.add(m[1]));
+
+  // Amazon dynamic image JSON
+  const dynAttr = [...html.matchAll(/data-a-dynamic-image\s*=\s*"([\s\S]*?)"/gi)];
+  for (const m of dynAttr) {
+    try {
+      const jsonText = m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+      const obj = JSON.parse(jsonText);
+      Object.keys(obj).forEach(k => urls.add(k));
+    } catch {}
+  }
+
+  // hiRes in embedded JSON
+  const hiResMatches = [...html.matchAll(/\"hiRes\"\s*:\s*\"(https?:\\\/[^"']+?\.(?:jpg|jpeg|png|webp))\"/gi)];
+  hiResMatches.forEach(m => urls.add(m[1].replace(/\\\//g, '/')));
+
+  // Generic <img src>
+  (html.match(/https?:\/\/[^\s"'<>]+\.(?:jpg|jpeg|png|webp)/gi) || []).forEach(u => urls.add(u));
+
+  return Array.from(urls).slice(0, 20);
+}
+
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
