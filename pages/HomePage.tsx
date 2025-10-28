@@ -2,9 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import ProductCard from '../components/public/ProductCard';
-import ProductDetailModal from '../components/public/ProductDetailModal';
 import ComparisonBar from '../components/public/ComparisonBar';
-import VirtualizedGrid from '../components/public/VirtualizedGrid';
 import { useNavigate } from 'react-router-dom';
 
 const BrandFilter: React.FC<{ brands: string[]; selected: string[]; onChange: (v: string[]) => void }> = ({ brands, selected, onChange }) => {
@@ -175,13 +173,7 @@ const HomePage: React.FC = () => {
     }, [onIntersect]);
 
     const handleCardClick = (product: Product) => {
-        if (product.slug) {
-            navigate(`/products/${product.slug}`);
-        }
-    };
-    
-    const handleCloseModal = () => {
-        // setSelectedProduct(null); // This state is no longer managed here
+        if (product.slug) navigate(`/products/${product.slug}`);
     };
 
     return (
@@ -202,8 +194,8 @@ const HomePage: React.FC = () => {
                 {/* Main Search Bar */}
                 <div className="flex items-center gap-3 mb-4">
                     <div className="flex-1 relative">
-                <input
-                    type="text"
+                        <input
+                            type="text"
                             placeholder="Find your next upgrade..."
                             value={pendingSearch}
                             onChange={(e) => { setPendingSearch(e.target.value); setPage(1); }}
@@ -237,15 +229,15 @@ const HomePage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                <select
-                    value={selectedCategory}
+                                <select
+                                    value={selectedCategory}
                                     onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
                                     className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                >
-                    {categories.map(category => (
-                        <option key={category} value={category}>{category}</option>
-                    ))}
-                </select>
+                                >
+                                    {categories.map(category => (
+                                        <option key={category} value={category}>{category}</option>
+                                    ))}
+                                </select>
                             </div>
                             
                             <div>
@@ -342,20 +334,18 @@ const HomePage: React.FC = () => {
                             localStorage.setItem('filterPresets', JSON.stringify(next));
                         }}
                     />
-                    <VirtualizedGrid
-                        items={currentPageProducts}
-                        itemHeight={240}
-                        onEndReached={() => setPage(p => (p < totalPages ? p + 1 : p))}
-                        renderItem={(product) => (
-                        <ProductCard
-                            key={product.id}
-                            product={product}
-                            onCardClick={handleCardClick}
-                            onAddToComparison={addToComparison}
-                                isInComparison={comparisonList.some(p => p.id === (product as any).id)}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {currentPageProducts.map(product => (
+                            <ProductCard
+                                key={product.id}
+                                product={product}
+                                onCardClick={handleCardClick}
+                                onAddToComparison={addToComparison}
+                                isInComparison={comparisonList.some(p => p.id === product.id)}
                             />
-                        )}
-                        />
+                        ))}
+                    </div>
                     <div ref={sentinelRef} className="h-8" />
                 </>
             ) : (
@@ -363,30 +353,25 @@ const HomePage: React.FC = () => {
                     <p className="text-gray-400 text-xl">No products found matching your criteria.</p>
                 </div>
             )}
-
-            {/* Pagination controls remain for accessibility; infinite scroll will auto-advance */}
-            {filteredProducts.length > 0 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                    <button
-                        className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
-                        disabled={page === 1}
-                        onClick={() => setPage(p => Math.max(1, p - 1))}
-                    >
-                        Prev
-                    </button>
-                    <span className="text-gray-300 text-sm">Page {page} of {totalPages}</span>
-                    <button
-                        className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    >
-                        Next
-                    </button>
-                </div>
-            )}
-
-            {/* ProductDetailModal is now removed */}
             
+            <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                    className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                >
+                    Prev
+                </button>
+                <span className="text-gray-300 text-sm">Page {page} of {totalPages}</span>
+                <button
+                    className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                >
+                    Next
+                </button>
+            </div>
+
             <ComparisonBar />
         </div>
     );
