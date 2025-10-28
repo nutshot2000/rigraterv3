@@ -67,47 +67,43 @@ const ProductPage: React.FC = () => {
         <>
             <Helmet>
                 <title>{product.seoTitle || product.name} | RIGRATER</title>
-                <meta name="description" content={product.seoDescription || product.review.substring(0, 160)} />
+                <meta name="description" content={product.seoDescription || (product.review || '').substring(0, 160)} />
             </Helmet>
             
-            <div className="max-w-5xl mx-auto">
-                <div className="grid md:grid-cols-2 gap-8 md:gap-12">
-                    {/* Image Column */}
-                    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 self-start">
-                        <img 
-                            src={product.imageUrl ? `/api/proxy-image?url=${encodeURIComponent(product.imageUrl)}` : FALLBACK_IMAGE_URL} 
-                            alt={product.name}
-                            className="w-full h-96 object-contain rounded"
-                        />
-                    </div>
-
-                    {/* Details Column */}
-                    <div>
-                        <div className="mb-4">
-                            <span className="text-sm text-slate-400 uppercase tracking-wider">{product.category}</span>
-                            <h1 className="text-4xl font-bold text-white leading-tight mt-1">{product.name}</h1>
-                        </div>
-                        <div className="text-4xl font-bold text-sky-400 mb-6">{product.price}</div>
-                        
-                        <div className="prose prose-invert max-w-none mb-6">
-                            <p className="text-slate-300">{product.review}</p>
-                        </div>
-                        
-                        <a href={product.affiliateLink} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary w-full justify-center py-3 text-lg">
-                            Buy Now
-                        </a>
-                    </div>
+            <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                    <span className="text-sm text-slate-400 uppercase tracking-wider">{product.category}</span>
+                    <h1 className="text-5xl font-bold text-white leading-tight mt-1">{product.name}</h1>
                 </div>
 
-                {/* Specifications Section */}
+                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mb-8">
+                    <img 
+                        src={product.imageUrl ? `/api/proxy-image?url=${encodeURIComponent(product.imageUrl)}` : FALLBACK_IMAGE_URL} 
+                        alt={product.name}
+                        className="w-full h-96 object-contain rounded"
+                    />
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-800/50 rounded-lg p-6 border border-slate-700 mb-8">
+                    <div className="text-4xl font-bold text-sky-400 mb-4 sm:mb-0">{product.price}</div>
+                    <a href={product.affiliateLink} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary justify-center py-3 text-lg sm:w-auto w-full">
+                        Buy Now on Amazon
+                    </a>
+                </div>
+
+                <div className="prose prose-invert max-w-none mb-8">
+                    <h2 className="text-3xl font-bold text-white">AI Review</h2>
+                    <p className="text-slate-300 leading-relaxed">{product.review}</p>
+                </div>
+
                 {specifications.length > 0 && (
                      <div className="mt-12">
-                        <h2 className="text-2xl font-bold text-white mb-4">Specifications</h2>
+                        <h2 className="text-3xl font-bold text-white mb-4">Specifications</h2>
                         <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-6 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                             {specifications.map(({ key, value }) => (
                                 <div key={key} className="flex justify-between items-baseline border-b border-slate-700/50 py-2">
-                                    <span className="text-slate-400 font-medium text-sm">{key}</span>
-                                    <span className="text-white font-semibold text-sm text-right">{value}</span>
+                                    <span className="text-slate-400 font-medium">{key}</span>
+                                    <span className="text-white font-semibold text-right">{value}</span>
                                 </div>
                             ))}
                         </div>
