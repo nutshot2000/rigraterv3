@@ -150,67 +150,37 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
       const resp = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: `Generate:
-SEO Title (<=60 chars)
-SEO Description (<=155 chars)
-for this blog post content. Return JSON { seo_title, seo_description } only.\n\n${text}` })
+        body: JSON.stringify({ message: `Generate an SEO title (max 60 chars) and an SEO description (max 155 chars) for the following blog post. Return a single JSON object with the keys "seo_title" and "seo_description", and nothing else.
+
+Content:
+${text}` })
       });
       
       if (!resp.ok) {
-        throw new Error('Failed to generate SEO content');
+        throw new Error('The AI service failed to respond.');
       }
       
       const data = await resp.json();
       let seoData;
       
-      // Try to parse the response as JSON - with much more robust parsing
       try {
         const rawResponse = data.response || '';
-        console.log("Raw AI response:", rawResponse);
-        
-        // Method 1: Try direct parsing if it's already JSON
-        try {
-          seoData = JSON.parse(rawResponse);
-        } catch {
-          // Method 2: Try to extract JSON from markdown code blocks
-          const jsonMatch = rawResponse.match(/```(?:json)?([\s\S]*?)```/);
-          if (jsonMatch && jsonMatch[1]) {
-            try {
-              seoData = JSON.parse(jsonMatch[1].trim());
-            } catch {
-              // Method 3: Try to manually extract the fields from the text
-              const seoTitleMatch = rawResponse.match(/["']?seo_title["']?\s*:\s*["']([^"']+)["']/i);
-              const seoDescMatch = rawResponse.match(/["']?seo_description["']?\s*:\s*["']([^"']+)["']/i);
-              
-              if (seoTitleMatch || seoDescMatch) {
-                seoData = {
-                  seo_title: seoTitleMatch ? seoTitleMatch[1] : '',
-                  seo_description: seoDescMatch ? seoDescMatch[1] : ''
-                };
-              }
-            }
-          }
+        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error("No JSON object found in the AI's response.");
         }
-        
-        // If we still don't have valid SEO data, try to create it from the AI response text
-        if (!seoData || !Object.keys(seoData).length) {
-          const lines = rawResponse.split('\n').filter(line => line.trim());
-          if (lines.length >= 2) {
-            seoData = {
-              seo_title: lines[0].replace(/^SEO Title:?\s*/i, '').trim().substring(0, 60),
-              seo_description: lines[1].replace(/^SEO Description:?\s*/i, '').trim().substring(0, 155)
-            };
-          } else {
-            throw new Error("Couldn't extract SEO data from response");
-          }
-        }
+        seoData = JSON.parse(jsonMatch[0]);
       } catch (e) {
-        console.error('Failed to parse AI response', e);
-        throw new Error('Could not extract SEO data from AI response');
+        console.error('Failed to parse AI response:', e);
+        throw new Error('The AI returned an invalid format. Please try again.');
       }
       
-      if (seoData?.seo_title) updateField('seo_title', seoData.seo_title);
-      if (seoData?.seo_description) updateField('seo_description', seoData.seo_description);
+      if (seoData?.seo_title) {
+        updateField('seo_title', seoData.seo_title);
+      }
+      if (seoData?.seo_description) {
+        updateField('seo_description', seoData.seo_description);
+      }
       
       toast.dismiss();
       toast.success('SEO content generated!');
