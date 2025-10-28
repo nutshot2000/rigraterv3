@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BlogPost, User } from '../../types';
-import { ArrowPathIcon, DocumentPlusIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, DocumentPlusIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { createBlogPost, updateBlogPostById } from '../../services/blogService';
 import { EditableField } from './EditableField';
@@ -26,6 +26,17 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
   const [buildType, setBuildType] = useState<'url' | 'topic'>('topic');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+  const [blogImages, setBlogImages] = useState<string[]>([]); // Array for additional blog images
+  
+  // Initialize blogImages from currentPost when it changes
+  useEffect(() => {
+    if (currentPost?.blog_images && Array.isArray(currentPost.blog_images)) {
+      setBlogImages(currentPost.blog_images);
+    } else {
+      setBlogImages([]);
+    }
+  }, [currentPost?.id]); // Only reset when the post ID changes
 
   const handleGenerate = async () => {
     if (!source.trim()) {
@@ -77,6 +88,9 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
         summary: postData.summary || '',
         content: postData.content || '',
         tags: postData.tags || [],
+        blogImages: blogImages, // Add the array of additional images
+        seoTitle: postData.seo_title || '', // Save SEO fields
+        seoDescription: postData.seo_description || '',
       };
       const savedPost = id
         ? await updateBlogPostById(id, mappedPostData)
@@ -97,6 +111,72 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
 
   const updateField = (field: keyof BlogPost, value: any) => {
     setCurrentPost({ ...currentPost, [field]: value });
+  };
+  
+  const addBlogImage = () => {
+    setBlogImages([...blogImages, '']);
+  };
+
+  const updateBlogImage = (index: number, value: string) => {
+    const newImages = [...blogImages];
+    newImages[index] = value;
+    setBlogImages(newImages);
+    // Also update in the current post object
+    updateField('blog_images', newImages);
+  };
+
+  const removeBlogImage = (index: number) => {
+    const newImages = blogImages.filter((_, i) => i !== index);
+    setBlogImages(newImages);
+    // Also update in the current post object
+    updateField('blog_images', newImages);
+  };
+
+  const handleGenerateSeo = async () => {
+    if (!currentPost) return;
+    
+    setIsGeneratingSeo(true);
+    toast.loading('Generating SEO content...');
+    
+    try {
+      const text = `${currentPost.title || ''}\n\n${currentPost.summary || ''}\n\n${(currentPost.content || '').slice(0, 800)}`;
+      const resp = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: `Generate:
+SEO Title (<=60 chars)
+SEO Description (<=155 chars)
+for this blog post content. Return JSON { seo_title, seo_description } only.\n\n${text}` })
+      });
+      
+      if (!resp.ok) {
+        throw new Error('Failed to generate SEO content');
+      }
+      
+      const data = await resp.json();
+      let seoData;
+      
+      // Try to parse the response as JSON
+      try {
+        const jsonText = (data.response || '').replace(/```json|```/g, '').trim();
+        seoData = JSON.parse(jsonText);
+      } catch (e) {
+        console.error('Failed to parse AI response', e);
+        throw new Error('Invalid response format');
+      }
+      
+      if (seoData?.seo_title) updateField('seo_title', seoData.seo_title);
+      if (seoData?.seo_description) updateField('seo_description', seoData.seo_description);
+      
+      toast.dismiss();
+      toast.success('SEO content generated!');
+    } catch (error: any) {
+      console.error('SEO generation error:', error);
+      toast.dismiss();
+      toast.error(error.message || 'Failed to generate SEO content');
+    } finally {
+      setIsGeneratingSeo(false);
+    }
   };
   
   return (
@@ -161,13 +241,27 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
               isTextarea
               rows={15}
             />
+            {/* Cover Image with Clear Button */}
             <div className="space-y-4">
-              <EditableField
-                label="Cover Image URL"
-                value={currentPost.cover_image_url || ''}
-                onChange={(v) => updateField('cover_image_url', v)}
-                helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
-              />
+              <div className="flex items-center gap-2">
+                <div className="flex-grow">
+                  <EditableField
+                    label="Cover Image URL"
+                    value={currentPost.cover_image_url || ''}
+                    onChange={(v) => updateField('cover_image_url', v)}
+                    helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
+                  />
+                </div>
+                {currentPost.cover_image_url && (
+                  <button 
+                    onClick={() => updateField('cover_image_url', '')} 
+                    className="btn-blueprint-danger h-10 self-end"
+                    title="Clear Image"
+                  >
+                    <TrashIcon className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
               {currentPost.cover_image_url && (
                 <div className="mt-2">
                   <p className="text-sm text-slate-400 mb-2">Cover Image Preview:</p>
@@ -180,6 +274,51 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
                 </div>
               )}
             </div>
+            
+            {/* Additional Blog Images */}
+            <details className="form-section" open>
+              <summary>Additional Blog Images</summary>
+              <div className="form-section-content">
+                <div className="space-y-4">
+                  {blogImages.map((image, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <div className="flex-grow">
+                        <EditableField
+                          label={`Image ${index + 1}`}
+                          value={image}
+                          onChange={(v) => updateBlogImage(index, v)}
+                        />
+                      </div>
+                      <button 
+                        onClick={() => removeBlogImage(index)}
+                        className="btn-blueprint-danger h-10 self-end"
+                        title="Remove Image"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                      
+                      {/* Image Preview */}
+                      {image && (
+                        <img
+                          src={getProxiedImageUrl(image)}
+                          alt={`Image ${index + 1}`}
+                          className="h-10 w-10 object-cover rounded border border-slate-700"
+                          onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  
+                  <button 
+                    onClick={addBlogImage} 
+                    className="btn-blueprint flex gap-2 items-center"
+                  >
+                    <PlusIcon className="h-5 w-5" />
+                    Add Image
+                  </button>
+                </div>
+              </div>
+            </details>
 
             {/* SEO Section */}
             <details className="form-section" open>
@@ -198,27 +337,10 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
                     />
                   <button
                     className="btn-blueprint mt-2"
-                    onClick={async () => {
-                      try {
-                        const text = `${currentPost.title || ''}\n\n${currentPost.summary || ''}\n\n${(currentPost.content || '').slice(0, 800)}`;
-                        const resp = await fetch('/api/ai/chat', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ message: `Generate:
-SEO Title (<=60 chars)
-SEO Description (<=155 chars)
-for this blog post content. Return JSON { seo_title, seo_description } only.\n\n${text}` })
-                        });
-                        if (resp.ok) {
-                          const data = await resp.json();
-                          const parsed = typeof data.response === 'string' ? JSON.parse(data.response.replace(/```json|```/g, '').trim()) : data;
-                          if (parsed.seo_title) updateField('seo_title', parsed.seo_title);
-                          if (parsed.seo_description) updateField('seo_description', parsed.seo_description);
-                        }
-                      } catch {}
-                    }}
+                    onClick={handleGenerateSeo}
+                    disabled={isGeneratingSeo}
                   >
-                    Auto-generate SEO
+                    {isGeneratingSeo ? 'Generating...' : 'Auto-generate SEO'}
                   </button>
                 </div>
             </details>

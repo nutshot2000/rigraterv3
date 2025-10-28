@@ -21,6 +21,9 @@ export async function createBlogPost(input: Omit<BlogPost, 'id' | 'createdAt'>):
         summary: input.summary,
         content: input.content,
         tags: input.tags || [],
+        blog_images: input.blogImages || [],
+        seo_title: input.seoTitle || '',
+        seo_description: input.seoDescription || '',
     };
     const { data, error } = await supabase
         .from('blog_posts')
@@ -40,6 +43,9 @@ export async function updateBlogPostById(id: string, input: Omit<BlogPost, 'id' 
         summary: input.summary,
         content: input.content,
         tags: input.tags || [],
+        blog_images: input.blogImages || [],
+        seo_title: input.seoTitle || '',
+        seo_description: input.seoDescription || '',
     };
     const { data, error } = await supabase
         .from('blog_posts')
@@ -63,10 +69,18 @@ function mapRowToBlogPost(row: any): BlogPost {
         title: row.title,
         slug: row.slug || '',
         coverImageUrl: row.cover_image_url || '',
+        cover_image_url: row.cover_image_url || '',
         summary: row.summary || '',
         content: row.content || '',
         tags: Array.isArray(row.tags) ? row.tags : [],
+        blog_images: Array.isArray(row.blog_images) ? row.blog_images : [],
         createdAt: row.created_at,
+        seoTitle: row.seo_title || '',
+        seo_title: row.seo_title || '',
+        seoDescription: row.seo_description || '',
+        seo_description: row.seo_description || '',
+        author_id: row.author_id,
+        published_at: row.published_at,
     };
 }
 
