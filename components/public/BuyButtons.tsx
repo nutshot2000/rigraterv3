@@ -1,6 +1,6 @@
 import React from 'react';
-import { useApp } from '../context/AppContext';
-import { AMAZON_TAG_US, AMAZON_TAG_UK } from '../constants';
+import { useApp } from '../../context/AppContext';
+import { AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
 
 const enrichAmazonLink = (url: string, tag: string): string => {
     if (!url || !tag) return url;
