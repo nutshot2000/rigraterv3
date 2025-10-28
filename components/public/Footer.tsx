@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { useApp } from '../../context/AppContext';
-import { Page } from '../../types';
+import { Link } from 'react-router-dom';
 
-const Footer: React.FC<{ onNavigate?: (page: Page) => void }> = ({ onNavigate }) => {
+const Footer: React.FC = () => {
     const { isAuthenticated } = useApp();
     return (
         <footer className="bg-gray-800 border-t border-gray-700 mt-12">
@@ -14,13 +14,13 @@ const Footer: React.FC<{ onNavigate?: (page: Page) => void }> = ({ onNavigate })
                 </p>
                  <p className="text-xs mt-2">As an Amazon Associate, we earn from qualifying purchases.</p>
                 <div className="mt-4 flex items-center justify-center gap-4 text-xs">
-                    <button
-                        onClick={() => onNavigate && onNavigate(Page.ADMIN)}
+                    <Link
+                        to="/admin"
                         className="text-slate-500 hover:text-slate-300 underline decoration-dotted"
                         title="Staff access"
                     >
                         Staff
-                    </button>
+                    </Link>
                     {isAuthenticated && (
                         <span className="px-2 py-0.5 rounded-full border border-slate-600 text-slate-400">Logged in</span>
                     )}
