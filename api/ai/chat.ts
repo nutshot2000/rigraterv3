@@ -5,14 +5,14 @@ export const config = {
   maxDuration: 60,
 };
 
-const GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.VITE_GEMINI_MODEL || process.env.GEMINI_MODEL || "gemini-1.5-pro-latest";
+const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro-latest').trim();
 
-if (!GEMINI_API_KEY) {
+if (!GEMINI_KEY) {
   throw new Error("Missing GEMINI_API_KEY environment variable");
 }
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(GEMINI_KEY);
 
 const model = genAI.getGenerativeModel({
   model: GEMINI_MODEL,
