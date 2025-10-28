@@ -7,4 +7,4 @@ Allow: /
 Disallow: /admin
 
 # Point crawlers to the sitemap
-Sitemap: https://www.rigrater.com/api/sitemap.xml
+Sitemap: https://www.rigrater.tech/api/sitemap.xml

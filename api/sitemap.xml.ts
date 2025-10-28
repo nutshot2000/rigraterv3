@@ -4,7 +4,7 @@ export const config = {
   runtime: 'nodejs',
 };
 
-const BASE_URL = 'https://www.rigrater.com'; // Replace with your actual domain
+const BASE_URL = 'https://www.rigrater.tech'; // Replace with your actual domain
 
 async function generateSitemap() {
     const urls = [];
