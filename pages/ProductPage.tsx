@@ -5,6 +5,7 @@ import { Product } from '../types';
 import { fetchProductBySlug } from '../services/productService';
 import { FALLBACK_IMAGE_URL } from '../constants';
 import { useApp } from '../context/AppContext';
+import BuyButtons from '../components/public/BuyButtons';
 
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -86,9 +87,7 @@ const ProductPage: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-800/50 rounded-lg p-6 border border-slate-700 mb-8">
                     <div className="text-4xl font-bold text-sky-400 mb-4 sm:mb-0">{product.price}</div>
-                    <a href={product.affiliateLink} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary justify-center py-3 text-lg sm:w-auto w-full">
-                        Buy Now on Amazon
-                    </a>
+                    <BuyButtons affiliateLink={product.affiliateLink} />
                 </div>
 
                 <div className="prose prose-invert max-w-none mb-8">
