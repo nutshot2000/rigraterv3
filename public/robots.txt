@@ -1,0 +1,10 @@
+# See https://www.robotstxt.org/robotstxt.html for syntax and directives
+
+User-agent: *
+Allow: /
+
+# Block crawlers from the admin area
+Disallow: /admin
+
+# Point crawlers to the sitemap
+Sitemap: https://www.rigrater.com/api/sitemap.xml
