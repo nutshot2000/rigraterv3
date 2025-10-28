@@ -87,7 +87,11 @@ const ProductPage: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-800/50 rounded-lg p-6 border border-slate-700 mb-8">
                     <div className="text-4xl font-bold text-sky-400 mb-4 sm:mb-0">{product.price}</div>
-                    <BuyButtons affiliateLink={product.affiliateLink} />
+                    <BuyButtons 
+                        affiliateLink={product.affiliateLink}
+                        productName={product.name}
+                        productCategory={product.category}
+                    />
                 </div>
 
                 <div className="prose prose-invert max-w-none mb-8">

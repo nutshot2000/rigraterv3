@@ -16,8 +16,26 @@ const enrichAmazonLink = (url: string, tag: string): string => {
     return url;
 };
 
-const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
+interface BuyButtonsProps {
+    affiliateLink: string;
+    productName: string;
+    productCategory: string;
+}
+
+const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, productCategory }) => {
     const { preferredRegion } = useApp();
+
+    const handleAffiliateClick = (region: 'US' | 'UK', url: string) => {
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', 'click_affiliate_link', {
+                event_category: 'Affiliate',
+                event_label: productName,
+                product_category: productCategory,
+                region: region,
+                link_url: url,
+            });
+        }
+    };
 
     // Generate US link
     const usLink = enrichAmazonLink(affiliateLink, AMAZON_TAG_US);
@@ -45,6 +63,7 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base"
+                onClick={() => handleAffiliateClick(primaryIsUK ? 'UK' : 'US', primaryIsUK ? ukLink : usLink)}
             >
                 Buy on Amazon ({primaryIsUK ? 'UK' : 'US'})
             </a>
@@ -53,6 +72,7 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="btn-blueprint flex-1 justify-center py-3 text-base"
+                onClick={() => handleAffiliateClick(primaryIsUK ? 'US' : 'UK', primaryIsUK ? usLink : ukLink)}
             >
                 Buy on Amazon ({primaryIsUK ? 'US' : 'UK'})
             </a>
