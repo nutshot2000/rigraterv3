@@ -5,6 +5,7 @@ import Header from './components/public/Header';
 import Footer from './components/public/Footer';
 import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
+import BlogPage from './pages/BlogPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import ToastContainer from './components/shared/ToastContainer';
 import { HelmetProvider } from 'react-helmet-async';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
                         <main className="flex-grow container mx-auto px-4 py-8">
                             <Routes>
                                 <Route path="/" element={<HomePage />} />
+                                <Route path="/blog" element={<BlogPage />} />
                                 <Route path="/products/:slug" element={<ProductPage />} />
                                 <Route path="/admin" element={
                                     <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
