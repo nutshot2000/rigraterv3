@@ -1,13 +1,9 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { ChipIcon } from './Icons';
-import { useApp } from '../../context/AppContext';
 
 const Header: React.FC = () => {
-    const { isAuthenticated, currentUserEmail } = useApp();
-    const backendOn = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY);
-
     const navLinkClasses = ({ isActive }: { isActive: boolean }) => 
         `btn-blueprint ${isActive ? 'btn-blueprint--primary' : ''} text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400`;
 
@@ -26,13 +22,9 @@ const Header: React.FC = () => {
                         <NavLink to="/" className={navLinkClasses}>
                             Storefront
                         </NavLink>
-                        {/* Add other links for categories, blog etc. later */}
-                        <div className="hidden md:flex items-center text-xs px-2 py-1 rounded border neon-outline "
-                             title={backendOn ? (isAuthenticated ? 'Connected to Supabase as admin' : 'Connected to Supabase - not logged in') : 'Local-only mode'}
-                        >
-                            <span className={`mr-2 w-2 h-2 rounded-full ${backendOn ? (isAuthenticated ? 'bg-green-400' : 'bg-yellow-400') : 'bg-red-400'}`}></span>
-                            {backendOn ? (isAuthenticated ? `DB: ${currentUserEmail || 'Connected'}` : 'DB: Login required') : 'DB: Local-only'}
-                        </div>
+                        <NavLink to="/blog" className={navLinkClasses}>
+                            Blog
+                        </NavLink>
                     </div>
                 </div>
             </nav>

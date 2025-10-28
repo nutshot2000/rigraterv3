@@ -8,10 +8,12 @@ import ProductPage from './pages/ProductPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import ToastContainer from './components/shared/ToastContainer';
 import { HelmetProvider } from 'react-helmet-async';
+import GoogleAnalytics from './components/shared/GoogleAnalytics';
 
 const App: React.FC = () => {
     return (
         <HelmetProvider>
+            <GoogleAnalytics />
             <AppProvider>
                 <BrowserRouter>
                     <div className="flex flex-col min-h-screen text-gray-100 theme-blueprint bg-grid bg-noise bg-crt-dark">
