@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
   maxDuration: 60,
 };
 
@@ -24,15 +24,15 @@ const model = genAI.getGenerativeModel({
   ],
 });
 
-export default async function handler(req: Request) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { message } = await req.json();
+  const { message } = req.body;
 
   if (!message) {
-    return new Response(JSON.stringify({ error: 'Missing message in request body' }), { status: 400 });
+    return res.status(400).json({ error: 'Missing message in request body' });
   }
 
   const prompt = `
@@ -50,15 +50,10 @@ export default async function handler(req: Request) {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    return new Response(JSON.stringify({ reply: responseText }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return res.status(200).json({ reply: responseText });
 
   } catch (error) {
     console.error("Error generating chat reply:", error);
-    return new Response(JSON.stringify({ error: 'Failed to get a reply from AI.' }), {
-      status: 500,
-    });
+    return res.status(500).json({ error: 'Failed to get a reply from AI.' });
   }
 }
