@@ -8,22 +8,7 @@ export const config = {
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
 const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro-latest').trim();
-
-if (!GEMINI_KEY) {
-  throw new Error("Missing GEMINI_API_KEY environment variable");
-}
-
-const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: GEMINI_MODEL,
-  safetySettings: [
-    { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-    { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-    { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-    { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
-  ],
-});
+const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 async function fetchPageContent(url: string): Promise<string> {
   try {
@@ -78,6 +63,10 @@ function extractImagesFromHTML(html: string): string[] {
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!ai) {
+    return res.status(500).json({ error: 'AI service not configured. Missing API key.' });
   }
 
   const { source, type } = req.body || {}; // source can be URL or topic
@@ -154,6 +143,15 @@ export default async function handler(req: any, res: any) {
   `;
 
   try {
+    const model = ai.getGenerativeModel({
+      model: GEMINI_MODEL,
+      safetySettings: [
+        { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+        { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+      ],
+    });
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
