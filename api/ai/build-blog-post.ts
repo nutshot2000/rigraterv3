@@ -6,8 +6,8 @@ export const config = {
   maxDuration: 180,
 };
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-pro-latest";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || "gemini-1.5-pro-latest";
 
 if (!GEMINI_API_KEY) {
   throw new Error("Missing GEMINI_API_KEY environment variable");
