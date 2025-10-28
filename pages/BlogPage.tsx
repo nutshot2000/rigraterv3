@@ -15,9 +15,12 @@ const BlogPage: React.FC = () => {
             try {
                 setLoading(true);
                 const fetchedPosts = await fetchBlogPosts();
-                setPosts(fetchedPosts);
+                setPosts(fetchedPosts || []);
             } catch (err: any) {
-                setError(err.message || 'Failed to load blog posts.');
+                console.error('Error loading blog posts:', err);
+                // If backend is not configured or there are no posts, just show empty state
+                setError(null);
+                setPosts([]);
             } finally {
                 setLoading(false);
             }
