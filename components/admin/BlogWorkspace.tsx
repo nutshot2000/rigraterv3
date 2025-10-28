@@ -10,6 +10,13 @@ import { FALLBACK_IMAGE_URL } from '../../constants';
 const getProxiedImageUrl = (url: string) => {
     if (!url) return FALLBACK_IMAGE_URL;
     if (url.startsWith('/api/proxy-image')) return url;
+    
+    // Handle Unsplash/Pexels search query formatting
+    if (!url.startsWith('http') && !url.includes('.')) {
+        // This is likely a search query, not a URL
+        return `/api/proxy-image?url=${encodeURIComponent(`https://source.unsplash.com/featured/?${encodeURIComponent(url)}`)}`;
+    }
+    
     if (url.startsWith('http')) return `/api/proxy-image?url=${encodeURIComponent(url)}`;
     return url;
 };
@@ -156,13 +163,50 @@ for this blog post content. Return JSON { seo_title, seo_description } only.\n\n
       const data = await resp.json();
       let seoData;
       
-      // Try to parse the response as JSON
+      // Try to parse the response as JSON - with much more robust parsing
       try {
-        const jsonText = (data.response || '').replace(/```json|```/g, '').trim();
-        seoData = JSON.parse(jsonText);
+        const rawResponse = data.response || '';
+        console.log("Raw AI response:", rawResponse);
+        
+        // Method 1: Try direct parsing if it's already JSON
+        try {
+          seoData = JSON.parse(rawResponse);
+        } catch {
+          // Method 2: Try to extract JSON from markdown code blocks
+          const jsonMatch = rawResponse.match(/```(?:json)?([\s\S]*?)```/);
+          if (jsonMatch && jsonMatch[1]) {
+            try {
+              seoData = JSON.parse(jsonMatch[1].trim());
+            } catch {
+              // Method 3: Try to manually extract the fields from the text
+              const seoTitleMatch = rawResponse.match(/["']?seo_title["']?\s*:\s*["']([^"']+)["']/i);
+              const seoDescMatch = rawResponse.match(/["']?seo_description["']?\s*:\s*["']([^"']+)["']/i);
+              
+              if (seoTitleMatch || seoDescMatch) {
+                seoData = {
+                  seo_title: seoTitleMatch ? seoTitleMatch[1] : '',
+                  seo_description: seoDescMatch ? seoDescMatch[1] : ''
+                };
+              }
+            }
+          }
+        }
+        
+        // If we still don't have valid SEO data, try to create it from the AI response text
+        if (!seoData || !Object.keys(seoData).length) {
+          const lines = rawResponse.split('\n').filter(line => line.trim());
+          if (lines.length >= 2) {
+            seoData = {
+              seo_title: lines[0].replace(/^SEO Title:?\s*/i, '').trim().substring(0, 60),
+              seo_description: lines[1].replace(/^SEO Description:?\s*/i, '').trim().substring(0, 155)
+            };
+          } else {
+            throw new Error("Couldn't extract SEO data from response");
+          }
+        }
       } catch (e) {
         console.error('Failed to parse AI response', e);
-        throw new Error('Invalid response format');
+        throw new Error('Could not extract SEO data from AI response');
       }
       
       if (seoData?.seo_title) updateField('seo_title', seoData.seo_title);
