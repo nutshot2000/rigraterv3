@@ -34,6 +34,24 @@ export async function createBlogPost(input: Omit<BlogPost, 'id' | 'createdAt'>):
     return mapRowToBlogPost(data as any);
 }
 
+export async function fetchBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+    if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
+    const { data, error } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('slug', slug)
+        .single();
+    if (error) {
+        // PostgREST not found code can vary; return null on not found
+        if ((error as any).code === 'PGRST116' || (error as any).details?.includes('Results contain 0 rows')) {
+            return null;
+        }
+        throw error;
+    }
+    if (!data) return null;
+    return mapRowToBlogPost(data as any);
+}
+
 export async function updateBlogPostById(id: string, input: Omit<BlogPost, 'id' | 'createdAt'>): Promise<BlogPost> {
     if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
     const payload = {

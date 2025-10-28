@@ -155,9 +155,20 @@ export default async function handler(req: any, res: any) {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    // Clean the response text to ensure it's valid JSON
-    const cleanJson = responseText.replace(/```json|```/g, '').trim();
-    const blogPost = JSON.parse(cleanJson);
+    // Clean and robustly extract JSON object from the model response
+    let blogPost: any;
+    try {
+      // First try: direct parse after stripping common code fences
+      const stripped = responseText.replace(/```json|```/g, '').trim();
+      blogPost = JSON.parse(stripped);
+    } catch {
+      // Fallback: find first top-level JSON object
+      const match = responseText.match(/\{[\s\S]*\}/);
+      if (!match) {
+        throw new Error('Model returned no JSON object');
+      }
+      blogPost = JSON.parse(match[0]);
+    }
     if ((!blogPost.cover_image_url || /^\w+(?:\s|$)/.test(blogPost.cover_image_url)) && extractedCoverUrl) {
       blogPost.cover_image_url = extractedCoverUrl;
     }
