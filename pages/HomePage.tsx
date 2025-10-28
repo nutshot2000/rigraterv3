@@ -5,6 +5,7 @@ import ProductCard from '../components/public/ProductCard';
 import ProductDetailModal from '../components/public/ProductDetailModal';
 import ComparisonBar from '../components/public/ComparisonBar';
 import VirtualizedGrid from '../components/public/VirtualizedGrid';
+import { useNavigate } from 'react-router-dom';
 
 const BrandFilter: React.FC<{ brands: string[]; selected: string[]; onChange: (v: string[]) => void }> = ({ brands, selected, onChange }) => {
     const unique = Array.from(new Set(brands)).sort();
@@ -57,7 +58,7 @@ const PresetBar: React.FC<{ presets: { name: string; data: any }[]; onSave: () =
 
 const HomePage: React.FC = () => {
     const { products, addToComparison, comparisonList } = useApp();
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [sortBy, setSortBy] = useState<'relevance' | 'priceLow' | 'priceHigh' | 'nameAZ' | 'nameZA'>('relevance');
@@ -174,11 +175,13 @@ const HomePage: React.FC = () => {
     }, [onIntersect]);
 
     const handleCardClick = (product: Product) => {
-        setSelectedProduct(product);
+        if (product.slug) {
+            navigate(`/products/${product.slug}`);
+        }
     };
     
     const handleCloseModal = () => {
-        setSelectedProduct(null);
+        // setSelectedProduct(null); // This state is no longer managed here
     };
 
     return (
@@ -382,9 +385,7 @@ const HomePage: React.FC = () => {
                 </div>
             )}
 
-            {selectedProduct && (
-                <ProductDetailModal product={selectedProduct} onClose={handleCloseModal} />
-            )}
+            {/* ProductDetailModal is now removed */}
             
             <ComparisonBar />
         </div>
