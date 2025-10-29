@@ -164,7 +164,7 @@ ${text}` })
       let seoData;
       
       try {
-        const rawResponse = data.response || '';
+        const rawResponse = data.reply || '';
         const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
         if (!jsonMatch) {
           throw new Error("No JSON object found in the AI's response.");

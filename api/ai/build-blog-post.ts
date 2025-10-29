@@ -32,6 +32,35 @@ function sanitizeHtml(html: string): string {
     return result.replace(/\s\s+/g, ' ').trim();
 }
 
+function toSlug(input: string): string {
+  return (input || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
+function clampLength(str: string, max: number): string {
+  if (!str) return '';
+  return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
+}
+
+function normalizeBlogPost(raw: any): any {
+  const post = { ...raw };
+  post.title = (post.title || '').trim();
+  post.slug = post.slug && String(post.slug).trim() ? post.slug : toSlug(post.title);
+  post.summary = (post.summary || '').trim();
+  post.content = (post.content || '').replace(/```[\s\S]*?```/g, '').trim();
+  post.seoTitle = clampLength((post.seoTitle || post.title || '').trim(), 60);
+  post.seoDescription = clampLength((post.seoDescription || post.summary || '').trim(), 160);
+  // Keep suggested search query if present; will be proxied client-side
+  if (typeof post.cover_image_url === 'string') {
+    post.cover_image_url = post.cover_image_url.trim();
+  }
+  return post;
+}
+
 // Extract candidate image URLs from HTML (Amazon-aware)
 function extractImagesFromHTML(html: string): string[] {
   const urls = new Set<string>();
@@ -117,29 +146,31 @@ export default async function handler(req: any, res: any) {
     
     ${context}
     
-    Please generate a complete blog post. The output must be a single, clean JSON object and nothing else.
+    Please generate a complete blog post. The output must be a single, clean JSON object and nothing else. Wrap the JSON in a single \`\`\`json code block to avoid extra text.
     
     The JSON object must have the following structure:
     {
       "title": "string",
       "slug": "string (kebab-case, based on title)",
       "summary": "string (A concise, compelling summary of the article, 2-3 sentences max).",
-      "content": "string (Full blog post content in Markdown format. It should be well-structured with headings, paragraphs, lists, etc. Keep it tight: 700-900 words.)",
-      "seoTitle": "string (An SEO-optimized title, 60 characters max).",
-      "seoDescription": "string (An SEO-optimized meta description, 160 characters max).",
+      "content": "string (Full blog post content in Markdown format with clear structure. Keep it tight: 700-900 words.)",
+      "seoTitle": "string (An SEO-optimized title, <=60 characters).",
+      "seoDescription": "string (An SEO-optimized meta description, <=160 characters).",
       "cover_image_url": "string (A suggested Unsplash or Pexels search query for a relevant, high-quality cover image. For example: 'gaming keyboard RGB' or 'man building custom PC')."
     }
 
     Guidelines for the content:
     - **Title:** Make it catchy and relevant.
     - **Content (Markdown):** 
-      - Start with an engaging introduction.
-      - Use headings (##), subheadings (###), bold text (**), and bullet points (*) to structure the content.
-      - Ensure the information is accurate and up-to-date.
-      - If rewriting from a URL, do not plagiarize. Synthesize the information and present it in your own unique voice and structure.
-      - End with a strong conclusion and a call-to-action if appropriate (e.g., "Check out our latest reviews" or "What do you think? Let us know in the comments!").
-      - Aim for 700-900 words (concise, no fluff).
-    - **SEO:** Title and description should be optimized for search engines, using relevant keywords naturally.
+      - Start with a short intro paragraph (2-3 sentences).
+      - Include a "## Key Takeaways" section with 3-5 concise bullet points.
+      - Use clear H2/H3 headings, short paragraphs, and bulleted lists where helpful.
+      - Include a brief "## Pros and Cons" section with 3 bullets each (balanced, specific).
+      - If rewriting from a URL, DO NOT copy text; synthesize in a unique voice.
+      - End with a strong conclusion and a natural call-to-action.
+      - Aim for 700-900 words (concise, no fluff, avoid filler phrases).
+    - **SEO:** Use relevant keywords naturally; avoid clickbait; do not exceed the length limits.
+    - **Quality:** Avoid hallucinated specs/benchmarks; avoid absolute claims; prefer cautious, helpful phrasing.
   `;
 
   try {
@@ -169,6 +200,7 @@ export default async function handler(req: any, res: any) {
       }
       blogPost = JSON.parse(match[0]);
     }
+    blogPost = normalizeBlogPost(blogPost);
     if ((!blogPost.cover_image_url || /^\w+(?:\s|$)/.test(blogPost.cover_image_url)) && extractedCoverUrl) {
       blogPost.cover_image_url = extractedCoverUrl;
     }

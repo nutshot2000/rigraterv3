@@ -6,6 +6,26 @@ const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_
 const AMAZON_TAG_UK = (process.env.AMAZON_TAG_UK || process.env.VITE_AMAZON_TAG_UK || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
+function clamp(str: string, max: number): string {
+    if (!str) return '';
+    return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
+}
+
+function normalizePrice(input: string): string {
+    const s = String(input || '').trim();
+    if (!s) return '$0.00';
+    if (/^[£$€]/.test(s)) return s;
+    if (/^\d/.test(s)) return `$${s}`;
+    return '$0.00';
+}
+
+function normalizeSeo(data: any): any {
+    const out = { ...data };
+    out.seoTitle = clamp((out.seoTitle || out.name || '').trim(), 60);
+    out.seoDescription = clamp((out.seoDescription || '').trim(), 155);
+    return out;
+}
+
 function getAmazonImageBase(url: string): string {
     // Extracts the unique part of an Amazon image URL, like '710bB5V1jPL'
     // from https://m.media-amazon.com/images/I/710bB5V1jPL._SL1500_.jpg
@@ -447,13 +467,9 @@ Your assignment:
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
 6. Write a professional review (150-220 words) as if you've personally tested this product. Include:
-   - Performance analysis and benchmarks
-   - Build quality and design assessment
-   - Value proposition and pricing analysis
-   - Target audience and use cases
-   - Comparison to competitors
-   - Pros and cons
-   - Final verdict and recommendation
+   - Performance, build quality, value, target audience
+   - A short Pros and Cons segment inside the review as bulleted lines (use "- " bullets)
+   - A clear final verdict and recommendation
 7. SEO title (under 60 chars, include brand and key feature)
 8. SEO description (under 155 chars, compelling summary)
 9. URL-friendly slug (lowercase, hyphens, no special chars)
@@ -470,6 +486,7 @@ WRITING STYLE:
 - Address common objections and concerns
 - Use power words that drive action (premium, exceptional, must-have, game-changer)
 - End with a strong call-to-action that feels natural
+ - Avoid invented benchmarks or precise numbers unless provided; keep phrasing cautious.
 
 HTML Content (first 40k chars):
 ${cleanHtml.substring(0, 40000)}
@@ -499,6 +516,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         }
                         // Always generate our clean affiliate link
                         productData.affiliateLink = generateAffiliateLink(input);
+                        productData = normalizeSeo(productData);
                     } catch (e) {
                         console.error('AI extraction failed:', e);
                         // Fallback with extracted data
@@ -539,12 +557,14 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                 try {
                     const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                     const prompt = `Generate product details for: ${input}.
-Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars), slug (URL-friendly), affiliateLink.`;
+Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (150-220 words; include a short Pros and Cons segment inside the review using "- " bullets), seoTitle (<=60 chars), seoDescription (<=155 chars), slug (URL-friendly), affiliateLink.`;
                     const result = await model.generateContent(prompt);
                     const jsonText = result.response.text().replace(/```json|```/g, '').trim();
                     productData = JSON.parse(jsonText);
                     // Name-only doesn't have a URL, so clear affiliate link
                     productData.affiliateLink = '';
+                    productData.price = normalizePrice(productData.price);
+                    productData = normalizeSeo(productData);
                 } catch (e) {
                     console.error('AI name generation failed:', e);
                     productData = heuristicComplete(input);
@@ -559,11 +579,11 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
             name: productData.name || input,
             brand: productData.brand || productData.name?.split(' ')[0] || '',
             category: productData.category || 'Misc',
-            price: productData.price || '$0.00',
+            price: normalizePrice(productData.price || '$0.00'),
             specifications: productData.specifications || '',
             review: productData.review || 'Review pending...',
-            seoTitle: productData.seoTitle || `${productData.name} | Review & Specs`,
-            seoDescription: productData.seoDescription || `Explore ${productData.name}: key specs, pricing, and quick AI-style summary.`,
+            seoTitle: clamp(productData.seoTitle || `${productData.name} | Review & Specs`, 60),
+            seoDescription: clamp(productData.seoDescription || `Explore ${productData.name}: key specs, pricing, and quick AI-style summary.`, 155),
             slug: productData.slug || productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
             affiliateLink: productData.affiliateLink || (isUrl ? generateAffiliateLink(input) : ''),
             imageUrls: imageUrls.slice(0, 10) // Limit to 10 images
