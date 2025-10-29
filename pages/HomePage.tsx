@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import ProductCard from '../components/public/ProductCard';
-import BrandMultiSelect from '../components/public/BrandMultiSelect';
+import FiltersToolbar from '../components/public/FiltersToolbar';
 import ComparisonBar from '../components/public/ComparisonBar';
 import { useNavigate } from 'react-router-dom';
 
@@ -45,7 +45,7 @@ const HomePage: React.FC = () => {
     const [presets, setPresets] = useState<{ name: string; data: any }[]>(() => {
         try { return JSON.parse(localStorage.getItem('filterPresets') || '[]'); } catch { return []; }
     });
-    const [showFilters, setShowFilters] = useState(false);
+    // redesigned toolbar replaces collapsible filters
     const [page, setPage] = useState(1);
     const pageSize = 12;
 
@@ -167,124 +167,33 @@ const HomePage: React.FC = () => {
                 </p>
             </header>
 
-            {/* Search and Filter Panel */}
+            {/* Redesigned Filters Toolbar */}
             <div className="mb-8">
-                {/* Main Search Bar */}
-                <div className="flex items-center gap-3 mb-4">
-                    <div className="flex-1 relative">
-                        <input
-                            type="text"
-                            placeholder="Find your next upgrade..."
-                            value={pendingSearch}
-                            onChange={(e) => { setPendingSearch(e.target.value); setPage(1); }}
-                            className="input-blueprint"
-                        />
-                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className="btn-blueprint flex items-center gap-2"
-                    >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z" />
-                        </svg>
-                        Filters
-                        {Object.values({ selectedCategory, selectedBrands, priceMin, priceMax }).some(v => 
-                            Array.isArray(v) ? v.length > 0 : v && v !== 'All' && v !== ''
-                        ) && (
-                            <span className="w-2 h-2 bg-teal-400 rounded-full"></span>
-                        )}
-                    </button>
-                </div>
-
-                {/* Collapsible Filter Panel */}
-                {showFilters && (
-                    <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700 rounded-xl p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
-                                <select
-                                    value={selectedCategory}
-                                    onChange={(e) => { setSelectedCategory(e.target.value); setPage(1); }}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                                >
-                                    {categories.map(category => (
-                                        <option key={category} value={category}>{category}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Sort By</label>
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => { setSortBy(e.target.value as any); setPage(1); }}
-                                    className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                                >
-                                    <option value="relevance">Relevance</option>
-                                    <option value="priceLow">Price: Low to High</option>
-                                    <option value="priceHigh">Price: High to Low</option>
-                                    <option value="nameAZ">Name: A → Z</option>
-                                    <option value="nameZA">Name: Z → A</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Price Range</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="number"
-                                        placeholder="Min $"
-                                        value={priceMin}
-                                        onChange={(e) => { setPriceMin(e.target.value); setPage(1); }}
-                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                                    />
-                                    <input
-                                        type="number"
-                                        placeholder="Max $"
-                                        value={priceMax}
-                                        onChange={(e) => { setPriceMax(e.target.value); setPage(1); }}
-                                        className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-                                    />
-                                </div>
-                            </div>
-                            
-                            <div className="md:col-span-2 lg:col-span-1">
-                                <label className="block text-sm font-medium text-gray-300 mb-2">Brands</label>
-                                <BrandMultiSelect
-                                    brands={products.map(p => p.brand).filter(Boolean) as string[]}
-                                    selected={selectedBrands}
-                                    onChange={(b) => { setSelectedBrands(b); setPage(1); }}
-                                />
-                            </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-                            <button
-                                onClick={() => {
-                                    setSearchTerm('');
-                                    setPendingSearch('');
-                                    setSelectedCategory('All');
-                                    setSortBy('relevance');
-                                    setSelectedBrands([]);
-                                    setPriceMin('');
-                                    setPriceMax('');
-                                    setPage(1);
-                                }}
-                                className="px-4 py-2 text-gray-400 hover:text-white transition"
-                            >
-                                Clear all filters
-                            </button>
-                            <div className="text-sm text-gray-400">
-                                {filteredProducts.length} products found
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <FiltersToolbar
+                    search={pendingSearch}
+                    onSearchChange={(v) => { setPendingSearch(v); setPage(1); }}
+                    categories={categories}
+                    category={selectedCategory}
+                    onCategoryChange={(v) => { setSelectedCategory(v); setPage(1); }}
+                    sortBy={sortBy}
+                    onSortChange={(v) => { setSortBy(v); setPage(1); }}
+                    priceMin={priceMin}
+                    priceMax={priceMax}
+                    onPriceChange={(min, max) => { setPriceMin(min); setPriceMax(max); setPage(1); }}
+                    allBrands={Array.from(new Set(products.map(p => p.brand).filter(Boolean) as string[]))}
+                    selectedBrands={selectedBrands}
+                    onBrandsChange={(b) => { setSelectedBrands(b); setPage(1); }}
+                    onReset={() => {
+                        setSearchTerm('');
+                        setPendingSearch('');
+                        setSelectedCategory('All');
+                        setSortBy('relevance');
+                        setSelectedBrands([]);
+                        setPriceMin('');
+                        setPriceMax('');
+                        setPage(1);
+                    }}
+                />
             </div>
             
             {filteredProducts.length > 0 ? (
