@@ -204,7 +204,7 @@ const HomePage: React.FC = () => {
                 {/* Collapsible Filter Panel */}
                 {showFilters && (
                     <div className="bg-gray-800/40 backdrop-blur-sm border border-gray-700 rounded-xl p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-4 gap-x-8">
                             <div>
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Category</label>
                                 <select
