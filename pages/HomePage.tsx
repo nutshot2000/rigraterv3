@@ -2,33 +2,11 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import ProductCard from '../components/public/ProductCard';
+import BrandMultiSelect from '../components/public/BrandMultiSelect';
 import ComparisonBar from '../components/public/ComparisonBar';
 import { useNavigate } from 'react-router-dom';
 
-const BrandFilter: React.FC<{ brands: string[]; selected: string[]; onChange: (v: string[]) => void }> = ({ brands, selected, onChange }) => {
-    const unique = Array.from(new Set(brands)).sort();
-    return (
-        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1">
-            {unique.length === 0 ? (
-                <span className="text-gray-500 text-sm">No brands</span>
-            ) : unique.map(b => {
-                const active = selected.includes(b);
-                return (
-                    <button
-                        key={b}
-                        className={`px-3 py-1 rounded-full border ${active ? 'border-teal-400 text-teal-300' : 'border-gray-600 text-gray-300'} hover:border-teal-500 hover:text-teal-300 transition text-sm whitespace-nowrap`}
-                        onClick={() => {
-                            if (active) onChange(selected.filter(x => x !== b));
-                            else onChange([...selected, b]);
-                        }}
-                    >
-                        {b}
-                    </button>
-                );
-            })}
-        </div>
-    );
-};
+// Brand chip filter replaced by dropdown multi-select (see BrandMultiSelect)
 
 const PresetBar: React.FC<{ presets: { name: string; data: any }[]; onSave: () => void; onApply: (preset: { name: string; data: any }) => void; onDelete: (name: string) => void }> = ({ presets, onSave, onApply, onDelete }) => {
     return (
@@ -277,10 +255,10 @@ const HomePage: React.FC = () => {
                             
                             <div className="md:col-span-2 lg:col-span-1">
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Brands</label>
-                                <BrandFilter 
-                                    brands={products.map(p => p.brand).filter(Boolean) as string[]} 
-                                    selected={selectedBrands} 
-                                    onChange={(b) => { setSelectedBrands(b); setPage(1); }} 
+                                <BrandMultiSelect
+                                    brands={products.map(p => p.brand).filter(Boolean) as string[]}
+                                    selected={selectedBrands}
+                                    onChange={(b) => { setSelectedBrands(b); setPage(1); }}
                                 />
                             </div>
                         </div>
