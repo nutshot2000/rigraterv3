@@ -11,6 +11,7 @@ import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
 import AdminLogin from '../components/admin/AdminLogin';
+import AdminTopbar from '../components/admin/AdminTopbar';
 
 export const AdminPage: React.FC = () => {
     const { isAuthenticated, currentUserEmail, logout } = useApp();
@@ -27,6 +28,29 @@ export const AdminPage: React.FC = () => {
     const handlePostSave = useCallback(() => {
         // Add logic to refresh post list if needed
     }, []);
+
+    // Keyboard shortcuts: Ctrl+Shift+P (AI Product), Ctrl+Shift+B (AI Blog), Ctrl+N (New in current list)
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.ctrlKey && e.shiftKey && (e.key === 'P' || e.key === 'p')) {
+                setMode('ai_product');
+            } else if (e.ctrlKey && e.shiftKey && (e.key === 'B' || e.key === 'b')) {
+                setMode('ai_blog');
+            } else if ((e.ctrlKey || (e as any).metaKey) && (e.key === 'n' || e.key === 'N')) {
+                e.preventDefault();
+                if (mode === 'manage_posts') {
+                    setCurrentBlogPost({
+                        title: '', slug: '', summary: '', content: '', cover_image_url: '', tags: [], seo_title: '', seo_description: '', blog_images: []
+                    } as any);
+                    setMode('ai_blog');
+                } else if (mode === 'manage_products') {
+                    setMode('ai_product');
+                }
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [mode]);
 
     if (!isAuthenticated) {
         return <AdminLogin />;
@@ -99,8 +123,22 @@ export const AdminPage: React.FC = () => {
                 onLogout={logout}
                 onOpenIdeas={() => setIsIdeasModalOpen(true)}
             />
-            <main className="flex-1 flex overflow-hidden">
-                {renderWorkspace()}
+            <main className="flex-1 flex flex-col overflow-hidden">
+                <AdminTopbar 
+                    mode={mode}
+                    onCreateNew={() => {
+                        if (mode === 'manage_posts') {
+                            setCurrentBlogPost({ title: '', slug: '', summary: '', content: '', cover_image_url: '', tags: [], seo_title: '', seo_description: '', blog_images: [] } as any);
+                            setMode('ai_blog');
+                        } else if (mode === 'manage_products') {
+                            setMode('ai_product');
+                        }
+                    }}
+                    onNavigate={(m) => setMode(m)}
+                />
+                <div className="flex-1 flex overflow-hidden">
+                    {renderWorkspace()}
+                </div>
             </main>
             <IdeasModal 
                 isOpen={isIdeasModalOpen} 

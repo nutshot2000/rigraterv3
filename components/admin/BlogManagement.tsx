@@ -78,15 +78,15 @@ const BlogManagement: React.FC<BlogManagementProps> = ({ onEdit, onCreate }) => 
                                 </tr>
                             )}
                             {filtered.map(post => (
-                                <tr key={post.id} className="border-t border-slate-700/60 hover:bg-slate-800/40">
+                                <tr key={post.id} className="border-t border-slate-700/60 hover:bg-slate-800/40 cursor-pointer" onClick={() => onEdit(post)}>
                                     <td className="px-4 py-3 text-white">{post.title}</td>
                                     <td className="px-4 py-3 text-slate-300">{post.slug}</td>
                                     <td className="px-4 py-3 text-slate-300">{Array.isArray(post.tags) ? post.tags.join(', ') : ''}</td>
                                     <td className="px-4 py-3 text-slate-300">{formatDate(post.createdAt)}</td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="inline-flex gap-2">
-                                            <button className="btn-blueprint" onClick={() => onEdit(post)}>Edit</button>
-                                            <button className="btn-blueprint-danger" onClick={() => handleDelete(post.id)}>Delete</button>
+                                            <button className="btn-blueprint" onClick={(e) => { e.stopPropagation(); onEdit(post); }}>Edit</button>
+                                            <button className="btn-blueprint-danger" onClick={(e) => { e.stopPropagation(); handleDelete(post.id); }}>Delete</button>
                                         </div>
                                     </td>
                                 </tr>
