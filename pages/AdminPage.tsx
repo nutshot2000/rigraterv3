@@ -6,6 +6,7 @@ import ProductPreview from '../components/admin/ProductPreview';
 import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
 import ProductManagement from '../components/admin/ProductManagement';
 import { BlogWorkspace } from '../components/admin/BlogWorkspace';
+import BlogManagement from '../components/admin/BlogManagement';
 import { BlogPreview } from '../components/admin/BlogPreview';
 import { IdeasModal } from '../components/admin/IdeasModal';
 import { Product, BlogPost } from '../types';
@@ -54,7 +55,28 @@ export const AdminPage: React.FC = () => {
             case 'manage_products':
                 return <ProductManagement />;
             case 'manage_posts':
-                return <h1 className="text-white p-8">Manage Blog Posts - Coming Soon</h1>;
+                return (
+                    <BlogManagement 
+                        onEdit={(post) => {
+                            setCurrentBlogPost(post);
+                            setMode('ai_blog');
+                        }}
+                        onCreate={() => {
+                            setCurrentBlogPost({
+                                title: '',
+                                slug: '',
+                                summary: '',
+                                content: '',
+                                cover_image_url: '',
+                                tags: [],
+                                seo_title: '',
+                                seo_description: '',
+                                blog_images: []
+                            } as any);
+                            setMode('ai_blog');
+                        }}
+                    />
+                );
             case 'settings':
                  return <h1 className="text-white p-8">Settings - Coming Soon</h1>;
             default:
