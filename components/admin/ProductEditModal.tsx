@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Product } from '../../types';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { FALLBACK_IMAGE_URL } from '../../constants';
+import { generateProductSEO } from '../../services/geminiService';
 
 interface ProductEditModalProps {
   product: Product;
@@ -20,6 +21,7 @@ const getProxiedImageUrl = (url: string) => {
 const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, onCancel }) => {
   const [editedProduct, setEditedProduct] = useState<Product>({ ...product });
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'seo'>('basic');
+  const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
 
   const handleChange = (field: keyof Product, value: any) => {
     setEditedProduct({ ...editedProduct, [field]: value });
@@ -28,6 +30,29 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(editedProduct);
+  };
+
+  const clamp = (str: string, max: number) => str ? (str.length <= max ? str : str.slice(0, max - 1).trimEnd()) : '';
+
+  const handleAutoSeo = async () => {
+    if (!editedProduct.name) return;
+    try {
+      setIsGeneratingSeo(true);
+      const { seoTitle, seoDescription } = await generateProductSEO(
+        editedProduct.name,
+        editedProduct.category || '',
+        editedProduct.review || ''
+      );
+      setEditedProduct(prev => ({
+        ...prev,
+        seoTitle: clamp(seoTitle || prev.seoTitle || '', 60),
+        seoDescription: clamp(seoDescription || prev.seoDescription || '', 155)
+      }));
+    } catch {
+      // silent; user can still edit manually
+    } finally {
+      setIsGeneratingSeo(false);
+    }
   };
 
   return (
@@ -198,6 +223,17 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                   className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-20"
                   placeholder="SEO optimized description (160 chars max)"
                 />
+                <div className="mt-2 flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Tip: Keep title ≤60 chars, description ≤155.</span>
+                  <button
+                    type="button"
+                    onClick={handleAutoSeo}
+                    disabled={isGeneratingSeo}
+                    className="px-3 py-1 text-xs bg-sky-600 hover:bg-sky-500 text-white rounded-md"
+                  >
+                    {isGeneratingSeo ? 'Generating…' : 'Auto-generate'}
+                  </button>
+                </div>
               </div>
               
               <div>
