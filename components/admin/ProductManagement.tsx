@@ -20,8 +20,8 @@ const ProductManagement: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortField, setSortField] = useState<string>('name');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<string>('created_at');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
@@ -100,6 +100,25 @@ const ProductManagement: React.FC = () => {
     setSortField(field);
     setSortDirection(newDirection);
     loadProducts({ sortBy: field, sortDirection: newDirection });
+  };
+
+  const handleSortPresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const preset = e.target.value;
+    let field = 'created_at';
+    let dir: 'asc' | 'desc' = 'desc';
+    switch (preset) {
+      case 'newest': field = 'created_at'; dir = 'desc'; break;
+      case 'oldest': field = 'created_at'; dir = 'asc'; break;
+      case 'nameAZ': field = 'name'; dir = 'asc'; break;
+      case 'nameZA': field = 'name'; dir = 'desc'; break;
+      case 'priceLow': field = 'price'; dir = 'asc'; break;
+      case 'priceHigh': field = 'price'; dir = 'desc'; break;
+      default: field = 'created_at'; dir = 'desc';
+    }
+    setSortField(field);
+    setSortDirection(dir);
+    setCurrentPage(1);
+    loadProducts({ sortBy: field, sortDirection: dir, page: 1 });
   };
 
   const handlePageChange = (page: number) => {
@@ -280,6 +299,19 @@ const ProductManagement: React.FC = () => {
               {categories.map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
+            </select>
+
+            <select
+              onChange={handleSortPresetChange}
+              defaultValue="newest"
+              className="bg-slate-800 border border-slate-700 rounded-lg text-white px-3 py-2"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="nameAZ">Name A → Z</option>
+              <option value="nameZA">Name Z → A</option>
+              <option value="priceLow">Price: Low to High</option>
+              <option value="priceHigh">Price: High to Low</option>
             </select>
           </div>
         </div>
