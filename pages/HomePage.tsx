@@ -126,7 +126,7 @@ const HomePage: React.FC = () => {
             }
         });
         return sorted;
-    }, [products, searchTerm, selectedCategory, sortBy]);
+    }, [products, searchTerm, selectedCategory, selectedBrands, priceMin, priceMax, sortBy, specFilters]);
 
     const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
     const currentPageProducts = useMemo(() => {
