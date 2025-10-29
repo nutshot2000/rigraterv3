@@ -52,7 +52,7 @@ const BrandMultiSelect: React.FC<BrandMultiSelectProps> = ({ brands, selected, o
       </button>
 
       {open && (
-        <div className="absolute z-20 mt-2 w-72 max-w-[75vw] bg-gray-900 border border-gray-700 rounded-lg shadow-xl">
+        <div className="z-20 mt-2 w-full max-w-md bg-gray-900 border border-gray-700 rounded-lg shadow-xl">
           <div className="p-2 border-b border-gray-700">
             <input
               value={query}
