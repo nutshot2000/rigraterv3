@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Product } from '../../types';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { FALLBACK_IMAGE_URL } from '../../constants';
+import { supabase, isBackendEnabled } from '../../services/supabaseClient';
 import { generateProductSEO } from '../../services/geminiService';
 
 interface ProductEditModalProps {
@@ -22,6 +23,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
   const [editedProduct, setEditedProduct] = useState<Product>({ ...product });
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'seo'>('basic');
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (field: keyof Product, value: any) => {
     setEditedProduct({ ...editedProduct, [field]: value });
@@ -30,6 +32,39 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(editedProduct);
+  };
+  const handlePickFile = () => {
+    if (!isBackendEnabled) {
+      alert('Image upload requires Supabase backend to be enabled. Paste an image URL instead.');
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleUploadImage: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+    try {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!supabase) throw new Error('Backend not configured');
+
+      const safeBase = (editedProduct.slug || editedProduct.name || 'product')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      const ext = file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')).toLowerCase() : '.jpg';
+      const path = `${safeBase}-${Date.now()}${ext}`;
+
+      const { error: upErr } = await supabase.storage.from('product-images').upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      const publicUrl = data.publicUrl;
+      if (!publicUrl) throw new Error('Failed to get public URL');
+      setEditedProduct(prev => ({ ...prev, imageUrl: publicUrl }));
+    } catch (err: any) {
+      alert(err?.message || 'Image upload failed. Ensure a bucket named "product-images" exists and public access is allowed.');
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const clamp = (str: string, max: number) => str ? (str.length <= max ? str : str.slice(0, max - 1).trimEnd()) : '';
@@ -111,6 +146,19 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                         onChange={(e) => handleChange('imageUrl', e.target.value)}
                         className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white text-sm"
                       />
+                      <div className="mt-2 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={handlePickFile}
+                          className="px-3 py-1 text-xs bg-sky-600 hover:bg-sky-500 text-white rounded-md"
+                        >
+                          Upload new image
+                        </button>
+                        {!isBackendEnabled && (
+                          <span className="text-[10px] text-slate-500">Paste a direct URL when backend is off</span>
+                        )}
+                      </div>
+                      <input ref={fileInputRef} onChange={handleUploadImage} type="file" accept="image/*" className="hidden" />
                     </div>
                   </div>
                 </div>
