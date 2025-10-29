@@ -115,6 +115,8 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         specifications: input.specifications,
         brand: input.brand ?? null,
         slug: slug ?? null,
+        seo_title: input.seoTitle ?? null,
+        seo_description: input.seoDescription ?? null,
     };
     const { data, error } = await supabase.from('products').insert(payload).select('*').single();
     if (error) throw error;
@@ -130,6 +132,8 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         specifications: row.specifications,
         brand: row.brand ?? undefined,
         slug: row.slug ?? undefined,
+        seoTitle: row.seo_title ?? undefined,
+        seoDescription: row.seo_description ?? undefined,
     };
 }
 
@@ -145,6 +149,8 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
         specifications: input.specifications,
         brand: input.brand ?? null,
         slug: input.slug ?? null,
+        seo_title: input.seoTitle ?? null,
+        seo_description: input.seoDescription ?? null,
     };
     const { data, error } = await supabase.from('products').update(payload).eq('id', id).select('*').single();
     if (error) throw error;
@@ -160,6 +166,8 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
         specifications: row.specifications,
         brand: row.brand ?? undefined,
         slug: row.slug ?? undefined,
+        seoTitle: row.seo_title ?? undefined,
+        seoDescription: row.seo_description ?? undefined,
     };
 }
 
