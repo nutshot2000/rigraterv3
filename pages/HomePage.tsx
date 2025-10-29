@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const BrandFilter: React.FC<{ brands: string[]; selected: string[]; onChange: (v: string[]) => void }> = ({ brands, selected, onChange }) => {
     const unique = Array.from(new Set(brands)).sort();
     return (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto pr-1">
             {unique.length === 0 ? (
                 <span className="text-gray-500 text-sm">No brands</span>
             ) : unique.map(b => {
@@ -16,7 +16,7 @@ const BrandFilter: React.FC<{ brands: string[]; selected: string[]; onChange: (v
                 return (
                     <button
                         key={b}
-                        className={`px-3 py-1 rounded-full border ${active ? 'border-teal-400 text-teal-300' : 'border-gray-600 text-gray-300'} hover:border-teal-500 hover:text-teal-300 transition text-sm`}
+                        className={`px-3 py-1 rounded-full border ${active ? 'border-teal-400 text-teal-300' : 'border-gray-600 text-gray-300'} hover:border-teal-500 hover:text-teal-300 transition text-sm whitespace-nowrap`}
                         onClick={() => {
                             if (active) onChange(selected.filter(x => x !== b));
                             else onChange([...selected, b]);
@@ -275,9 +275,13 @@ const HomePage: React.FC = () => {
                                 </div>
                             </div>
                             
-                            <div>
+                            <div className="md:col-span-2 lg:col-span-1">
                                 <label className="block text-sm font-medium text-gray-300 mb-2">Brands</label>
-                                <BrandFilter brands={products.map(p => p.brand).filter(Boolean) as string[]} selected={selectedBrands} onChange={(b) => { setSelectedBrands(b); setPage(1); }} />
+                                <BrandFilter 
+                                    brands={products.map(p => p.brand).filter(Boolean) as string[]} 
+                                    selected={selectedBrands} 
+                                    onChange={(b) => { setSelectedBrands(b); setPage(1); }} 
+                                />
                             </div>
                         </div>
                         
