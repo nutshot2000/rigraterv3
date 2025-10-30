@@ -422,7 +422,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const panelRaw = (name + ' ' + (getSpecVal(['panel']) || '')).match(/\b(ips|va|tn|oled|mini-?led)\b/i)?.[1];
     const hdrGrade = (name + ' ' + (getSpecVal(['hdr']) || '')).match(/hdr\s*([0-9]{3,4})/i)?.[1];
     const combined = `${name} ${Object.entries(specs || {}).map(([k,v]) => `${k}: ${v}`).join(' ')}`;
-    const sizeInch = combined.match(/\b(\d{2})(?:\.|\s?)(?:"|in|inch|inches)\b/i)?.[1];
+    // Avoid picking the "75" from "1.75 inches" by ensuring the number isn't part of a decimal
+    const sizeMatch = combined.match(/(^|[^0-9.])(\d{2})(?=\s?(?:"|in(?:ches)?\b))/i);
+    const sizeInch = sizeMatch ? sizeMatch[2] : undefined;
     const hasUsbC = /usb[-\s]?c|type[-\s]?c/i.test(combined);
     const vrr = /g[-\s]?sync|freesync|vrr/i.test(combined) ? 'VRR support' : '';
     const res = (() => {
@@ -434,8 +436,11 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const refresh = refreshFromName || (refreshSpec?.match(/\d{3}/)?.[0]);
 
     const blocks: string[] = [];
+    const lcAll = (name + ' ' + combined).toLowerCase();
+    const isMotherboard = /(motherboard|lga\s?\d{3,5}|am4|am5|z\d{3}\b|b\d{3}\b|x\d{3}\b|pci\s?-?e|vrm|m\.?2|\batx\b|micro[-\s]?atx)/i.test(lcAll);
+    const catNormalized = isMotherboard ? 'motherboard' : cat;
 
-    if (cat.includes('monitor') || cat.includes('display')) {
+    if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
         const introParts: string[] = [];
         introParts.push('The ' + firstMention);
         const keyBits: string[] = [];
@@ -455,6 +460,10 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         blocks.push('Ergonomics cover the basics (tilt/height), and the I/O selection suits modern PCs and laptops.');
         blocks.push('Compared with typical high‑refresh 1440p options, this brings smoothness and clarity that feel great in games and everyday use.');
         blocks.push('It feels like a clear upgrade you’ll notice every day and be happy to live with.');
+    } else if (catNormalized.includes('motherboard')) {
+        blocks.push(`The ${firstMention} targets builders who want reliable power delivery, modern connectivity, and painless setup.`);
+        blocks.push('VRM design keeps thermals in check for sustained loads, and BIOS updates are straightforward.');
+        blocks.push('You get plenty of storage and I/O: fast M.2 slots, PCIe for GPUs/expansion, and ample USB—including high‑speed rear I/O.');
     } else if (cat.includes('keyboard')) {
         blocks.push(`The ${firstMention} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
@@ -478,33 +487,63 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
 
     // Build a concise spec summary rather than dumping page labels
     const specBits: string[] = [];
-    if (sizeInch) specBits.push(`${sizeInch}"`);
-    if (res) specBits.push(res);
-    if (refresh) specBits.push(`${refresh}Hz`);
-    if (panelRaw) specBits.push(panelRaw.toUpperCase());
-    if (hdrGrade) specBits.push(`HDR${hdrGrade}`);
-    if (hasUsbC) specBits.push('USB‑C');
+    if (catNormalized.includes('motherboard')) {
+        const socket = getSpecVal(['socket', 'lga', 'am5']);
+        const chipset = getSpecVal(['chipset']);
+        const form = getSpecVal(['form factor']);
+        const m2 = getSpecVal(['m.2', 'm2']);
+        const pcie = getSpecVal(['pcie', 'pci-e']);
+        if (socket) specBits.push(`Socket ${socket}`);
+        if (chipset) specBits.push(String(chipset));
+        if (form) specBits.push(String(form));
+        if (m2) specBits.push(`${m2} M.2`);
+        if (pcie) specBits.push(`PCIe ${pcie}`);
+    } else {
+        if (sizeInch) specBits.push(`${sizeInch}"`);
+        if (res) specBits.push(res);
+        if (refresh) specBits.push(`${refresh}Hz`);
+        if (panelRaw) specBits.push(panelRaw.toUpperCase());
+        if (hdrGrade) specBits.push(`HDR${hdrGrade}`);
+        if (hasUsbC) specBits.push('USB‑C');
+    }
     const specLine = specBits.length ? `Key specs — ${specBits.join(', ')}.` : '';
 
-    const whoFor = `If you want smooth gameplay and sharp text without chasing flagship pricing, this monitor fits well.`;
+    const whoFor = catNormalized.includes('motherboard')
+        ? `Ideal if you want a stable build with fast storage and next‑gen connectivity without paying for halo boards.`
+        : `If you want smooth gameplay and sharp text without chasing flagship pricing, this monitor fits well.`;
 
     // Add Pros/Cons bullets as plain lines inside the paragraph text
     const pros: string[] = [];
-    if (res) pros.push(`${res} sharpness at ${sizeInch || 'this'}"`);
-    if (refresh) pros.push(`${refresh}Hz with ${vrr || 'VRR'} for fluid motion`);
-    if (panelRaw) pros.push(`${panelRaw.toUpperCase()} viewing consistency`);
-    if (hasUsbC) pros.push('USB‑C convenience for laptops');
+    if (catNormalized.includes('motherboard')) {
+        const socket = getSpecVal(['socket', 'lga', 'am5']);
+        if (socket) pros.push(`Compatible with ${socket} CPUs`);
+        if (getSpecVal(['m.2'])) pros.push('Multiple M.2 NVMe slots');
+        if (getSpecVal(['wifi'])) pros.push('Integrated Wi‑Fi for easy networking');
+        pros.push('Solid VRM and cooling for sustained loads');
+    } else {
+        if (res) pros.push(`${res} sharpness at ${sizeInch || 'this'}"`);
+        if (refresh) pros.push(`${refresh}Hz with ${vrr || 'VRR'} for fluid motion`);
+        if (panelRaw) pros.push(`${panelRaw.toUpperCase()} viewing consistency`);
+        if (hasUsbC) pros.push('USB‑C convenience for laptops');
+    }
 
     const cons: string[] = [];
-    if (hdrGrade) cons.push('HDR at this tier is limited');
-    cons.push('No true HDR dimming zones');
+    if (catNormalized.includes('motherboard')) {
+        cons.push('Front‑panel USB/headers vary by case');
+        cons.push('Overclocking headroom depends on cooling and CPU');
+    } else {
+        if (hdrGrade) cons.push('HDR at this tier is limited');
+        cons.push('No true HDR dimming zones');
+    }
 
     const prosCons = [
         pros.length ? `Pros:\n- ${pros.join('\n- ')}` : '',
         cons.length ? `Cons:\n- ${cons.join('\n- ')}` : ''
     ].filter(Boolean).join('\n');
 
-    const verdict = `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`;
+    const verdict = catNormalized.includes('motherboard')
+        ? `Bottom line: a dependable board with the right I/O for modern builds—shortlist it and check current pricing against close rivals.`
+        : `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`;
 
     return [...blocks, specLine, whoFor, prosCons, verdict]
         .filter(Boolean)
