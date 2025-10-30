@@ -106,7 +106,7 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     const { url, mode } = req.body || {};
-    if (!url) return res.status(400).json({ error: 'url is required' });
+    if (mode !== 'review' && !url) return res.status(400).json({ error: 'url is required' });
 
     const apiKey = process.env.SCRAPER_API_KEY;
     const fetchUrl = apiKey ? `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}` : url;
