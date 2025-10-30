@@ -52,7 +52,7 @@ function normalizeSeo(data: any): any {
 function getAmazonImageBase(url: string): string {
     // Extracts the unique part of an Amazon image URL, like '710bB5V1jPL'
     // from https://m.media-amazon.com/images/I/710bB5V1jPL._SL1500_.jpg
-    const match = url.match(/\/images\/I\/([a-zA-Z0-9]+)/);
+    const match = url.match(/\/images\/I\/([A-Za-z0-9]+)/);
     return match ? match[1] : url;
 }
 
@@ -110,7 +110,7 @@ async function validateImages(urls: string[]): Promise<string[]> {
     const validationPromises = urls.slice(0, 20).map(async (url) => {
         try {
             // Trust Amazon CDN image URLs without network validation to avoid 403/HEAD blockers
-            if (/media-amazon\.com\/images\/I\//i.test(url) || /ssl-images-amazon\.com\/images\/I\//i.test(url)) {
+            if (/\b(?:m\.)?media-amazon\.com\/images\/I\//i.test(url) || /ssl-images-amazon\.com\/images\/I\//i.test(url) || /images-na\.ssl-images-amazon\.com\/images\/I\//i.test(url)) {
                 return url;
             }
             // Try original URL first
@@ -162,7 +162,7 @@ async function validateImages(urls: string[]): Promise<string[]> {
     console.log(`Found ${validUrls.length} valid images out of ${urls.length}`);
     // If nothing validated, still return original Amazon CDN images as a last resort
     if (validUrls.length === 0) {
-        const amazonOnly = urls.filter(u => /amazon\.com\/images\/I\//i.test(u) || /ssl-images-amazon\.com\/images\/I\//i.test(u));
+        const amazonOnly = urls.filter(u => /(?:m\.)?media-amazon\.com\/images\/I\//i.test(u) || /ssl-images-amazon\.com\/images\/I\//i.test(u) || /images-na\.ssl-images-amazon\.com\/images\/I\//i.test(u));
         if (amazonOnly.length) return amazonOnly.slice(0, 8);
     }
     return validUrls.slice(0, 8); // Limit to 8 images max
