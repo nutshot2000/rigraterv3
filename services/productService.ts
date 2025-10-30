@@ -247,4 +247,36 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
     };
 }
 
+export async function fetchProductById(id: string): Promise<Product | null> {
+    if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        if ((error as any).code === 'PGRST116') return null;
+        throw error;
+    }
+    if (!data) return null;
+
+    const row = data as any;
+    return {
+        id: String(row.id),
+        name: row.name,
+        category: row.category,
+        imageUrl: row.image_url,
+        imageUrls: row.image_urls || [],
+        price: row.price,
+        affiliateLink: row.affiliate_link,
+        review: row.review,
+        specifications: row.specifications,
+        brand: row.brand ?? undefined,
+        slug: row.slug ?? undefined,
+        seoTitle: row.seo_title ?? undefined,
+        seoDescription: row.seo_description ?? undefined,
+    };
+}
+
 
