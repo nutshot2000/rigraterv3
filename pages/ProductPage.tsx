@@ -64,11 +64,30 @@ const ProductPage: React.FC = () => {
         })
         .filter(s => s.key && s.value);
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.rigrater.tech';
+    const pageUrl = `${origin}/products/${product.slug || slug}`;
+    const ogTitle = `${product.seoTitle || product.name} | RIGRATER`;
+    const ogDesc = product.seoDescription || (product.review || '').substring(0, 160);
+    const ogImage = product.imageUrl ? `/api/proxy-image?url=${encodeURIComponent(product.imageUrl)}` : FALLBACK_IMAGE_URL;
+
     return (
         <>
             <Helmet>
-                <title>{product.seoTitle || product.name} | RIGRATER</title>
-                <meta name="description" content={product.seoDescription || (product.review || '').substring(0, 160)} />
+                <title>{ogTitle}</title>
+                <meta name="description" content={ogDesc} />
+                {/* Canonical */}
+                <link rel="canonical" href={pageUrl} />
+                {/* Open Graph */}
+                <meta property="og:type" content="product" />
+                <meta property="og:title" content={ogTitle} />
+                <meta property="og:description" content={ogDesc} />
+                <meta property="og:url" content={pageUrl} />
+                <meta property="og:image" content={origin + ogImage} />
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={ogTitle} />
+                <meta name="twitter:description" content={ogDesc} />
+                <meta name="twitter:image" content={origin + ogImage} />
             </Helmet>
             
             <div className="max-w-4xl mx-auto">

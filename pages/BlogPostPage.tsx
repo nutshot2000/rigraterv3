@@ -49,11 +49,27 @@ const BlogPostPage: React.FC = () => {
         );
     }
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.rigrater.tech';
+    const pageUrl = `${origin}/blog/${post.slug}`;
+    const ogTitle = `${post.seoTitle || post.title} | RIGRATER Blog`;
+    const ogDesc = post.seoDescription || post.summary || '';
+    const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
+
     return (
         <>
             <Helmet>
-                <title>{post.seoTitle || post.title} | RIGRATER Blog</title>
-                <meta name="description" content={post.seoDescription || post.summary} />
+                <title>{ogTitle}</title>
+                <meta name="description" content={ogDesc} />
+                <link rel="canonical" href={pageUrl} />
+                <meta property="og:type" content="article" />
+                <meta property="og:title" content={ogTitle} />
+                <meta property="og:description" content={ogDesc} />
+                <meta property="og:url" content={pageUrl} />
+                <meta property="og:image" content={origin + ogImage} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={ogTitle} />
+                <meta name="twitter:description" content={ogDesc} />
+                <meta name="twitter:image" content={origin + ogImage} />
             </Helmet>
 
             <article className="max-w-3xl mx-auto">
