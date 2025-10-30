@@ -243,7 +243,7 @@ function extractBrand(html: string, title: string): string {
 
 // Extract price from common Amazon locations and JSON-LD
 function extractPrice(html: string): string {
-    // JSON-LD offers price
+    // 1) JSON-LD offers price (most reliable)
     try {
         const json = extractJsonLdProduct(html);
         const offer = Array.isArray(json?.offers) ? json?.offers[0] : json?.offers;
@@ -255,50 +255,54 @@ function extractPrice(html: string): string {
         }
     } catch {}
 
-    // Prefer the Buy Box/core price block (Amazon)
-    try {
-        const coreBlock = html.match(/id=["']corePrice_feature_div["'][\s\S]*?<\/div>/i)?.[0] || '';
-        if (coreBlock) {
-            const offscreen = coreBlock.match(/class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i)?.[1];
-            if (offscreen) {
-                const val = offscreen.replace(/\s+/g, '').replace(/&nbsp;/g, '');
-                if (/^£|^\$|^€/.test(val)) return val;
-            }
-            // Assemble from whole + fraction if needed
-            const whole = coreBlock.match(/a-price-whole[^>]*>\s*([\d,.]+)/i)?.[1];
-            const frac = coreBlock.match(/a-price-fraction[^>]*>\s*(\d{2})/i)?.[1];
-            if (whole) {
-                // Guess currency by page locale symbol near core block
-                const near = coreBlock.match(/(£|\$|€)/)?.[1] || (html.includes('£') ? '£' : html.includes('€') ? '€' : '$');
-                const normalizedWhole = whole.replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,/g, '');
-                return `${near}${normalizedWhole}${frac ? '.' + frac : ''}`;
-            }
-        }
-    } catch {}
-
-    // Common price blocks (Amazon) fallback
-    const candidates = [
+    // 2) Known Amazon price containers
+    const priceBlocks: RegExp[] = [
+        /id=["']apex_priceToPay["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
+        /id=["']corePrice_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
+        /id=["']corePriceDisplay_desktop_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
         /id=["']priceblock_ourprice["'][^>]*>\s*([^<]+)/i,
         /id=["']priceblock_dealprice["'][^>]*>\s*([^<]+)/i,
         /id=["']apex_desktop_qualifiedBuybox_price["'][^>]*>\s*([^<]+)/i,
-        /class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
-        /class=["'][^"']*a-price-whole[^"']*["'][^>]*>\s*([^<]+)/i
     ];
-    for (const re of candidates) {
+    for (const re of priceBlocks) {
         const m = html.match(re);
         if (m && m[1]) {
-            const raw = m[1]
-                .replace(/\s/g, '')
-                .replace(/&nbsp;/g, '')
-                // remove thousand separators like 1.299,00 or 1,299.00 safely
-                .replace(/\.(?=\d{3}(\D|$))/g, '');
+            const raw = m[1].replace(/\s+/g, '').replace(/&nbsp;/g, '');
             if (/^£|^\$|^€/.test(raw)) return raw;
             if (/^\d/.test(raw)) return `$${raw}`;
         }
     }
-    // fallback: first currency-like token allowing thousands separators
-    const currency = html.match(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/);
-    if (currency) return `${currency[1]}${currency[2]}`;
+
+    // 3) Assemble from whole + fraction within nearby price sections
+    const assembleBlocks: RegExp[] = [
+        /id=["']apex_priceToPay["'][\s\S]*?<\/?span[\s\S]*?a-price-whole[\s\S]*?>\s*([\d,.]+)[\s\S]*?a-price-fraction[\s\S]*?>\s*(\d{2})/i,
+        /id=["']corePrice_feature_div["'][\s\S]*?a-price-whole[\s\S]*?>\s*([\d,.]+)[\s\S]*?a-price-fraction[\s\S]*?>\s*(\d{2})/i,
+    ];
+    for (const re of assembleBlocks) {
+        const m = html.match(re);
+        if (m) {
+            const whole = m[1].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,/g, '');
+            const frac = m[2];
+            const near = html.match(/(£|\$|€)/)?.[1] || '$';
+            return `${near}${whole}.${frac}`;
+        }
+    }
+
+    // 4) Heuristic: choose the maximum currency token on the page to avoid $10 coupons
+    const currencyTokens = [
+        ...html.matchAll(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g)
+    ];
+    if (currencyTokens.length) {
+        let best: { sym: string; val: number } | null = null;
+        for (const m of currencyTokens) {
+            const sym = m[1];
+            const num = parseFloat(m[2].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,(?=\d{2}$)/, '.'));
+            if (!isFinite(num)) continue;
+            if (!best || num > best.val) best = { sym, val: num };
+        }
+        if (best) return `${best.sym}${best.val.toFixed(2)}`;
+    }
+
     return '$0.00';
 }
 
