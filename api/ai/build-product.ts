@@ -347,26 +347,80 @@ function extractAmazonSpecs(html: string): Record<string, string> {
 }
 
 // Compose a slightly shorter review if AI returns short/missing content
+function shortenDisplayName(name: string, brand: string): string {
+    if (!name) return brand || 'Product';
+    let n = name
+        .replace(/[®™]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    // Drop warranty/marketing tails and heavy spec chains
+    n = n.split(' - ')[0];
+    n = n.split(' | ')[0];
+    n = n.split(',')[0];
+    // Remove long parenthetical blocks
+    n = n.replace(/\([^)]{20,}\)/g, '').replace(/\s+/g, ' ').trim();
+    // Clamp length
+    if (n.length > 60) n = n.slice(0, 57).trimEnd() + '…';
+    // Ensure brand isn't duplicated at the start
+    const lb = (brand || '').toLowerCase();
+    const ln = n.toLowerCase();
+    if (brand && ln.startsWith(lb + ' ')) return n;
+    return brand ? `${brand} ${n}` : n;
+}
+
 function expandReviewIfShort(review: string, name: string, brand: string, category: string, specs: Record<string,string>): string {
     const wordCount = (review || '').split(/\s+/).filter(Boolean).length;
-    // If the AI already wrote a full review, use it as-is
     if (wordCount >= 170) return review;
 
-    // Build a richer fallback (~170–220 words)
-    const pairs = Object.entries(specs).slice(0, 6);
+    const getSpecVal = (keys: string[]): string | undefined => {
+        const entries = Object.entries(specs || {});
+        for (const [k, v] of entries) {
+            const lk = k.toLowerCase();
+            if (keys.some(q => lk.includes(q.toLowerCase()))) return v;
+        }
+        return undefined;
+    };
+
+    const pairs = Object.entries(specs || {}).slice(0, 6);
     const features = pairs.map(([k, v]) => `${k}: ${v}`).join('; ');
-    const lowerName = (name || '').toLowerCase();
-    const lowerBrand = (brand || '').toLowerCase();
-    const displayName = brand && lowerName.startsWith(lowerBrand) ? name : `${brand ? brand + ' ' : ''}${name}`;
+    const displayName = shortenDisplayName(name, brand);
+    const cat = (category || '').toLowerCase();
 
-    const intro = `The ${displayName} is a compelling ${category || 'tech'} option designed for buyers who want dependable performance without overspending.`;
-    const perf = `In day‑to‑day use it feels responsive and consistent. Power delivery and thermals are well controlled for the class, and noise stays reasonable under load.`;
-    const design = `Build quality is tidy with a clean layout that makes installation straightforward. Connectivity and compatibility are broad for most modern builds.`;
+    // Light heuristics for monitors
+    const refreshFromName = (name || '').match(/(\d{3})\s*hz/i)?.[1];
+    const refreshSpec = getSpecVal(['refresh']);
+    const panelRaw = (name + ' ' + (getSpecVal(['panel']) || '')).match(/\b(ips|va|tn|oled|mini-?led)\b/i)?.[1];
+    const hdrGrade = (name + ' ' + (getSpecVal(['hdr']) || '')).match(/hdr\s*([0-9]{3,4})/i)?.[1];
+
+    const blocks: string[] = [];
+
+    if (cat.includes('monitor') || cat.includes('display')) {
+        blocks.push(`The ${displayName} targets gamers and creators who want a sharp, smooth image without paying flagship prices.`);
+        const perfBits: string[] = [];
+        if (refreshFromName || refreshSpec) perfBits.push('high refresh for smooth motion');
+        if (panelRaw) perfBits.push(`${panelRaw.toUpperCase()} panel for consistent visuals`);
+        if (hdrGrade) perfBits.push(`HDR${hdrGrade} support (entry‑level HDR expectations)`);
+        if (perfBits.length) blocks.push(`In use, you get ${perfBits.join(', ')}.`);
+        blocks.push(`Ergonomics and ports are sensible, and setup is straightforward.`);
+    } else if (cat.includes('keyboard')) {
+        blocks.push(`The ${displayName} focuses on comfortable typing with a solid, fuss‑free layout.`);
+        blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
+    } else if (cat.includes('mouse')) {
+        blocks.push(`The ${displayName} delivers accurate tracking and a shape that suits most hand sizes.`);
+        blocks.push(`Buttons feel crisp and the scroll is confident without being noisy.`);
+    } else if (cat.includes('power') || cat.includes('psu')) {
+        blocks.push(`The ${displayName} aims for dependable delivery with clean cabling and low noise.`);
+        blocks.push(`Efficiency is competitive and thermals stay in check under typical loads.`);
+    } else {
+        blocks.push(`The ${displayName} is a balanced ${category || 'tech'} pick with good everyday usability.`);
+        blocks.push(`Performance feels consistent and build quality inspires confidence for the price.`);
+    }
+
     const specLine = features ? `Notable specs — ${features}.` : '';
-    const whoFor = `If you’re building or refreshing a mid‑range system, this hits a sweet spot of capability and value.`;
-    const verdict = `Bottom line: the ${displayName} is easy to recommend if the price aligns with your budget. Compare against a couple of close rivals, but it should be high on your shortlist.`;
+    const whoFor = `If you want strong value without obvious compromises, this should suit most needs in its class.`;
+    const verdict = `Bottom line: the ${displayName} is worth shortlisting—check current pricing and compare against a close rival before you decide.`;
 
-    return [intro, perf, design, specLine, whoFor, verdict]
+    return [...blocks, specLine, whoFor, verdict]
         .filter(Boolean)
         .join(' ')
         .replace(/\s+/g, ' ')
@@ -515,7 +569,7 @@ URL: ${input}
 Parsed Specifications (from page): ${specsInline || 'None detected'}
 
 Your assignment:
-1. Product name (clean, marketing-friendly)
+1. Product name (clean, marketing‑friendly, ≤60 chars). Drop long spec chains, trademarks, and warranty text. Avoid parentheses unless it’s the core model ID.
 2. Brand identification
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
@@ -536,6 +590,13 @@ WRITING STYLE:
  - Use everyday technical language; avoid invented numbers/benchmarks
  - Compare briefly to a close alternative when it clarifies value
  - Persuasive but respectful—no overpromises, no pushy sales tone
+  - Don’t repeat the full product name inside the review body; use category nouns ("this monitor", "this keyboard") after the first mention
+
+CATEGORY FOCUS (adapt based on detected category):
+ - Monitor/Display: panel type, refresh rate/motion clarity, VRR (G‑Sync/FreeSync), HDR grade realism (e.g., HDR400 is entry‑level), color accuracy, ergonomics, ports.
+ - Keyboard: switch feel, stabilizers, layout, build, acoustics.
+ - Mouse: sensor accuracy, shape/weight, buttons/scroll, feet.
+ - PSU: efficiency rating, acoustics, cabling, build.
 
 HTML Content (first 40k chars):
 ${cleanHtml.substring(0, 40000)}
