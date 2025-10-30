@@ -370,7 +370,7 @@ function shortenDisplayName(name: string, brand: string): string {
 
 function expandReviewIfShort(review: string, name: string, brand: string, category: string, specs: Record<string,string>): string {
     const wordCount = (review || '').split(/\s+/).filter(Boolean).length;
-    if (wordCount >= 170) return review;
+    if (wordCount >= 200) return review;
 
     const getSpecVal = (keys: string[]): string | undefined => {
         const entries = Object.entries(specs || {});
@@ -412,7 +412,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (res) keyBits.push(res);
         if (refresh) keyBits.push(`${refresh}Hz`);
         if (panelRaw) keyBits.push(panelRaw.toUpperCase());
-        blocks.push(`${introParts.join(' ')} is a ${keyBits.join(' ')} gaming monitor focused on smooth motion and clean image quality.`);
+        blocks.push(`${introParts.join(' ')} is a ${keyBits.join(' ')} gaming monitor focused on smooth motion and clean, punchy visuals.`);
         const perfLine: string[] = [];
         if (refresh) perfLine.push('fast motion stays fluid');
         if (vrr) perfLine.push(vrr.toLowerCase());
@@ -420,19 +420,28 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (perfLine.length) blocks.push(`In use, ${perfLine.join(', ')}.`);
         if (hasUsbC) blocks.push('USB‑C simplifies laptop hookup (video/data; power delivery may vary).');
         if (hdrGrade) blocks.push(`HDR${hdrGrade} is entry‑level—expect modest highlights rather than true HDR.`);
-        blocks.push('Ergonomics and ports are sensible, and setup is straightforward.');
+        if (res && sizeInch) blocks.push(`Text looks crisp at ${res} on ${sizeInch}", and color balance is easy to tune for work and play.`);
+        blocks.push('Ergonomics cover the basics (tilt/height), and the I/O selection suits modern PCs and laptops.');
+        blocks.push('Compared with typical high‑refresh 1440p options, this brings smoothness and clarity that feel great in games and everyday use.');
     } else if (cat.includes('keyboard')) {
         blocks.push(`The ${displayName} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
+        blocks.push('Key legends are clear and the build resists flex, which adds to long‑term confidence.');
+        blocks.push('If you care about everyday comfort and tidy desk aesthetics, it hits a sweet spot.');
     } else if (cat.includes('mouse')) {
         blocks.push(`The ${displayName} delivers accurate tracking and a shape that suits most hand sizes.`);
         blocks.push(`Buttons feel crisp and the scroll is confident without being noisy.`);
+        blocks.push('Glide is smooth on common mouse pads, and the shell finish handles long sessions well.');
+        blocks.push('It’s an easy upgrade if you want reliable aim without paying flagship prices.');
     } else if (cat.includes('power') || cat.includes('psu')) {
         blocks.push(`The ${displayName} aims for dependable delivery with clean cabling and low noise.`);
         blocks.push(`Efficiency is competitive and thermals stay in check under typical loads.`);
+        blocks.push('Ripple suppression and protections are in line with reputable units at this tier.');
+        blocks.push('It’s the kind of PSU you install and forget—stable, quiet, and tidy.');
     } else {
         blocks.push(`The ${displayName} is a balanced ${category || 'tech'} pick with good everyday usability.`);
         blocks.push(`Performance feels consistent and build quality inspires confidence for the price.`);
+        blocks.push('It strikes a nice blend of capability and polish without chasing halo‑tier features.');
     }
 
     // Build a concise spec summary rather than dumping page labels
@@ -463,7 +472,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         cons.length ? `Cons:\n- ${cons.join('\n- ')}` : ''
     ].filter(Boolean).join('\n');
 
-    const verdict = `Bottom line: this monitor is worth shortlisting—check current pricing and compare against a close rival before you decide.`;
+    const verdict = `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`;
 
     return [...blocks, specLine, whoFor, prosCons, verdict]
         .filter(Boolean)
@@ -605,7 +614,7 @@ export default async function handler(req: any, res: any) {
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
-                        const prompt = `You are a senior tech reviewer with a helpful, benefit‑led style. Your goal is to help readers decide quickly with clear reasons to choose (or skip) a product—confident and persuasive without hype.
+                        const prompt = `You are a senior tech reviewer with a helpful, benefit‑led style. Your goal is to help readers decide quickly with clear reasons to choose (or skip) a product—confident and persuasive without hype. Use an energetic, positive tone while staying honest.
 
 You're reviewing this product: ${title}
 Brand: ${brand}
@@ -619,7 +628,7 @@ Your assignment:
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (180–230 words). Structure it exactly as:
+6. Write a professional review (200–260 words). Structure it exactly as:
    - 2–3 sentence intro that frames the core benefit/outcome
    - Performance and build (what it feels like to use)
    - Who it’s for (and who should skip)
@@ -636,6 +645,7 @@ WRITING STYLE:
  - Compare briefly to a close alternative when it clarifies value
  - Persuasive but respectful—no overpromises, no pushy sales tone
   - Don’t repeat the full product name inside the review body; use category nouns ("this monitor", "this keyboard") after the first mention
+  - Positive language is welcome—make it feel exciting when justified
 
 CATEGORY FOCUS (adapt based on detected category):
  - Monitor/Display: panel type, refresh rate/motion clarity, VRR (G‑Sync/FreeSync), HDR grade realism (e.g., HDR400 is entry‑level), color accuracy, ergonomics, ports.
