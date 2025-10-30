@@ -297,7 +297,12 @@ function extractPrice(html: string): string {
         }
     }
 
-    // 4) Heuristic: choose the maximum currency token on the page, but ignore coupon/save contexts
+    // If Amazon hides price behind cart, avoid guessing from form fields
+    if (/add this item to your cart/i.test(html)) {
+        return '$0.00';
+    }
+
+    // 4) Heuristic: choose the maximum currency token on the page, but ignore coupon/save/lower-price form contexts
     const currencyTokens = [
         ...html.matchAll(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g)
     ];
@@ -305,8 +310,8 @@ function extractPrice(html: string): string {
         let best: { sym: string; val: number } | null = null;
         for (const m of currencyTokens) {
             const idx = (m.index || 0);
-            const context = html.slice(Math.max(0, idx - 60), Math.min(html.length, idx + 60)).toLowerCase();
-            if (/coupon|save|off|subscribe|per\s+month|installment/.test(context)) continue;
+            const context = html.slice(Math.max(0, idx - 100), Math.min(html.length, idx + 100)).toLowerCase();
+            if (/coupon|save|off|subscribe|per\s+month|installment|found\s+a\s+lower\s+price|tell\s+us\s+about\s+a\s+lower\s+price|price\s*\(\$\)/.test(context)) continue;
             const sym = m[1];
             const num = parseFloat(m[2].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,(?=\d{2}$)/, '.'));
             if (!isFinite(num)) continue;
