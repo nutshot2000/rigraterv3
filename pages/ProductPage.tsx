@@ -116,7 +116,7 @@ const ProductPage: React.FC = () => {
                 </div>
 
                 <div className="prose prose-invert max-w-none mb-8">
-                    <h2 className="text-3xl font-bold text-white">AI Review</h2>
+                    <h2 className="text-3xl font-bold text-white">Review</h2>
                     <p className="text-slate-300 leading-relaxed">{product.review}</p>
                 </div>
 
