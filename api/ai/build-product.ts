@@ -359,8 +359,12 @@ function shortenDisplayName(name: string, brand: string): string {
     n = n.split(',')[0];
     // Remove long parenthetical blocks
     n = n.replace(/\([^)]{20,}\)/g, '').replace(/\s+/g, ' ').trim();
-    // Clamp length
-    if (n.length > 60) n = n.slice(0, 57).trimEnd() + '…';
+    // Clamp length at a word boundary without adding ellipsis (avoid in-sentence …)
+    if (n.length > 60) {
+        const cut = n.slice(0, 60);
+        const lastSpace = cut.lastIndexOf(' ');
+        n = (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trimEnd();
+    }
     // Ensure brand isn't duplicated at the start
     const lb = (brand || '').toLowerCase();
     const ln = n.toLowerCase();
@@ -384,6 +388,12 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const pairs = Object.entries(specs || {}).slice(0, 6);
     const displayName = shortenDisplayName(name, brand);
     const cat = (category || '').toLowerCase();
+    const noun = cat.includes('monitor') ? 'monitor' :
+                 cat.includes('keyboard') ? 'keyboard' :
+                 cat.includes('mouse') ? 'mouse' :
+                 (cat.includes('power') || cat.includes('psu')) ? 'power supply' :
+                 (category || 'product');
+    const firstMention = (name && name.length <= 60) ? displayName : `${brand ? brand + ' ' : ''}${noun}`;
 
     // Light heuristics for monitors
     const refreshFromName = (name || '').match(/(\d{3})\s*hz/i)?.[1];
@@ -406,7 +416,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
 
     if (cat.includes('monitor') || cat.includes('display')) {
         const introParts: string[] = [];
-        introParts.push('The ' + displayName);
+        introParts.push('The ' + firstMention);
         const keyBits: string[] = [];
         if (sizeInch) keyBits.push(`${sizeInch}"`);
         if (res) keyBits.push(res);
@@ -424,22 +434,22 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         blocks.push('Ergonomics cover the basics (tilt/height), and the I/O selection suits modern PCs and laptops.');
         blocks.push('Compared with typical high‑refresh 1440p options, this brings smoothness and clarity that feel great in games and everyday use.');
     } else if (cat.includes('keyboard')) {
-        blocks.push(`The ${displayName} focuses on comfortable typing with a solid, fuss‑free layout.`);
+        blocks.push(`The ${firstMention} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
         blocks.push('Key legends are clear and the build resists flex, which adds to long‑term confidence.');
         blocks.push('If you care about everyday comfort and tidy desk aesthetics, it hits a sweet spot.');
     } else if (cat.includes('mouse')) {
-        blocks.push(`The ${displayName} delivers accurate tracking and a shape that suits most hand sizes.`);
+        blocks.push(`The ${firstMention} delivers accurate tracking and a shape that suits most hand sizes.`);
         blocks.push(`Buttons feel crisp and the scroll is confident without being noisy.`);
         blocks.push('Glide is smooth on common mouse pads, and the shell finish handles long sessions well.');
         blocks.push('It’s an easy upgrade if you want reliable aim without paying flagship prices.');
     } else if (cat.includes('power') || cat.includes('psu')) {
-        blocks.push(`The ${displayName} aims for dependable delivery with clean cabling and low noise.`);
+        blocks.push(`The ${firstMention} aims for dependable delivery with clean cabling and low noise.`);
         blocks.push(`Efficiency is competitive and thermals stay in check under typical loads.`);
         blocks.push('Ripple suppression and protections are in line with reputable units at this tier.');
         blocks.push('It’s the kind of PSU you install and forget—stable, quiet, and tidy.');
     } else {
-        blocks.push(`The ${displayName} is a balanced ${category || 'tech'} pick with good everyday usability.`);
+        blocks.push(`The ${firstMention} is a balanced ${category || 'tech'} pick with good everyday usability.`);
         blocks.push(`Performance feels consistent and build quality inspires confidence for the price.`);
         blocks.push('It strikes a nice blend of capability and polish without chasing halo‑tier features.');
     }
