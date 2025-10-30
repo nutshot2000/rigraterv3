@@ -104,41 +104,33 @@ function extractPrice(html: string): string {
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  try {
-    const { url, mode } = req.body || {};
-    if (mode !== 'review' && !url) return res.status(400).json({ error: 'url is required' });
 
-    // Short-circuit: review regeneration does not require fetching the URL
-    if (mode === 'review') {
-      const { name, brand, category, specifications, prior } = req.body || {};
-      const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+  const { url, mode, ...rest } = req.body || {};
+
+  // --- Mode 1: Regenerate Review (no URL needed) ---
+  if (mode === 'review') {
+    try {
+      const { name, brand, category, specifications, prior } = rest;
+      const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
       const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
       if (!GEMINI_KEY) return res.status(500).json({ error: 'AI service not configured' });
+
       const ai = new GoogleGenerativeAI(GEMINI_KEY);
       const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
-      const prompt = `Rewrite the product review with variety and specificity.
+      const prompt = `Rewrite the product review with variety and specificity. Product: - Name: ${name} - Brand: ${brand} - Category (one of a fixed set like CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair): ${category} - Specifications: ${specifications} Requirements: - 200–260 words, natural paragraphs, no fluff or generic phrases. - Avoid using wording like "balanced tech pick", "easy shortlist pick", or any monitor-specific language unless category is Monitor. - Be specific: mention 2–4 concrete details from the specs when useful. - Include a short Pros and Cons section (3 bullets each) using "- " bullets. - End with a calm, useful verdict. Previous text (avoid reusing phrasing): ${prior || ''} Return only the new review as plain text.`;
 
-Product:
-- Name: ${name}
-- Brand: ${brand}
-- Category (one of a fixed set like CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair): ${category}
-- Specifications: ${specifications}
-
-Requirements:
-- 200–260 words, natural paragraphs, no fluff or generic phrases.
-- Avoid using wording like "balanced tech pick", "easy shortlist pick", or any monitor-specific language unless category is Monitor.
-- Be specific: mention 2–4 concrete details from the specs when useful.
-- Include a short Pros and Cons section (3 bullets each) using "- " bullets.
-- End with a calm, useful verdict.
-
-Previous text (avoid reusing phrasing): ${prior || ''}
-
-Return only the new review as plain text.`;
       const result = await model.generateContent(prompt);
       const review = (result.response.text() || '').trim();
       return res.status(200).json({ review });
+    } catch (e: any) {
+      return res.status(500).json({ error: 'Failed to regenerate review', details: e?.message || String(e) });
     }
+  }
 
+  // --- Modes 2 & 3: Price and Metadata (URL is required) ---
+  if (!url) return res.status(400).json({ error: 'URL is required for this operation' });
+
+  try {
     const apiKey = process.env.SCRAPER_API_KEY;
     const fetchUrl = apiKey ? `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}` : url;
 
@@ -173,12 +165,10 @@ Return only the new review as plain text.`;
       return res.status(200).json({ name, brand, specifications: Object.entries(specs).map(([k,v])=>`${k}: ${v}`).join(', ') });
     }
 
-    // (review mode handled above without fetching)
-
     console.log(`[fetch-price] source=${source} price=${price}`);
     return res.status(200).json({ price });
   } catch (e: any) {
-    return res.status(500).json({ error: 'Failed to fetch price', details: e?.message || String(e) });
+    return res.status(500).json({ error: 'Failed to fetch data from URL', details: e?.message || String(e) });
   }
 }
 
