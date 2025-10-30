@@ -775,10 +775,19 @@ Price: ${price}
 URL: ${input}
 Parsed Specifications (from page): ${specsInline || 'None detected'}
 
+ALLOWED_CATEGORIES (choose exactly one; use these labels only):
+CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair
+
+CATEGORY RULES:
+- Only choose Monitor if the title/specs clearly mention display terms such as panel type (IPS/VA/TN/OLED), refresh rate (Hz), or resolution (1080p/1440p/4K).
+- For thermals compounds (thermal paste/grease/compound), use Thermal Paste.
+- For power supplies, use PSU (not Power Supply Unit).
+- For coolers (air/AIO/radiator/heatsink), use CPU COOLER.
+
 Your assignment:
 1. Product name (clean, marketing‑friendly, ≤60 chars). Drop long spec chains, trademarks, and warranty text. Avoid parentheses unless it’s the core model ID.
 2. Brand identification
-3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
+3. Category (must be one of ALLOWED_CATEGORIES)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
 6. Write a professional review (230–320 words). Structure it exactly as:
@@ -806,6 +815,9 @@ CATEGORY FOCUS (adapt based on detected category):
  - Keyboard: switch feel, stabilizers, layout, build, acoustics.
  - Mouse: sensor accuracy, shape/weight, buttons/scroll, feet.
  - PSU: efficiency rating, acoustics, cabling, build.
+ - Thermal Paste: application ease, non‑conductive safety, long‑term stability.
+ - Microphone: clarity, noise handling, setup/controls, monitoring.
+ - Chair: ergonomics/adjustability, cushioning/support, build.
 
 HTML Content (first 40k chars):
 ${cleanHtml.substring(0, 40000)}
@@ -848,10 +860,10 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                                 if (wc >= 170) {
                                     productData.review = refinedText;
                                 } else {
-                                    productData.review = expandReviewIfShort(refinedText, productData.name, productData.brand, productData.category || 'tech', specMap);
+                                    productData.review = expandReviewIfShort(refinedText, productData.name, productData.brand, canonicalCategory(productData.name, productData.category || ''), specMap);
                                 }
                             } catch {
-                                productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, productData.category || 'tech', specMap);
+                                productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, canonicalCategory(productData.name, productData.category || ''), specMap);
                             }
                         }
                         // Always generate our clean affiliate link
@@ -866,7 +878,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                             category: 'Misc',
                             price: price,
                             specifications: specsInline || 'Specifications: Check product page for detailed specs',
-                            review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
+                            review: expandReviewIfShort('', title || 'Product', brand || '', canonicalCategory(title || 'Product', 'Misc'), specMap),
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
                             slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
@@ -880,7 +892,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                         category: 'Misc',
                         price: price,
                         specifications: specsInline || 'Specifications: Check product page for detailed specs',
-                        review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
+                        review: expandReviewIfShort('', title || 'Product', brand || '', canonicalCategory(title || 'Product', 'Misc'), specMap),
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
                         slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
