@@ -83,6 +83,8 @@ const ProductPage: React.FC = () => {
                 <meta property="og:description" content={ogDesc} />
                 <meta property="og:url" content={pageUrl} />
                 <meta property="og:image" content={origin + ogImage} />
+                {/* Secondary branded OG (SVG) */}
+                <meta property="og:image" content={`${origin}/api/og-image?slug=${product.slug || slug}`} />
                 {/* Twitter */}
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={ogTitle} />
