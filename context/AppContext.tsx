@@ -36,6 +36,7 @@ interface AppContextType {
     addBlogPost: (post: Omit<BlogPost, 'id' | 'createdAt'>) => void;
     updateBlogPost: (post: BlogPost) => void;
     deleteBlogPost: (id: string) => void;
+    refreshBlogPosts: () => Promise<void>;
 
     comparisons: ComparisonDoc[];
     addComparisonDoc: (doc: Omit<ComparisonDoc, 'id' | 'createdAt'>) => void;
@@ -253,6 +254,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, []);
 
+    const refreshBlogPosts = useCallback(async () => {
+        try {
+            const remoteBlogs = await fetchBlogPostsApi();
+            if (Array.isArray(remoteBlogs)) setBlogPosts(remoteBlogs);
+        } catch (e) {
+            // keep current list on failure
+        }
+    }, []);
+
     // Comparison Docs
     const addComparisonDoc = useCallback((doc: Omit<ComparisonDoc, 'id' | 'createdAt'>) => {
         if (isBackendEnabled) {
@@ -345,18 +355,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 if (remoteResponse && Array.isArray(remoteResponse.products)) {
                     setProducts(remoteResponse.products);
                 }
-            } catch {}
+            } catch (e) {
+                console.error('Failed to fetch products', e);
+                addToast('Failed to load products from database.', 'error');
+            }
             try {
                 const remoteBlogs = await fetchBlogPostsApi();
                 if (Array.isArray(remoteBlogs)) setBlogPosts(remoteBlogs);
-            } catch {}
+            } catch (e) {
+                console.error('Failed to fetch blog posts', e);
+                addToast('Failed to load blog posts from database.', 'error');
+            }
             try {
                 const remoteComparisons = await fetchComparisonDocsApi();
                 if (Array.isArray(remoteComparisons)) setComparisons(remoteComparisons);
-            } catch {}
+            } catch (e) {
+                console.error('Failed to fetch comparisons', e);
+                addToast('Failed to load comparisons from database.', 'error');
+            }
         })();
     }, []);
 
+    const setPreferredRegion = useCallback((r: 'US' | 'UK') => {
+        setPreferredRegionState(r);
+    }, []);
 
     const value = {
         products,
@@ -379,6 +401,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         addBlogPost,
         updateBlogPost,
         deleteBlogPost,
+        refreshBlogPosts,
         comparisons,
         addComparisonDoc,
         updateComparisonDoc,

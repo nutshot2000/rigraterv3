@@ -2,8 +2,8 @@
 import React from 'react';
 import { Product } from '../../types';
 import { CloseIcon } from './Icons';
-import { FALLBACK_IMAGE_URL, AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
-import { trackEvent } from '../../services/analytics';
+import { FALLBACK_IMAGE_URL } from '../../constants';
+import BuyButtons from './BuyButtons';
 
 // Helper function to proxy image URLs
 const getProxiedImageUrl = (url: string) => {
@@ -135,7 +135,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
                     {/* Buy Buttons */}
                     <div className="pt-6">
-                        <BuyButtons affiliateLink={product.affiliateLink} />
+                        <ContentSection title="Buy Now">
+                            <BuyButtons 
+                                affiliateLink={product.affiliateLink}
+                                productName={product.name}
+                                productCategory={product.category}
+                            />
+                        </ContentSection>
                     </div>
                 </div>
             </div>
@@ -154,51 +160,3 @@ const ContentSection: React.FC<{ title: string; children: React.ReactNode }> = (
 );
 
 export default ProductDetailModal;
-
-const enrichAmazonLink = (url: string, tag: string): string => {
-    try {
-        const u = new URL(url);
-        if (!tag) return url;
-        if (u.hostname.includes('amazon.')) {
-            // Canonicalize to product path if possible
-            // Remove tracking params; keep our tag
-            u.searchParams.set('tag', tag);
-            return u.toString();
-        }
-        return url;
-    } catch {
-        return url;
-    }
-};
-
-import { useApp } from '../../context/AppContext';
-
-const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
-    const { preferredRegion } = useApp();
-    const us = AMAZON_TAG_US ? enrichAmazonLink(affiliateLink, AMAZON_TAG_US) : affiliateLink;
-    const ukBase = affiliateLink.includes('amazon.co.uk') ? affiliateLink : affiliateLink.replace('amazon.com', 'amazon.co.uk');
-    const uk = AMAZON_TAG_UK ? enrichAmazonLink(ukBase, AMAZON_TAG_UK) : '';
-    return (
-        <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white flex items-center gap-3">
-                <span className="w-2 h-2 bg-sky-400 rounded-full"></span>
-                Buy Now
-            </h3>
-            <div className="pl-5 flex flex-col sm:flex-row gap-3">
-                {preferredRegion === 'UK' && uk ? (
-                    <>
-                        <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'UK', link_url: uk, context: 'ProductDetailModal' })}>Buy on Amazon (UK)</a>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'US', link_url: us, context: 'ProductDetailModal' })}>Buy on Amazon (US)</a>
-                    </>
-                ) : (
-                    <>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'US', link_url: us, context: 'ProductDetailModal' })}>Buy on Amazon (US)</a>
-                        {uk && (
-                            <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'UK', link_url: uk, context: 'ProductDetailModal' })}>Buy on Amazon (UK)</a>
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
-    );
-};

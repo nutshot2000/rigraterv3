@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { trackEvent } from '../../services/analytics';
-import { AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
+import { AMAZON_TAG_US, AMAZON_TAG_UK, AMAZON_TAG_CA } from '../../constants';
 
 const enrichAmazonLink = (url: string, tag: string): string => {
     if (!url || !tag) return url;
@@ -26,7 +26,7 @@ interface BuyButtonsProps {
 const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, productCategory }) => {
     const { preferredRegion } = useApp();
 
-    const handleAffiliateClick = (region: 'US' | 'UK', url: string) => {
+    const handleAffiliateClick = (region: 'US' | 'UK' | 'CA', url: string) => {
         trackEvent('affiliate_click', {
             product_name: productName,
             product_category: productCategory,
@@ -53,6 +53,20 @@ const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, pro
         }
     }
 
+    // Generate CA link
+    let caLink = '';
+    if (affiliateLink) {
+        if (affiliateLink.includes('amazon.ca')) {
+            caLink = enrichAmazonLink(affiliateLink, AMAZON_TAG_CA);
+        } else {
+            try {
+                const url = new URL(affiliateLink);
+                url.hostname = 'www.amazon.ca';
+                caLink = enrichAmazonLink(url.toString(), AMAZON_TAG_CA);
+            } catch {}
+        }
+    }
+
     const primaryIsUK = preferredRegion === 'UK' && ukLink;
 
     return (
@@ -75,6 +89,17 @@ const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, pro
             >
                 Buy on Amazon ({primaryIsUK ? 'US' : 'UK'})
             </a>
+            {caLink && (
+                <a 
+                    href={caLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn-blueprint flex-1 justify-center py-3 text-base"
+                    onClick={() => handleAffiliateClick('CA', caLink)}
+                >
+                    Buy on Amazon (CA)
+                </a>
+            )}
         </div>
     );
 };
