@@ -27,6 +27,9 @@ function canonicalCategory(name: string, raw: string): string {
     if (has(/\bheadset\b|headphones\b/)) return 'Headset';
     if (has(/\bpsu\b|power\s*supply(\s*unit)?\b/)) return 'PSU';
     if (has(/\bcpu\s*cooler\b|heatsink|radiator\b|aio\b|liquid\s*cool/)) return 'CPU COOLER';
+    if (has(/thermal[\s\w-]{0,12}(paste|compound|grease)\b|\bnt[- ]?h\d\b|\bmx[- ]?\d\b|thermal\s*grizzly|cryonaut|arctic\s*silver/)) return 'Thermal Paste';
+    if (has(/\bmicrophone\b|\bmic\b|\bxlr\b|usb\s*mic(rophone)?\b/)) return 'Microphone';
+    if (has(/\bchair\b|gaming\s*chair\b/)) return 'Chair';
     return raw || 'Misc';
 }
 
@@ -453,7 +456,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const blocks: string[] = [];
     const lcAll = (name + ' ' + combined).toLowerCase();
     const isMotherboard = /(motherboard|lga\s?\d{3,5}|am4|am5|z\d{3}\b|b\d{3}\b|x\d{3}\b|pci\s?-?e|vrm|m\.?2|\batx\b|micro[-\s]?atx)/i.test(lcAll);
-    const catNormalized = (!cat || cat === 'misc') && isMotherboard ? 'motherboard' : cat;
+    const pasteCue = /thermal[\s\w-]{0,12}(paste|compound|grease)|\bnt[- ]?h\d\b|\bmx[- ]?\d\b|thermal\s*grizzly|cryonaut|arctic\s*silver/i.test(lcAll);
+    let catNormalized = (!cat || cat === 'misc') && isMotherboard ? 'motherboard' : cat;
+    if (catNormalized === 'motherboard' && pasteCue) catNormalized = 'thermal paste';
 
     if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
         const introParts: string[] = [];
