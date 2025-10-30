@@ -108,6 +108,14 @@ export default async function handler(req: any, res: any) {
     });
     const html = await resp.text();
     const price = extractPrice(html);
+    
+    // Detailed logging for debugging
+    console.log(`[fetch-price] URL: ${url}`);
+    console.log(`[fetch-price] Extracted Price: ${price}`);
+    if (price === '$0.00') {
+      console.log(`[fetch-price] Received HTML (first 1k chars): ${html.substring(0, 1000)}`);
+    }
+
     return res.status(200).json({ price });
   } catch (e: any) {
     return res.status(500).json({ error: 'Failed to fetch price', details: e?.message || String(e) });
