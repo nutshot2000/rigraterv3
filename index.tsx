@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/shared/ErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,5 +16,6 @@ root.render(
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
+    <Analytics />
   </React.StrictMode>
 );
