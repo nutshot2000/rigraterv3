@@ -50,14 +50,7 @@ const ProductManagement: React.FC = () => {
       setTotalPages(response.totalPages);
       setTotalCount(response.totalCount);
       
-      // Extract unique categories for filter dropdown
-      if (!params.page) {
-        const allCategories = new Set<string>();
-        response.products.forEach(product => {
-          if (product.category) allCategories.add(product.category);
-        });
-        setCategories(Array.from(allCategories).sort());
-      }
+      // Do not reset category list here; we load the full distinct set separately
     } catch (error) {
       console.error('Failed to load products:', error);
       addToast('Failed to load products', 'error');
@@ -148,6 +141,12 @@ const ProductManagement: React.FC = () => {
       
       // Refresh the current page to ensure we have the right number of items
       loadProducts();
+
+      // Also refresh category list to reflect any changes
+      try {
+        const cats = await fetchDistinctCategories();
+        if (cats.length) setCategories(cats);
+      } catch {}
     } catch (error) {
       console.error('Failed to delete product:', error);
       addToast('Failed to delete product', 'error');
@@ -163,6 +162,12 @@ const ProductManagement: React.FC = () => {
       setProducts(products.map(p => p.id === id ? updatedProduct : p));
       setEditingProduct(null);
       addToast('Product updated successfully', 'success');
+
+      // Refresh categories in case category changed
+      try {
+        const cats = await fetchDistinctCategories();
+        if (cats.length) setCategories(cats);
+      } catch {}
     } catch (error) {
       console.error('Failed to update product:', error);
       addToast('Failed to update product', 'error');
