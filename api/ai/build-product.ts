@@ -374,7 +374,7 @@ function shortenDisplayName(name: string, brand: string): string {
 
 function expandReviewIfShort(review: string, name: string, brand: string, category: string, specs: Record<string,string>): string {
     const wordCount = (review || '').split(/\s+/).filter(Boolean).length;
-    if (wordCount >= 200) return review;
+    if (wordCount >= 230) return review;
 
     const getSpecVal = (keys: string[]): string | undefined => {
         const entries = Object.entries(specs || {});
@@ -433,6 +433,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (res && sizeInch) blocks.push(`Text looks crisp at ${res} on ${sizeInch}", and color balance is easy to tune for work and play.`);
         blocks.push('Ergonomics cover the basics (tilt/height), and the I/O selection suits modern PCs and laptops.');
         blocks.push('Compared with typical high‑refresh 1440p options, this brings smoothness and clarity that feel great in games and everyday use.');
+        blocks.push('It feels like a clear upgrade you’ll notice every day and be happy to live with.');
     } else if (cat.includes('keyboard')) {
         blocks.push(`The ${firstMention} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
@@ -451,7 +452,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     } else {
         blocks.push(`The ${firstMention} is a balanced ${category || 'tech'} pick with good everyday usability.`);
         blocks.push(`Performance feels consistent and build quality inspires confidence for the price.`);
-        blocks.push('It strikes a nice blend of capability and polish without chasing halo‑tier features.');
+        blocks.push('It strikes a nice blend of capability and polish without chasing halo‑tier features—an upgrade you’ll feel good about owning.');
     }
 
     // Build a concise spec summary rather than dumping page labels
@@ -638,7 +639,7 @@ Your assignment:
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (200–260 words). Structure it exactly as:
+6. Write a professional review (230–320 words). Structure it exactly as:
    - 2–3 sentence intro that frames the core benefit/outcome
    - Performance and build (what it feels like to use)
    - Who it’s for (and who should skip)
@@ -655,6 +656,7 @@ WRITING STYLE:
  - Compare briefly to a close alternative when it clarifies value
  - Persuasive but respectful—no overpromises, no pushy sales tone
   - Don’t repeat the full product name inside the review body; use category nouns ("this monitor", "this keyboard") after the first mention
+  - Make the reader feel good about choosing it: pride of ownership, peace of mind, and sensible, future‑proof value
   - Positive language is welcome—make it feel exciting when justified
 
 CATEGORY FOCUS (adapt based on detected category):
@@ -689,7 +691,7 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         if (!productData.review || productData.review.split(/\s+/).length < 170) {
                             try {
                                 // Second AI pass: expand/refresh the review to target length and tone
-                                const refinePrompt = `Rewrite the following product review to be a fresh, professional review of 200–260 words with an energetic but honest tone. Structure: brief intro on core benefit, performance/build, who it’s for (and who should skip), 3 pros and 3 cons as - bullets, and a soft verdict CTA. Do not repeat the full long product name—use category nouns after first mention. Avoid invented metrics.
+                                const refinePrompt = `Rewrite the following product review to be a fresh, professional review of 230–320 words with an energetic but honest tone. Structure: brief intro on core benefit, performance/build, who it’s for (and who should skip), 3 pros and 3 cons as - bullets, and a soft verdict CTA. Make it feel good to own: pride of ownership, peace of mind, and future‑proof value. Do not repeat the full long product name—use category nouns after first mention. Avoid invented metrics.
 
 Product: ${productData.name}
 Brand: ${productData.brand}
