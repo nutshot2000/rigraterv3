@@ -71,19 +71,14 @@ const ProductManagement: React.FC = () => {
     loadProducts();
   }, [loadProducts]);
 
-  // Handle search with debounce
-  const debouncedSearch = useCallback(
-    debounce((term: string) => {
-      setCurrentPage(1); // Reset to first page on new search
-      loadProducts({ page: 1, search: term });
-    }, 500),
-    [loadProducts]
-  );
-
+  // Handle search with debounce (stable independent of current page)
   useEffect(() => {
-    debouncedSearch(searchTerm);
-    return () => debouncedSearch.cancel();
-  }, [searchTerm, debouncedSearch]);
+    const t = setTimeout(() => {
+      setCurrentPage(1);
+      loadProducts({ page: 1, search: searchTerm });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
