@@ -506,7 +506,7 @@ export default async function handler(req: any, res: any) {
                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
-                        const prompt = `You are a senior tech reviewer and sales expert at a major publication like The Verge, TechCrunch, or PC Gamer. You have years of experience testing products and helping consumers make smart purchasing decisions. You're known for honest, detailed reviews that drive sales through trust and expertise.
+                        const prompt = `You are a senior tech reviewer with a helpful, benefit‑led style. Your goal is to help readers decide quickly with clear reasons to choose (or skip) a product—confident and persuasive without hype.
 
 You're reviewing this product: ${title}
 Brand: ${brand}
@@ -520,27 +520,22 @@ Your assignment:
 3. Category (specific tech category like "GPU", "CPU", "Keyboard", "Mouse", "Monitor", "Headphones", etc.)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (150-220 words) as if you've personally tested this product. Include:
-   - Performance, build quality, value, target audience
-   - A short Pros and Cons segment inside the review as bulleted lines (use "- " bullets)
-   - A clear final verdict and recommendation
+6. Write a professional review (180–230 words). Structure it exactly as:
+   - 2–3 sentence intro that frames the core benefit/outcome
+   - Performance and build (what it feels like to use)
+   - Who it’s for (and who should skip)
+   - Pros and Cons (3 concise bullets each; prefix bullets with "- ")
+   - Verdict with a soft CTA (e.g., "worth shortlisting", "check current price") without hard-selling
 7. SEO title (under 60 chars, include brand and key feature)
 8. SEO description (under 155 chars, compelling summary)
 9. URL-friendly slug (lowercase, hyphens, no special chars)
 
 WRITING STYLE:
-- Write with authority and expertise
-- Be honest about strengths and weaknesses
-- Use technical language appropriately
-- Give specific examples and comparisons
-- Make clear recommendations
-- Sound like a seasoned reviewer who knows their stuff
-- Be persuasive but not pushy - focus on value and benefits
-- Create urgency when appropriate (limited time offers, great deals)
-- Address common objections and concerns
-- Use power words that drive action (premium, exceptional, must-have, game-changer)
-- End with a strong call-to-action that feels natural
- - Avoid invented benchmarks or precise numbers unless provided; keep phrasing cautious.
+ - Benefit‑led and outcome‑oriented; tangible advantages the reader gets
+ - Honest trade‑offs; avoid hype words unless you justify them
+ - Use everyday technical language; avoid invented numbers/benchmarks
+ - Compare briefly to a close alternative when it clarifies value
+ - Persuasive but respectful—no overpromises, no pushy sales tone
 
 HTML Content (first 40k chars):
 ${cleanHtml.substring(0, 40000)}
