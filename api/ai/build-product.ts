@@ -827,8 +827,9 @@ WRITING STYLE:
   - Don’t repeat the full product name inside the review body; use category nouns ("this monitor", "this keyboard") after the first mention
   - Make the reader feel good about choosing it: pride of ownership, peace of mind, and sensible, future‑proof value
   - Positive language is welcome—make it feel exciting when justified
-
-CATEGORY FOCUS (adapt based on detected category):
+ - AVOID GENERIC PHRASES like "balanced tech pick", "easy shortlist pick", "solid value", "inspires confidence", or "worth shortlisting". Be specific instead.
+ 
+ CATEGORY FOCUS (adapt based on detected category):
  - Monitor/Display: panel type, refresh rate/motion clarity, VRR (G‑Sync/FreeSync), HDR grade realism (e.g., HDR400 is entry‑level), color accuracy, ergonomics, ports.
  - Keyboard: switch feel, stabilizers, layout, build, acoustics.
  - Mouse: sensor accuracy, shape/weight, buttons/scroll, feet.
@@ -860,30 +861,12 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         if (!productData.price || !/^[£$€]/.test(productData.price)) productData.price = price;
                         if (!productData.specifications && specsInline) productData.specifications = specsInline;
                         if (!productData.slug) productData.slug = (productData.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        
+                        // If review is too short after the first pass, leave it blank.
                         if (!productData.review || productData.review.split(/\s+/).length < 170) {
-                            try {
-                                // Second AI pass: expand/refresh the review to target length and tone
-                                const refinePrompt = `Rewrite the following product review to be a fresh, professional review of 230–320 words with an energetic but honest tone. Structure: brief intro on core benefit, performance/build, who it’s for (and who should skip), 3 pros and 3 cons as - bullets, and a soft verdict CTA. Make it feel good to own: pride of ownership, peace of mind, and future‑proof value. Do not repeat the full long product name—use category nouns after first mention. Avoid invented metrics.
-
-Product: ${productData.name}
-Brand: ${productData.brand}
-Category: ${productData.category}
-Price: ${productData.price}
-Key specs: ${(Object.entries(specMap).slice(0,6).map(([k,v]) => `${k}: ${v}`)).join(', ')}
-
-Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn ONLY the rewritten review as plain text.`;
-                                const refine = await model.generateContent(refinePrompt);
-                                const refinedText = cleanAiOutput(refine.response.text());
-                                const wc = refinedText.split(/\s+/).filter(Boolean).length;
-                                if (wc >= 170) {
-                                    productData.review = refinedText;
-                                } else {
-                                    productData.review = '';
-                                }
-                            } catch {
-                                productData.review = '';
-                            }
+                            productData.review = '';
                         }
+                        
                         // Always generate our clean affiliate link
                         productData.affiliateLink = generateAffiliateLink(input);
                         productData = normalizeSeo(productData);
