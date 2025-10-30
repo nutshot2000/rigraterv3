@@ -111,9 +111,22 @@ async function validateImages(urls: string[]): Promise<string[]> {
     // Process in parallel with timeout
     const validationPromises = urls.slice(0, 20).map(async (url) => {
         try {
-            // Trust Amazon CDN image URLs without network validation to avoid 403/HEAD blockers
+            // Prefer higher-res variants for Amazon CDN images without network validation (avoid 403/HEAD)
             if (/\b(?:m\.)?media-amazon\.com\/images\/I\//i.test(url) || /ssl-images-amazon\.com\/images\/I\//i.test(url) || /images-na\.ssl-images-amazon\.com\/images\/I\//i.test(url)) {
-                return url;
+                const base = url
+                    .replace(/\._AC_[A-Z]{2}\d+_,?/gi, '')
+                    .replace(/\._AC_SL\d+_/i, '')
+                    .replace(/\._SL\d+_/i, '')
+                    .replace(/\._SX\d+_/i, '')
+                    .replace(/\._SY\d+_/i, '')
+                    .replace(/\._UX\d+_/i, '')
+                    .replace(/\._UY\d+_/i, '')
+                    .replace(/\._SS\d+_/i, '')
+                    .replace(/\._SR\d+,\d+_/i, '')
+                    .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
+                // Generate a likely high-res candidate; many SKUs support 1500/1200 widths
+                const high = base.replace(/(\.[a-z]+)$/i, '._SL1500_$1');
+                return high;
             }
             // Try original URL first
             if (await testImageUrl(url)) {
@@ -138,10 +151,10 @@ async function validateImages(urls: string[]): Promise<string[]> {
                 }
                 
                 // Try different Amazon sizes
-                const baseMatch = url.match(/^(.+?)_SL\d+_(.+)$/i);
+                const baseMatch = (stripped || url).match(/^(.+?)_SL\d+_(.+)$/i) || (stripped ? [stripped, stripped.replace(/(\.[a-z]+)$/i, ''), stripped.match(/(\.[a-z]+)$/i)?.[1] || ''] as any : null);
                 if (baseMatch) {
                     const [, base, ext] = baseMatch;
-                    const sizes = ['1500', '1200', '1000', '800', '600', '500', '400', '300', '200'];
+                    const sizes = ['2000','1600','1500', '1200', '1100', '1000', '800', '600', '500', '400', '300', '200'];
                     for (const size of sizes) {
                         const testUrl = `${base}_SL${size}_${ext}`;
                         if (await testImageUrl(testUrl)) {
