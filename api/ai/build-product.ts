@@ -643,7 +643,7 @@ export default async function handler(req: any, res: any) {
             try {
                 const apiKey = process.env.SCRAPER_API_KEY;
                 const fetchUrl = apiKey ? `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(input)}` : input;
-
+ 
                 const pageResponse = await fetch(fetchUrl, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
@@ -651,46 +651,87 @@ export default async function handler(req: any, res: any) {
                         'Accept-Language': 'en-US,en;q=0.9',
                     }
                 });
-                const html = await pageResponse.text();
-                const cleanHtml = sanitizeHtml(html);
-
-                // Extract images from HTML only (avoid guessing Amazon image URLs from ASIN which often 404)
-                const htmlImages = extractImagesFromHTML(html);
-                imageUrls = [...htmlImages];
-
-                // Validate images
-                imageUrls = await validateImages(imageUrls);
-
-                // De-duplicate Amazon images, keeping the highest resolution found for each unique image
-                const uniqueImages = new Map<string, string>();
-                const getSize = (url: string): number => {
-                    const match = url.match(/\._S[LXY](\d+)_/i);
-                    // Treat base images (no size token) as highest priority/resolution
-                    return match ? parseInt(match[1], 10) : 9999;
-                };
-
-                for (const url of imageUrls) {
-                    const base = getAmazonImageBase(url);
-                    const existingUrl = uniqueImages.get(base);
-
-                    if (!existingUrl || getSize(url) > getSize(existingUrl)) {
-                        uniqueImages.set(base, url);
-                    }
+                let html = await pageResponse.text();
+ 
+                // If proxy returns a blocked/stripped page, fallback to direct fetch with Googlebot UA
+                const looksBlocked = /continue shopping|add this item to your cart|bot detection/i.test(html);
+                if (looksBlocked || html.trim().length < 5000) {
+                    try {
+                        const altResp = await fetch(input, {
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                                'Accept-Language': 'en-US,en;q=0.9'
+                            }
+                        });
+                        const altHtml = await altResp.text();
+                        if (altHtml && altHtml.length > html.length) html = altHtml;
+                    } catch {}
                 }
-                imageUrls = Array.from(uniqueImages.values());
-
-
-                // Extract basic data from HTML first
-                const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
-                const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1];
-                const title = sanitizeTitle(titleMatch ? titleMatch[1] : (ogTitle || '')) || '';
-                const brand = extractBrand(html, title);
-                const price = extractPrice(html);
-                const specMap = extractAmazonSpecs(html);
-                const specsInline = Object.entries(specMap).map(([k,v]) => `${k}: ${v}`).join(', ');
-                
-                // AI extraction with better context
-                if (ai) {
+ 
+                const cleanHtml = sanitizeHtml(html);
+ 
+                 // Extract images from HTML only (avoid guessing Amazon image URLs from ASIN which often 404)
+                 const htmlImages = extractImagesFromHTML(html);
+                 imageUrls = [...htmlImages];
+ 
+                 // Validate images
+                 imageUrls = await validateImages(imageUrls);
+ 
+                 // De-duplicate Amazon images, keeping the highest resolution found for each unique image
+                 const uniqueImages = new Map<string, string>();
+                 const getSize = (url: string): number => {
+                     const match = url.match(/\._S[LXY](\d+)_/i);
+                     // Treat base images (no size token) as highest priority/resolution
+                     return match ? parseInt(match[1], 10) : 9999;
+                 };
+ 
+                 for (const url of imageUrls) {
+                     const base = getAmazonImageBase(url);
+                     const existingUrl = uniqueImages.get(base);
+ 
+                     if (!existingUrl || getSize(url) > getSize(existingUrl)) {
+                         uniqueImages.set(base, url);
+                     }
+                 }
+                 imageUrls = Array.from(uniqueImages.values());
+ 
+ 
+                 // Extract basic data from HTML first
+                 const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
+                 const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1];
+                 let title = sanitizeTitle(titleMatch ? titleMatch[1] : (ogTitle || '')) || '';
+                 let brand = extractBrand(html, title);
+                 let price = extractPrice(html);
+                 let specMap = extractAmazonSpecs(html);
+                 let specsInline = Object.entries(specMap).map(([k,v]) => `${k}: ${v}`).join(', ');
+ 
+                 // If core fields are still empty, try one more direct Googlebot fetch pass to re-extract
+                 if ((!title || title.length < 3) && !brand) {
+                     try {
+                         const altResp2 = await fetch(input, {
+                             headers: {
+                                 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+                             }
+                         });
+                         const altHtml2 = await altResp2.text();
+                         const t2 = altHtml2.match(/<title[^>]*>([^<]+)</i);
+                         const og2 = altHtml2.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1];
+                         const title2 = sanitizeTitle(t2 ? t2[1] : (og2 || '')) || '';
+                         const brand2 = extractBrand(altHtml2, title2);
+                         const price2 = extractPrice(altHtml2);
+                         const spec2 = extractAmazonSpecs(altHtml2);
+                         if (title2) title = title2;
+                         if (brand2) brand = brand2;
+                         if (price2 && price2 !== '$0.00') price = price2;
+                         if (Object.keys(spec2).length) {
+                             specMap = spec2; specsInline = Object.entries(spec2).map(([k,v]) => `${k}: ${v}`).join(', ');
+                         }
+                     } catch {}
+                 }
+ 
+                 // AI extraction with better context
+                 if (ai) {
                     try {
                         const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                         const prompt = `You are a senior tech reviewer with a helpful, benefit‑led style. Your goal is to help readers decide quickly with clear reasons to choose (or skip) a product—confident and persuasive without hype. Use an energetic, positive tone while staying honest.

@@ -57,15 +57,25 @@ export default async function handler(req: any, res: any) {
     const apiKey = process.env.SCRAPER_API_KEY;
     const fetchUrl = apiKey ? `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(url)}` : url;
 
-    const resp = await fetch(fetchUrl, {
+    let resp = await fetch(fetchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
         'Accept-Language': 'en-US,en;q=0.9',
       }
     });
-    const html = await resp.text();
-    const price = extractPrice(html);
+    let html = await resp.text();
+    let price = extractPrice(html);
+
+    if (price === '$0.00' || /continue shopping|add this item to your cart|bot detection/i.test(html)) {
+      try {
+        const alt = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' } });
+        const altHtml = await alt.text();
+        const p2 = extractPrice(altHtml);
+        if (p2 && p2 !== '$0.00') price = p2;
+      } catch {}
+    }
+
     return res.status(200).json({ price });
   } catch (e: any) {
     return res.status(500).json({ error: 'Failed to fetch price', details: e?.message || String(e) });
