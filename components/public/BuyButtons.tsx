@@ -21,9 +21,10 @@ interface BuyButtonsProps {
     affiliateLink: string;
     productName: string;
     productCategory: string;
+    variant?: 'primary' | 'amazon';
 }
 
-const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, productCategory }) => {
+const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, productCategory, variant = 'primary' }) => {
     const { preferredRegion } = useApp();
 
     const handleAffiliateClick = (region: 'US' | 'UK', url: string) => {
@@ -55,26 +56,36 @@ const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, pro
 
     const primaryIsUK = preferredRegion === 'UK' && ukLink;
 
+    const primaryBtnClass = variant === 'amazon'
+        ? 'inline-flex items-center justify-center gap-2 font-bold rounded-md px-4 py-3 shadow-sm bg-[#FFD814] text-black hover:bg-[#FFA41C] hover:text-white transition-colors'
+        : 'btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base';
+
+    const secondaryBtnClass = variant === 'amazon'
+        ? 'inline-flex items-center justify-center gap-2 font-semibold rounded-md px-4 py-3 shadow-sm bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700 transition-colors'
+        : 'btn-blueprint flex-1 justify-center py-3 text-base';
+
     return (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className={variant === 'amazon' ? 'flex flex-wrap gap-3' : 'flex flex-col sm:flex-row gap-3'}>
             <a 
                 href={primaryIsUK ? ukLink : usLink} 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base"
+                className={primaryBtnClass}
                 onClick={() => handleAffiliateClick(primaryIsUK ? 'UK' : 'US', primaryIsUK ? ukLink : usLink)}
             >
-                Buy on Amazon ({primaryIsUK ? 'UK' : 'US'})
+                {variant === 'amazon' ? '🛒 Buy on Amazon' : `Buy on Amazon (${primaryIsUK ? 'UK' : 'US'})`}
             </a>
-            <a 
-                href={primaryIsUK ? usLink : ukLink} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="btn-blueprint flex-1 justify-center py-3 text-base"
-                onClick={() => handleAffiliateClick(primaryIsUK ? 'US' : 'UK', primaryIsUK ? usLink : ukLink)}
-            >
-                Buy on Amazon ({primaryIsUK ? 'US' : 'UK'})
-            </a>
+            {ukLink && (
+                <a 
+                    href={primaryIsUK ? usLink : ukLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className={secondaryBtnClass}
+                    onClick={() => handleAffiliateClick(primaryIsUK ? 'US' : 'UK', primaryIsUK ? usLink : ukLink)}
+                >
+                    {variant === 'amazon' ? `Buy on Amazon (${primaryIsUK ? 'US' : 'UK'})` : `Buy on Amazon (${primaryIsUK ? 'US' : 'UK'})`}
+                </a>
+            )}
         </div>
     );
 };

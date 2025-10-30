@@ -152,7 +152,7 @@ const BlogPostPage: React.FC = () => {
                 {links.length > 0 && (
                     <div className="not-prose mt-8 flex flex-col gap-3">
                         {links.map((u, idx) => (
-                            <BuyButtons key={idx} affiliateLink={u} productName={post.title} productCategory={'BLOG'} />
+                            <BuyButtons key={idx} affiliateLink={u} productName={post.title} productCategory={'BLOG'} variant="amazon" />
                         ))}
                     </div>
                 )}
