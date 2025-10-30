@@ -111,7 +111,7 @@ export default async function handler(req: any, res: any) {
   if (mode === 'review') {
     try {
       const { name, brand, category, specifications, prior } = rest;
-      const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || '').trim();
+      const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
       const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
       if (!GEMINI_KEY) return res.status(500).json({ error: 'AI service not configured' });
 
