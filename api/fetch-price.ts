@@ -1,4 +1,5 @@
 export const config = { runtime: 'nodejs' };
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // --- Shared helpers (also used for metadata mode) ---
 function extractJsonLdProduct(html: string): any {
@@ -139,6 +140,37 @@ export default async function handler(req: any, res: any) {
       const specs = extractAmazonSpecs(html);
       console.log(`[fetch-meta] source=${source} name=${!!name} brand=${!!brand} specs=${Object.keys(specs).length}`);
       return res.status(200).json({ name, brand, specifications: Object.entries(specs).map(([k,v])=>`${k}: ${v}`).join(', ') });
+    }
+
+    // Regenerate review mode (no new serverless function; share endpoint)
+    if (mode === 'review') {
+      const { name, brand, category, specifications, prior } = req.body || {};
+      const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
+      const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash').trim();
+      if (!GEMINI_KEY) return res.status(500).json({ error: 'AI service not configured' });
+      const ai = new GoogleGenerativeAI(GEMINI_KEY);
+      const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
+      const prompt = `Rewrite the product review with variety and specificity.
+
+Product:
+- Name: ${name}
+- Brand: ${brand}
+- Category (one of a fixed set like CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair): ${category}
+- Specifications: ${specifications}
+
+Requirements:
+- 200–260 words, natural paragraphs, no fluff or generic phrases.
+- Avoid using wording like "balanced tech pick", "easy shortlist pick", or any monitor-specific language unless category is Monitor.
+- Be specific: mention 2–4 concrete details from the specs when useful.
+- Include a short Pros and Cons section (3 bullets each) using "- " bullets.
+- End with a calm, useful verdict.
+
+Previous text (avoid reusing phrasing): ${prior || ''}
+
+Return only the new review as plain text.`;
+      const result = await model.generateContent(prompt);
+      const review = (result.response.text() || '').trim();
+      return res.status(200).json({ review });
     }
 
     console.log(`[fetch-price] source=${source} price=${price}`);

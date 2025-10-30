@@ -25,6 +25,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const [isRefreshingPrice, setIsRefreshingPrice] = useState(false);
   const [isRefreshingMeta, setIsRefreshingMeta] = useState(false);
+  const [isRegeneratingReview, setIsRegeneratingReview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (field: keyof Product, value: any) => {
@@ -144,6 +145,36 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
       alert(e?.message || 'Could not refresh details.');
     } finally {
       setIsRefreshingMeta(false);
+    }
+  };
+
+  const looksGeneric = (text: string) => {
+    if (!text) return false;
+    return /balanced tech pick|easy shortlist pick|smooth gameplay and sharp text|build quality inspires confidence/i.test(text);
+  };
+
+  const handleRegenerateReview = async () => {
+    try {
+      setIsRegeneratingReview(true);
+      const resp = await fetch('/api/fetch-price', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'review',
+          name: editedProduct.name,
+          brand: editedProduct.brand,
+          category: editedProduct.category,
+          specifications: editedProduct.specifications,
+          prior: editedProduct.review,
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Failed to regenerate review');
+      setEditedProduct(prev => ({ ...prev, review: data.review || prev.review }));
+    } catch (e: any) {
+      alert(e?.message || 'Could not regenerate review');
+    } finally {
+      setIsRegeneratingReview(false);
     }
   };
 
@@ -309,6 +340,19 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                   className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-60"
                   placeholder="Product review content..."
                 />
+                {looksGeneric(editedProduct.review || '') && (
+                  <div className="mt-2 text-xs text-amber-400">This review looks generic. Try Regenerate for a more specific take.</div>
+                )}
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    onClick={handleRegenerateReview}
+                    className="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-md text-sm"
+                    disabled={isRegeneratingReview}
+                  >
+                    {isRegeneratingReview ? 'Regenerating…' : 'Regenerate review'}
+                  </button>
+                </div>
               </div>
             </div>
           )}
