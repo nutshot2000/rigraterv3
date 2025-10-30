@@ -48,6 +48,7 @@ const HomePage: React.FC = () => {
     // redesigned toolbar replaces collapsible filters
     const [page, setPage] = useState(1);
     const [hasUserScrolled, setHasUserScrolled] = useState(false);
+    const enableAutoLoad = false; // disable infinite auto-advance
     const pageSize = 12;
 
     // URL sync
@@ -147,18 +148,20 @@ const HomePage: React.FC = () => {
     // Infinite scroll: advance page when bottom sentinel is visible (only after user scrolls)
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const onIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
+        if (!enableAutoLoad) return;
         const entry = entries[0];
         if (entry.isIntersecting && hasUserScrolled) {
             setPage(p => (p < totalPages ? p + 1 : p));
         }
-    }, [totalPages, hasUserScrolled]);
+    }, [totalPages, hasUserScrolled, enableAutoLoad]);
     useEffect(() => {
+        if (!enableAutoLoad) return;
         const el = sentinelRef.current;
         if (!el) return;
         const obs = new IntersectionObserver(onIntersect, { rootMargin: '200px' });
         obs.observe(el);
         return () => obs.disconnect();
-    }, [onIntersect]);
+    }, [onIntersect, enableAutoLoad]);
 
     const handleCardClick = (product: Product) => {
         if (product.slug) navigate(`/products/${product.slug}`);
@@ -247,7 +250,7 @@ const HomePage: React.FC = () => {
                             />
                         ))}
                     </div>
-                    <div ref={sentinelRef} className="h-8" />
+                    {/* sentinel removed while auto-load is disabled */}
                 </>
             ) : (
                 <div className="text-center py-16">
