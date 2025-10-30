@@ -3,49 +3,95 @@ export const config = { runtime: 'nodejs' };
 function extractJsonLdProduct(html: string): any {
   const scripts = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   for (const m of scripts) {
-    try {
-      const json = JSON.parse(m[1].trim());
-      const nodes = Array.isArray(json) ? json : [json];
-      for (const n of nodes) {
-        if (!n) continue;
-        if (n['@type'] === 'Product' || (Array.isArray(n['@type']) && n['@type'].includes('Product'))) return n;
-        if (Array.isArray(n['@graph'])) {
-          const p = n['@graph'].find((x: any) => x['@type'] === 'Product');
-          if (p) return p;
-        }
-      }
-    } catch {}
+      try {
+          const cleaned = m[1].trim().replace(/\u0000/g, '');
+          const parsed = JSON.parse(cleaned);
+          const candidates = Array.isArray(parsed) ? parsed : [parsed];
+          for (const node of candidates) {
+              if (!node) continue;
+              if ((node['@type'] === 'Product') || (Array.isArray(node['@type']) && node['@type'].includes('Product'))) {
+                  return node;
+              }
+              if (Array.isArray(node['@graph'])) {
+                  const p = node['@graph'].find((x: any) => x && x['@type'] === 'Product');
+                  if (p) return p;
+              }
+          }
+      } catch {}
   }
   return null;
 }
 
 function extractPrice(html: string): string {
-  try {
-    const json = extractJsonLdProduct(html);
-    const offer = Array.isArray(json?.offers) ? json?.offers[0] : json?.offers;
-    const price = offer?.price || offer?.lowPrice || offer?.highPrice;
-    const currency = offer?.priceCurrency || json?.offers?.priceCurrency || 'USD';
-    if (price) {
-      const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
-      return `${symbol}${String(price)}`;
-    }
-  } catch {}
+    // 1) JSON-LD offers price (most reliable)
+    try {
+        const json = extractJsonLdProduct(html);
+        const offer = Array.isArray(json?.offers) ? json?.offers[0] : json?.offers;
+        const price = offer?.price || offer?.lowPrice || offer?.highPrice;
+        const currency = offer?.priceCurrency || json?.offers?.priceCurrency || 'USD';
+        if (price) {
+            const symbol = currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
+            return `${symbol}${String(price)}`;
+        }
+    } catch {}
 
-  const blocks: RegExp[] = [
-    /id=["']apex_priceToPay["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
-    /id=["']corePrice_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
-    /id=["']corePriceDisplay_desktop_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
-  ];
-  for (const re of blocks) {
-    const m = html.match(re);
-    if (m && m[1]) {
-      const raw = m[1].replace(/\s+/g, '').replace(/&nbsp;/g, '');
-      if (/^£|^\$|^€/.test(raw)) return raw;
-      if (/^\d/.test(raw)) return `$${raw}`;
+    // 2) Known Amazon price containers
+    const priceBlocks: RegExp[] = [
+        /id=["']apex_priceToPay["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
+        /id=["']corePrice_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
+        /id=["']corePriceDisplay_desktop_feature_div["'][\s\S]*?class=["'][^"']*a-offscreen[^"']*["'][^>]*>\s*([^<]+)/i,
+        /id=["']priceblock_ourprice["'][^>]*>\s*([^<]+)/i,
+        /id=["']priceblock_dealprice["'][^>]*>\s*([^<]+)/i,
+        /id=["']apex_desktop_qualifiedBuybox_price["'][^>]*>\s*([^<]+)/i,
+    ];
+    for (const re of priceBlocks) {
+        const m = html.match(re);
+        if (m && m[1]) {
+            const raw = m[1].replace(/\s+/g, '').replace(/&nbsp;/g, '');
+            if (/^£|^\$|^€/.test(raw)) return raw;
+            if (/^\d/.test(raw)) return `$${raw}`;
+        }
     }
-  }
 
-  return '$0.00';
+    // 3) Assemble from whole + fraction within nearby price sections
+    const assembleBlocks: RegExp[] = [
+        /id=["']apex_priceToPay["'][\s\S]*?<\/?span[\s\S]*?a-price-whole[\s\S]*?>\s*([\d,.]+)[\s\S]*?a-price-fraction[\s\S]*?>\s*(\d{2})/i,
+        /id=["']corePrice_feature_div["'][\s\S]*?a-price-whole[\s\S]*?>\s*([\d,.]+)[\s\S]*?a-price-fraction[\s\S]*?>\s*(\d{2})/i,
+    ];
+    for (const re of assembleBlocks) {
+        const m = html.match(re);
+        if (m) {
+            const whole = m[1].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,/g, '');
+            const frac = m[2];
+            const near = html.match(/(£|\$|€)/)?.[1] || '$';
+            return `${near}${whole}.${frac}`;
+        }
+    }
+    
+    // If Amazon hides price behind cart, avoid guessing from form fields
+    if (/add this item to your cart/i.test(html)) {
+        return '$0.00';
+    }
+
+    // 4) Heuristic: choose the maximum currency token on the page, but ignore coupon/save/lower-price form contexts
+    const currencyTokens = [
+        ...html.matchAll(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g)
+    ];
+    if (currencyTokens.length) {
+        let best: { sym: string; val: number } | null = null;
+        for (const m of currencyTokens) {
+            const idx = (m.index || 0);
+            const context = html.slice(Math.max(0, idx - 100), Math.min(html.length, idx + 100)).toLowerCase();
+            if (/coupon|save|off|subscribe|per\s+month|installment|found\s+a\s+lower\s+price|tell\s+us\s+about\s+a\s+lower\s+price|price\s*\(\$\)/.test(context)) continue;
+            const sym = m[1];
+            const num = parseFloat(m[2].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,(?=\d{2}$)/, '.'));
+            if (!isFinite(num)) continue;
+            if (!best || num > best.val) best = { sym, val: num };
+        }
+        if (best) return `${best.sym}${best.val.toFixed(2)}`;
+    }
+
+    return '$0.00';
 }
 
 export default async function handler(req: any, res: any) {
