@@ -49,7 +49,7 @@ const HomePage: React.FC = () => {
     const [page, setPage] = useState(1);
     const [hasUserScrolled, setHasUserScrolled] = useState(false);
     const enableAutoLoad = false; // disable infinite auto-advance
-    const pageSize = 12;
+    const pageSize = 20; // 5 rows × 4 columns on xl screens
 
     // URL sync
     useEffect(() => {
