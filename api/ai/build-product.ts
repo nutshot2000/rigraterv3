@@ -5,22 +5,8 @@ const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL 
 const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_US || '').trim();
 const AMAZON_TAG_UK = (process.env.AMAZON_TAG_UK || process.env.VITE_AMAZON_TAG_UK || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
-const SCRAPER_API_KEY = (process.env.SCRAPER_API_KEY || '').trim();
 
-async function fetchWithScraper(url: string) {
-    if (!SCRAPER_API_KEY) {
-        // Fallback to direct fetch if scraper key is not set
-        return fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-            }
-        });
-    }
-    const scraperUrl = `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encodeURIComponent(url)}`;
-    return fetch(scraperUrl);
-}
+const GOOGLEBOT_UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
 
 function clamp(str: string, max: number): string {
     if (!str) return '';
@@ -618,7 +604,13 @@ export default async function handler(req: any, res: any) {
         if (isUrl) {
             // URL path: fetch page, extract data
             try {
-                const pageResponse = await fetchWithScraper(input);
+                const pageResponse = await fetch(input, {
+                    headers: {
+                        'User-Agent': GOOGLEBOT_UA,
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                    }
+                });
                 const html = await pageResponse.text();
                 const cleanHtml = sanitizeHtml(html);
 
