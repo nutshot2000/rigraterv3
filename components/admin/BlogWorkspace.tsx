@@ -116,6 +116,45 @@ export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost,
     }
   };
 
+  // Simple, zero-API image suggestions using Unsplash search proxy queries
+  const suggestImages = () => {
+    if (!currentPost) return;
+    const title = (currentPost.title || '').trim();
+    if (!title) { toast.error('Add a title first'); return; }
+    const lower = title.toLowerCase();
+    const isComparison = /\bvs\b|\bversus\b|\//i.test(lower);
+    let queries: string[] = [];
+    if (isComparison) {
+      // Split by common separators to extract compared items
+      const parts = title.split(/\s+vs\.?\s+|\s*\/\s*|\s+versus\s+/i).map(p => p.trim()).filter(Boolean);
+      const base = parts.slice(0, 4); // limit
+      // Cover: generic comparison banner
+      const cover = `${parts.join(' vs ')} product comparison side by side, studio lighting, white background`;
+      queries.push(cover);
+      // Gallery: one image per item
+      base.forEach(p => {
+        queries.push(`${p} product photo on white background, close-up`);
+      });
+    } else {
+      const tags = Array.isArray(currentPost.tags) ? (currentPost.tags as any[]).join(' ') : '';
+      const core = (title + ' ' + tags).trim();
+      queries = [
+        `${core} hero photo, studio lighting`,
+        `${core} lifestyle photo`,
+        `${core} close-up on white background`,
+        `${core} macro detail`,
+      ];
+    }
+    // Apply: first becomes cover, rest gallery (dedup empty)
+    const [first, ...rest] = queries.filter(Boolean);
+    if (first) updateField('cover_image_url', first);
+    if (rest.length) {
+      setBlogImages(rest);
+      updateField('blog_images', rest);
+    }
+    toast.success('Suggested images added. You can tweak or replace any of them.');
+  };
+
   const updateField = (field: keyof BlogPost, value: any) => {
     setCurrentPost({ ...currentPost, [field]: value });
   };
@@ -266,6 +305,13 @@ ${text}` })
                     helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
                   />
                 </div>
+                <button
+                  onClick={suggestImages}
+                  className="btn-blueprint h-10 self-end"
+                  title="Suggest Images"
+                >
+                  Suggest Images
+                </button>
                 {currentPost.cover_image_url && (
                   <button 
                     onClick={() => updateField('cover_image_url', '')} 
