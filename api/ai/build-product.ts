@@ -6,8 +6,6 @@ const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_
 const AMAZON_TAG_UK = (process.env.AMAZON_TAG_UK || process.env.VITE_AMAZON_TAG_UK || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
-const GOOGLEBOT_UA = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
-
 function clamp(str: string, max: number): string {
     if (!str) return '';
     return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
@@ -604,10 +602,13 @@ export default async function handler(req: any, res: any) {
         if (isUrl) {
             // URL path: fetch page, extract data
             try {
-                const pageResponse = await fetch(input, {
+                const apiKey = process.env.SCRAPER_API_KEY;
+                const fetchUrl = apiKey ? `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(input)}` : input;
+
+                const pageResponse = await fetch(fetchUrl, {
                     headers: {
-                        'User-Agent': GOOGLEBOT_UA,
-                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                         'Accept-Language': 'en-US,en;q=0.9',
                     }
                 });
