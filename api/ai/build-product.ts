@@ -312,7 +312,9 @@ function extractAmazonSpecs(html: string): Record<string, string> {
         const rows = [...overview.matchAll(/<tr[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
         for (const r of rows) {
             const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
-            const val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            let val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            if (/function\s*\(|window\.|var\s+\w+/.test(val)) continue;
+            val = val.replace(/See more\.?$/i, '').trim();
             if (key && val) specs[key] = val;
         }
     }
@@ -325,7 +327,9 @@ function extractAmazonSpecs(html: string): Record<string, string> {
         const rows = [...block.matchAll(/<tr[\s\S]*?<th[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
         for (const r of rows) {
             const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
-            const val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            let val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+            if (/function\s*\(|window\.|var\s+\w+/.test(val)) continue;
+            val = val.replace(/See more\.?$/i, '').trim();
             if (key && val) specs[key] = val;
         }
     }
@@ -348,7 +352,10 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     if (wordCount >= 140) return review;
     const bullets = Object.entries(specs).slice(0, 4).map(([k,v]) => `${k}: ${v}`);
     const pieces: string[] = [];
-    pieces.push(`The ${brand ? brand + ' ' : ''}${name} is a solid ${category || 'tech'} pick with strong value.`);
+    const lowerName = (name || '').toLowerCase();
+    const lowerBrand = (brand || '').toLowerCase();
+    const displayName = brand && lowerName.startsWith(lowerBrand) ? name : `${brand ? brand + ' ' : ''}${name}`;
+    pieces.push(`The ${displayName} is a solid ${category || 'tech'} pick with strong value.`);
     if (bullets.length) pieces.push(`Highlights — ${bullets.join('; ')}.`);
     pieces.push(`Overall: balanced performance, tidy design, and easy to recommend if the price fits.`);
     return pieces.join(' ');
@@ -402,6 +409,8 @@ function cleanAiOutput(text: string): string {
         .replace(/if\s*\([^)]+\)\s*\{[^}]+\}/gi, '')
         .replace(/ue\.count\([^)]+\);?/gi, '')
         .replace(/window\.ue\s*=\s*window\.ue\s*\|\|\s*\{\};/gi, '')
+        .replace(/\(function\([\s\S]*?\)\)\s*;?/gi, '')
+        .replace(/See more\.?/gi, '')
         .replace(/4\.5 out of 5 stars/gi, '') // common noise
         .replace(/\s+/g, ' ')
         .trim();
