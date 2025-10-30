@@ -878,10 +878,10 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                                 if (wc >= 170) {
                                     productData.review = refinedText;
                                 } else {
-                                    productData.review = expandReviewIfShort(refinedText, productData.name, productData.brand, canonicalCategory(productData.name, productData.category || ''), specMap);
+                                    productData.review = '';
                                 }
                             } catch {
-                                productData.review = expandReviewIfShort(productData.review || '', productData.name, productData.brand, canonicalCategory(productData.name, productData.category || ''), specMap);
+                                productData.review = '';
                             }
                         }
                         // Always generate our clean affiliate link
@@ -896,7 +896,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                             category: 'Misc',
                             price: price,
                             specifications: specsInline || 'Specifications: Check product page for detailed specs',
-                            review: expandReviewIfShort('', title || 'Product', brand || '', canonicalCategory(title || 'Product', 'Misc'), specMap),
+                            review: '',
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
                             slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
@@ -910,7 +910,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                         category: 'Misc',
                         price: price,
                         specifications: specsInline || 'Specifications: Check product page for detailed specs',
-                        review: expandReviewIfShort('', title || 'Product', brand || '', canonicalCategory(title || 'Product', 'Misc'), specMap),
+                        review: '',
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
                         slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
