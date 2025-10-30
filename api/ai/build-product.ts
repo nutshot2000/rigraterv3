@@ -25,6 +25,8 @@ function canonicalCategory(name: string, raw: string): string {
     if (has(/\bmouse\b|gaming mouse/)) return 'Mouse';
     if (has(/\bmonitor\b|display\b/)) return 'Monitor';
     if (has(/\bheadset\b|headphones\b/)) return 'Headset';
+    if (has(/\bpsu\b|power\s*supply(\s*unit)?\b/)) return 'PSU';
+    if (has(/\bcpu\s*cooler\b|heatsink|radiator\b|aio\b|liquid\s*cool/)) return 'CPU COOLER';
     return raw || 'Misc';
 }
 

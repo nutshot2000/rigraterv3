@@ -89,6 +89,24 @@ export async function fetchProducts(params?: ProductQueryParams): Promise<Produc
     };
 }
 
+function normalizeCategoryLabel(input?: string, fallbackName?: string): string {
+    const s = (input || '').toLowerCase() || (fallbackName || '').toLowerCase();
+    const has = (re: RegExp) => re.test(s);
+    if (has(/\bgpu|graphics|geforce|radeon|rtx|gtx\b/)) return 'GPU';
+    if (has(/\bcpu\b|processor|ryzen|intel core|i\d-\d{4,}/)) return 'CPU';
+    if (has(/\bmotherboard|b\d{3}|z\d{3}|x\d{3}\b/)) return 'Motherboard';
+    if (has(/\bram\b|ddr\d|memory\b/)) return 'RAM';
+    if (has(/\bssd|nvme|m\.2|hdd|storage\b/)) return 'Storage';
+    if (has(/\bcase\b|pc case|tower/)) return 'Case';
+    if (has(/\bkeyboard\b|keychron|mechanical/)) return 'Keyboard';
+    if (has(/\bmouse\b|gaming mouse/)) return 'Mouse';
+    if (has(/\bmonitor\b|display\b/)) return 'Monitor';
+    if (has(/\bheadset\b|headphones\b/)) return 'Headset';
+    if (has(/\bpsu\b|power\s*supply(\s*unit)?\b/)) return 'PSU';
+    if (has(/\bcpu\s*cooler\b|heatsink|radiator\b|aio\b|liquid\s*cool/)) return 'CPU COOLER';
+    return input || 'Misc';
+}
+
 export async function fetchDistinctCategories(): Promise<string[]> {
     if (!isBackendEnabled || !supabase) return [];
     const { data, error } = await supabase
@@ -123,7 +141,7 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
 
     const payload = {
         name: input.name,
-        category: input.category,
+        category: normalizeCategoryLabel(input.category, input.name),
         image_url: input.imageUrl,
         image_urls: input.imageUrls || [],
         price: input.price,
@@ -159,7 +177,7 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
     if (!isBackendEnabled || !supabase) throw new Error('Backend disabled');
     const payload = {
         name: input.name,
-        category: input.category,
+        category: normalizeCategoryLabel(input.category, input.name),
         image_url: input.imageUrl,
         image_urls: input.imageUrls || [],
         price: input.price,
