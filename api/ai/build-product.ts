@@ -11,6 +11,29 @@ function clamp(str: string, max: number): string {
     return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
 }
 
+function canonicalCategory(name: string, raw: string): string {
+    const s = (raw || '').toLowerCase();
+    const n = (name || '').toLowerCase();
+    const has = (k: RegExp) => k.test(s) || k.test(n);
+    if (has(/\bgpu|graphics|geforce|radeon|rtx|gtx\b/)) return 'GPU';
+    if (has(/\bcpu|processor|ryzen|intel core|i\d-\d{4,}\b/)) return 'CPU';
+    if (has(/\bmotherboard|b\d{3}|z\d{3}|x\d{3}\b/)) return 'Motherboard';
+    if (has(/\bram|ddr\d|memory\b/)) return 'RAM';
+    if (has(/\bssd|nvme|m\.2|hdd|storage\b/)) return 'Storage';
+    if (has(/\bcase\b|pc case|tower/)) return 'Case';
+    if (has(/\bkeyboard\b|keychron|mechanical/)) return 'Keyboard';
+    if (has(/\bmouse\b|gaming mouse/)) return 'Mouse';
+    if (has(/\bmonitor\b|display\b/)) return 'Monitor';
+    if (has(/\bheadset\b|headphones\b/)) return 'Headset';
+    return raw || 'Misc';
+}
+
+function guessBrand(name: string, fallback?: string): string {
+    const brands = ['AMD','Intel','NVIDIA','ASUS','MSI','Gigabyte','NZXT','Corsair','Crucial','Kingston','Samsung','Seagate','WD','Western Digital','Keychron','Logitech','Razer','SteelSeries','HyperX','ASRock','Acer','Dell','Lenovo','Cooler Master'];
+    const lower = (name || '').toLowerCase();
+    for (const b of brands) if (lower.includes(b.toLowerCase())) return b;
+    return fallback || (name || '').split(/\s+/)[0] || '';
+}
 function normalizePrice(input: string): string {
     const s = String(input || '').trim();
     if (!s) return '$0.00';
@@ -577,8 +600,8 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
         // Ensure required fields
         const finalProduct = {
             name: productData.name || input,
-            brand: productData.brand || productData.name?.split(' ')[0] || '',
-            category: productData.category || 'Misc',
+            brand: productData.brand || guessBrand(productData.name || input),
+            category: canonicalCategory(productData.name || input, productData.category || ''),
             price: normalizePrice(productData.price || '$0.00'),
             specifications: productData.specifications || '',
             review: productData.review || 'Review pending...',

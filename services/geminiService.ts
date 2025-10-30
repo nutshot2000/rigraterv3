@@ -36,6 +36,36 @@ const isLikelyImageUrl = (url: string): boolean => {
     }
 };
 
+// Canonicalize category names and guess brand when missing
+const canonicalCategory = (name: string, raw: string): string => {
+    const s = (raw || '').toLowerCase();
+    const n = (name || '').toLowerCase();
+    const is = (k: RegExp) => k.test(s) || k.test(n);
+    if (is(/\bgpu|graphics|geforce|radeon|rtx|gtx\b/)) return 'GPU';
+    if (is(/\bcpu|processor|ryzen|intel core|i\d-\d{4,}\b/)) return 'CPU';
+    if (is(/\bmotherboard|b\d{3}|z\d{3}|x\d{3}\b/)) return 'Motherboard';
+    if (is(/\bram|ddr\d|memory\b/)) return 'RAM';
+    if (is(/\bssd|nvme|m\.2|hdd|storage\b/)) return 'Storage';
+    if (is(/\bcase\b|pc case|tower/)) return 'Case';
+    if (is(/\bkeyboard\b|keychron|mechanical/)) return 'Keyboard';
+    if (is(/\bmouse\b|gaming mouse/)) return 'Mouse';
+    if (is(/\bmonitor\b|display\b/)) return 'Monitor';
+    if (is(/\bheadset\b|headphones\b/)) return 'Headset';
+    return (raw || 'Misc');
+};
+
+const guessBrandFromName = (name: string): string | undefined => {
+    const brands = [
+        'AMD','Intel','NVIDIA','ASUS','MSI','Gigabyte','GIGABYTE','NZXT','Corsair','Crucial','Kingston','Samsung','Seagate','WD','Western Digital','Keychron','Logitech','Razer','SteelSeries','HyperX','Sapphire','PowerColor','ASRock','Acer','Dell','Lenovo','Cooler Master'
+    ];
+    const lower = (name || '').toLowerCase();
+    for (const b of brands) {
+        if (lower.includes(b.toLowerCase())) return b;
+    }
+    const first = (name || '').split(/\s+/)[0];
+    return first && first.length <= 20 ? first : undefined;
+};
+
 /**
  * Sanitizes and validates the AI-generated product info.
  */
@@ -53,7 +83,7 @@ export function sanitizeProductInfo(input: unknown): AIProductInfo {
 
     // Coerce required, with sensible defaults
     out.name = typeof out.name === 'string' && out.name.trim() ? out.name.trim() : 'Unknown Product';
-    out.category = typeof out.category === 'string' && out.category.trim() ? out.category.trim() : 'Misc';
+    out.category = canonicalCategory(out.name, typeof out.category === 'string' && out.category.trim() ? out.category.trim() : '');
 
     const priceRaw = (out.price || '').toString().trim();
     out.price = priceRaw ? (priceRaw.startsWith('$') ? priceRaw : `$${priceRaw}`) : '$0.00';
@@ -79,7 +109,7 @@ export function sanitizeProductInfo(input: unknown): AIProductInfo {
 
     out.review = typeof out.review === 'string' ? out.review : '';
     out.specifications = typeof out.specifications === 'string' ? out.specifications : '';
-    out.brand = typeof out.brand === 'string' ? out.brand : undefined;
+    out.brand = typeof out.brand === 'string' && out.brand.trim() ? out.brand : (guessBrandFromName(out.name) || undefined);
 
     return out as AIProductInfo;
 }
