@@ -66,6 +66,7 @@ export default async function handler(req: any, res: any) {
     });
     let html = await resp.text();
     let price = extractPrice(html);
+    let source = apiKey ? 'proxy' : 'direct';
 
     if (price === '$0.00' || /continue shopping|add this item to your cart|bot detection/i.test(html)) {
       try {
@@ -73,8 +74,10 @@ export default async function handler(req: any, res: any) {
         const altHtml = await alt.text();
         const p2 = extractPrice(altHtml);
         if (p2 && p2 !== '$0.00') price = p2;
+        source = 'googlebot-fallback';
       } catch {}
     }
+    console.log(`[fetch-price] source=${source} price=${price}`);
 
     return res.status(200).json({ price });
   } catch (e: any) {

@@ -24,6 +24,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
   const [activeTab, setActiveTab] = useState<'basic' | 'details' | 'seo'>('basic');
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const [isRefreshingPrice, setIsRefreshingPrice] = useState(false);
+  const [isRefreshingMeta, setIsRefreshingMeta] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleChange = (field: keyof Product, value: any) => {
@@ -113,6 +114,36 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
       alert(e?.message || 'Could not refresh price.');
     } finally {
       setIsRefreshingPrice(false);
+    }
+  };
+
+  const handleRefreshMeta = async () => {
+    const url = editedProduct.affiliateLink || '';
+    if (!url) {
+      alert('Add an affiliate/product link first to refresh details.');
+      return;
+    }
+    try {
+      setIsRefreshingMeta(true);
+      const resp = await fetch('/api/fetch-metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Failed to fetch details');
+      setEditedProduct(prev => {
+        const next = { ...prev };
+        if (!prev.name || prev.name === 'Product from URL') next.name = data.name || prev.name;
+        if (!prev.brand || prev.brand === 'Unknown') next.brand = data.brand || prev.brand;
+        const placeholder = 'Specifications: Check product page for detailed specs';
+        if (!prev.specifications || prev.specifications === placeholder) next.specifications = data.specifications || prev.specifications;
+        return next;
+      });
+    } catch (e: any) {
+      alert(e?.message || 'Could not refresh details.');
+    } finally {
+      setIsRefreshingMeta(false);
     }
   };
 
@@ -241,6 +272,14 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                         disabled={isRefreshingPrice}
                       >
                         {isRefreshingPrice ? 'Refreshing…' : 'Refresh'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRefreshMeta}
+                        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-md text-sm"
+                        disabled={isRefreshingMeta}
+                      >
+                        {isRefreshingMeta ? 'Updating…' : 'Refresh details'}
                       </button>
                     </div>
                   </div>
