@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Product } from '../../types';
-import { fetchProducts, deleteProductById, updateProductById, ProductQueryParams } from '../../services/productService';
+import { fetchProducts, deleteProductById, updateProductById, ProductQueryParams, fetchDistinctCategories } from '../../services/productService';
 import { useApp } from '../../context/AppContext';
 import { TrashIcon, PencilIcon, MagnifyingGlassIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { FALLBACK_IMAGE_URL } from '../../constants';
@@ -70,6 +70,16 @@ const ProductManagement: React.FC = () => {
   useEffect(() => {
     loadProducts();
   }, [loadProducts]);
+
+  // Load full category list once (not limited to current page)
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await fetchDistinctCategories();
+        if (cats.length) setCategories(cats);
+      } catch {}
+    })();
+  }, []);
 
   // Handle search with debounce (stable independent of current page)
   useEffect(() => {

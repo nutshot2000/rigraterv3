@@ -89,6 +89,21 @@ export async function fetchProducts(params?: ProductQueryParams): Promise<Produc
     };
 }
 
+export async function fetchDistinctCategories(): Promise<string[]> {
+    if (!isBackendEnabled || !supabase) return [];
+    const { data, error } = await supabase
+        .from('products')
+        .select('category')
+        .not('category', 'is', null);
+    if (error) return [];
+    const set = new Set<string>();
+    (data as any[]).forEach(r => {
+        const c = (r.category || '').toString().trim();
+        if (c) set.add(c);
+    });
+    return Array.from(set).sort();
+}
+
 function ensureSlug(name: string, slug?: string): string {
     if (slug && slug.trim()) return slug.trim();
     return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
