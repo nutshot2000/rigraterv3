@@ -526,12 +526,14 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (grams) specBits.push(grams);
         specBits.push('Non‑conductive');
     } else {
-        if (sizeInch) specBits.push(`${sizeInch}"`);
-        if (res) specBits.push(res);
-        if (refresh) specBits.push(`${refresh}Hz`);
-        if (panelRaw) specBits.push(panelRaw.toUpperCase());
-        if (hdrGrade) specBits.push(`HDR${hdrGrade}`);
-        if (hasUsbC) specBits.push('USB‑C');
+        if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
+            if (sizeInch) specBits.push(`${sizeInch}"`);
+            if (res) specBits.push(res);
+            if (refresh) specBits.push(`${refresh}Hz`);
+            if (panelRaw) specBits.push(panelRaw.toUpperCase());
+            if (hdrGrade) specBits.push(`HDR${hdrGrade}`);
+            if (hasUsbC) specBits.push('USB‑C');
+        }
     }
     const specLine = specBits.length ? `Key specs — ${specBits.join(', ')}.` : '';
 
@@ -539,7 +541,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         ? `Ideal if you want a stable build with fast storage and next‑gen connectivity without paying for halo boards.`
         : catNormalized.includes('thermal paste')
         ? `Great if you want consistent temperatures and easy, mess‑free application for CPU/GPU cooler mounts.`
-        : `If you want smooth gameplay and sharp text without chasing flagship pricing, this monitor fits well.`;
+        : catNormalized.includes('monitor') || catNormalized.includes('display')
+        ? `If you want smooth motion and sharp text without chasing flagship pricing, this monitor fits well.`
+        : `Good everyday choice if you want solid performance and value without overpaying for halo features.`;
 
     // Add Pros/Cons bullets as plain lines inside the paragraph text
     const pros: string[] = [];
@@ -553,11 +557,15 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         pros.push('Easy application and cleanup');
         pros.push('Non‑conductive, component‑safe');
         pros.push('Reliable thermal performance');
-    } else {
+    } else if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
         if (res) pros.push(`${res} sharpness at ${sizeInch || 'this'}"`);
         if (refresh) pros.push(`${refresh}Hz with ${vrr || 'VRR'} for fluid motion`);
         if (panelRaw) pros.push(`${panelRaw.toUpperCase()} viewing consistency`);
         if (hasUsbC) pros.push('USB‑C convenience for laptops');
+    } else {
+        pros.push('Solid build quality for the price');
+        pros.push('Straightforward setup and use');
+        pros.push('Good overall value');
     }
 
     const cons: string[] = [];
@@ -567,9 +575,12 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     } else if (catNormalized.includes('thermal paste')) {
         cons.push('Performance depends on application method');
         cons.push('Shelf life varies after opening');
-    } else {
+    } else if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
         if (hdrGrade) cons.push('HDR at this tier is limited');
         cons.push('No true HDR dimming zones');
+    } else {
+        cons.push('Feature set may be basic at this price');
+        cons.push('Check compatibility for your setup');
     }
 
     const prosCons = [
@@ -581,7 +592,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         ? `Bottom line: a dependable board with the right I/O for modern builds—shortlist it and check current pricing against close rivals.`
         : catNormalized.includes('thermal paste')
         ? `Bottom line: dependable thermal paste that’s easy to apply and clean—cheap insurance for cooler performance.`
-        : `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`;
+        : catNormalized.includes('monitor') || catNormalized.includes('display')
+        ? `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`
+        : `Bottom line: a capable, good‑value pick for everyday use—compare features and grab it at a good price.`;
 
     return [...blocks, specLine, whoFor, prosCons, verdict]
         .filter(Boolean)
