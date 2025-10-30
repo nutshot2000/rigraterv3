@@ -109,6 +109,10 @@ async function validateImages(urls: string[]): Promise<string[]> {
     // Process in parallel with timeout
     const validationPromises = urls.slice(0, 20).map(async (url) => {
         try {
+            // Trust Amazon CDN image URLs without network validation to avoid 403/HEAD blockers
+            if (/media-amazon\.com\/images\/I\//i.test(url) || /ssl-images-amazon\.com\/images\/I\//i.test(url)) {
+                return url;
+            }
             // Try original URL first
             if (await testImageUrl(url)) {
                 return url;
@@ -156,6 +160,11 @@ async function validateImages(urls: string[]): Promise<string[]> {
     const validUrls = results.filter(url => url !== null) as string[];
     
     console.log(`Found ${validUrls.length} valid images out of ${urls.length}`);
+    // If nothing validated, still return original Amazon CDN images as a last resort
+    if (validUrls.length === 0) {
+        const amazonOnly = urls.filter(u => /amazon\.com\/images\/I\//i.test(u) || /ssl-images-amazon\.com\/images\/I\//i.test(u));
+        if (amazonOnly.length) return amazonOnly.slice(0, 8);
+    }
     return validUrls.slice(0, 8); // Limit to 8 images max
 }
 
@@ -288,13 +297,16 @@ function extractPrice(html: string): string {
         }
     }
 
-    // 4) Heuristic: choose the maximum currency token on the page to avoid $10 coupons
+    // 4) Heuristic: choose the maximum currency token on the page, but ignore coupon/save contexts
     const currencyTokens = [
         ...html.matchAll(/(£|\$|€)\s?(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/g)
     ];
     if (currencyTokens.length) {
         let best: { sym: string; val: number } | null = null;
         for (const m of currencyTokens) {
+            const idx = (m.index || 0);
+            const context = html.slice(Math.max(0, idx - 60), Math.min(html.length, idx + 60)).toLowerCase();
+            if (/coupon|save|off|subscribe|per\s+month|installment/.test(context)) continue;
             const sym = m[1];
             const num = parseFloat(m[2].replace(/\.(?=\d{3}(\D|$))/g, '').replace(/,(?=\d{2}$)/, '.'));
             if (!isFinite(num)) continue;
@@ -607,7 +619,7 @@ export default async function handler(req: any, res: any) {
                 const getSize = (url: string): number => {
                     const match = url.match(/\._S[LXY](\d+)_/i);
                     // Treat base images (no size token) as highest priority/resolution
-                    return match ? parseInt(match[1], 10) : 0;
+                    return match ? parseInt(match[1], 10) : 9999;
                 };
 
                 for (const url of imageUrls) {
