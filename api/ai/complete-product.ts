@@ -32,7 +32,7 @@ export default async function handler(req: any, res: any) {
             try {
                 const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
                 const prompt = `Generate product details for: ${productName}.
-Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words), seoTitle (<=60 chars), seoDescription (<=155 chars).`;
+Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), specifications (comma-separated Key: Value), review (200–260 words, energetic but honest, benefit‑led with 3 pros and 3 cons as - bullets), seoTitle (<=60 chars), seoDescription (<=155 chars).`;
                 const resp = await model.generateContent(prompt);
                 const text = clean(resp.response.text());
                 const data = JSON.parse(text);
@@ -62,8 +62,8 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
 
         try {
             const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
-            const prompt = `You complete missing product fields for an e-commerce admin tool. Use the provided data as truth; only fill blanks or obviously wrong values. Be concise and precise.
-Return ONLY JSON with keys: name, brand, category, price (USD formatted like "$XXX.XX"), specifications (comma-separated key: value pairs), review (120-200 words, readable paragraphs), seoTitle (<=60 chars), seoDescription (<=155 chars).
+            const prompt = `You complete missing product fields for an e-commerce admin tool. Use the provided data as truth; only fill blanks or obviously wrong values. Be concise, precise, and benefit‑led.
+Return ONLY JSON with keys: name, brand, category, price (USD formatted like "$XXX.XX"), specifications (comma-separated Key: Value), review (200–260 words, energetic but honest; include 3 pros and 3 cons as - bullets), seoTitle (<=60 chars), seoDescription (<=155 chars).
 
 Provided product JSON (hints, may be incomplete):\n${JSON.stringify(product || {}, null, 2)}\n
 Optional HTML snapshot of the page (may be truncated):\n${html.substring(0, 24000)}\n`;

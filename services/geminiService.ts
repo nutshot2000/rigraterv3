@@ -195,7 +195,19 @@ export const generateBlogPost = async (title: string, outline?: string): Promise
     }
     if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
     const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-    const response = await model.generateContent(`Write an SEO-optimized blog post about: ${title}. ${outline ? `Outline: ${outline}.` : ''} Return ONLY JSON: {title, slug, coverImageUrl, summary, content, tags}`);
+    const response = await model.generateContent(
+        `You are an expert tech blogger for RIGRATER (PC hardware). Tone: knowledgeable, energetic, benefit‑led, persuasive but not pushy. Make readers feel good about smart choices.
+
+Write an SEO-optimized blog post about: ${title}.
+${outline ? `Outline to follow: ${outline}.` : ''}
+
+Return ONLY JSON with keys {"title","slug","coverImageUrl","summary","content","tags"}.
+Rules:
+- content: Markdown, structured with H2/H3, includes "## Key Takeaways" (3-5 bullets) and a short "## Pros and Cons" (3 each). 800-1100 words, no fluff.
+- summary: 2-3 sentences, compelling and benefit‑led.
+- slug: kebab-case from title.
+`
+    );
     const jsonText = cleanJsonString(response.response.text());
     const post = JSON.parse(jsonText);
     return post;
