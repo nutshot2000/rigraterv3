@@ -39,7 +39,16 @@ function firstNonEmpty(...vals: (string | undefined)[]): string | undefined {
 }
 
 function fallbackParse(html: string, url: string) {
-    const title = extractMeta(html, 'og:title') || extractMeta(html, 'twitter:title', 'name');
+    const sanitizeTitle = (raw?: string) => {
+        if (!raw) return raw;
+        let t = raw.trim();
+        t = t.replace(/^Amazon\.(com|co\.uk)\s*:?\s*/i, '');
+        t = t.replace(/\s*:\s*Amazon\.(com|co\.uk).*$/i, '');
+        t = t.replace(/\s*\|\s*Amazon\.(com|co\.uk).*$/i, '');
+        t = t.replace(/\s*:\s*Electronics.*$/i, '');
+        return t.trim();
+    };
+    const title = sanitizeTitle(extractMeta(html, 'og:title') || extractMeta(html, 'twitter:title', 'name'));
     const image = extractMeta(html, 'og:image') || extractMeta(html, 'twitter:image', 'name');
     const desc = extractMeta(html, 'og:description') || extractMeta(html, 'description', 'name');
     const jsonld = extractJsonLd(html);

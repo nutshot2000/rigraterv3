@@ -407,6 +407,16 @@ function cleanAiOutput(text: string): string {
         .trim();
 }
 
+function sanitizeTitle(raw: string): string {
+    if (!raw) return '';
+    let t = raw.trim();
+    t = t.replace(/^Amazon\.(com|co\.uk)\s*:?\s*/i, '');
+    t = t.replace(/\s*:\s*Amazon\.(com|co\.uk).*$/i, '');
+    t = t.replace(/\s*\|\s*Amazon\.(com|co\.uk).*$/i, '');
+    t = t.replace(/\s*:\s*Electronics.*$/i, '');
+    return t.trim();
+}
+
 // Generate a clean affiliate link with the correct tag for OneLink
 function generateAffiliateLink(url: string): string {
     const asin = extractASIN(url);
@@ -465,7 +475,7 @@ export default async function handler(req: any, res: any) {
 
                 // Extract basic data from HTML first
                 const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
-                const title = titleMatch ? titleMatch[1].replace(/\s*:\s*Amazon\.co\.uk.*$/i, '').trim() : '';
+                const title = titleMatch ? sanitizeTitle(titleMatch[1]) : '';
                 const brand = extractBrand(html, title);
                 const price = extractPrice(html);
                 const specMap = extractAmazonSpecs(html);
