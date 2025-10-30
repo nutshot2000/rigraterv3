@@ -382,7 +382,6 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     };
 
     const pairs = Object.entries(specs || {}).slice(0, 6);
-    const features = pairs.map(([k, v]) => `${k}: ${v}`).join('; ');
     const displayName = shortenDisplayName(name, brand);
     const cat = (category || '').toLowerCase();
 
@@ -391,17 +390,37 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const refreshSpec = getSpecVal(['refresh']);
     const panelRaw = (name + ' ' + (getSpecVal(['panel']) || '')).match(/\b(ips|va|tn|oled|mini-?led)\b/i)?.[1];
     const hdrGrade = (name + ' ' + (getSpecVal(['hdr']) || '')).match(/hdr\s*([0-9]{3,4})/i)?.[1];
+    const combined = `${name} ${Object.entries(specs || {}).map(([k,v]) => `${k}: ${v}`).join(' ')}`;
+    const sizeInch = combined.match(/\b(\d{2})(?:\.|\s?)(?:"|in|inch|inches)\b/i)?.[1];
+    const hasUsbC = /usb[-\s]?c|type[-\s]?c/i.test(combined);
+    const vrr = /g[-\s]?sync|freesync|vrr/i.test(combined) ? 'VRR support' : '';
+    const res = (() => {
+        if (/3840\s*x\s*2160|\b4k\b|2160p/i.test(combined)) return '4K';
+        if (/2560\s*x\s*1440|\bqhd\b|1440p/i.test(combined)) return '1440p';
+        if (/1920\s*x\s*1080|\bfhd\b|1080p/i.test(combined)) return '1080p';
+        return undefined;
+    })();
+    const refresh = refreshFromName || (refreshSpec?.match(/\d{3}/)?.[0]);
 
     const blocks: string[] = [];
 
     if (cat.includes('monitor') || cat.includes('display')) {
-        blocks.push(`The ${displayName} targets gamers and creators who want a sharp, smooth image without paying flagship prices.`);
-        const perfBits: string[] = [];
-        if (refreshFromName || refreshSpec) perfBits.push('high refresh for smooth motion');
-        if (panelRaw) perfBits.push(`${panelRaw.toUpperCase()} panel for consistent visuals`);
-        if (hdrGrade) perfBits.push(`HDR${hdrGrade} support (entry‑level HDR expectations)`);
-        if (perfBits.length) blocks.push(`In use, you get ${perfBits.join(', ')}.`);
-        blocks.push(`Ergonomics and ports are sensible, and setup is straightforward.`);
+        const introParts: string[] = [];
+        introParts.push('The ' + displayName);
+        const keyBits: string[] = [];
+        if (sizeInch) keyBits.push(`${sizeInch}"`);
+        if (res) keyBits.push(res);
+        if (refresh) keyBits.push(`${refresh}Hz`);
+        if (panelRaw) keyBits.push(panelRaw.toUpperCase());
+        blocks.push(`${introParts.join(' ')} is a ${keyBits.join(' ')} gaming monitor focused on smooth motion and clean image quality.`);
+        const perfLine: string[] = [];
+        if (refresh) perfLine.push('fast motion stays fluid');
+        if (vrr) perfLine.push(vrr.toLowerCase());
+        if (panelRaw) perfLine.push(`${panelRaw.toUpperCase()} consistency`);
+        if (perfLine.length) blocks.push(`In use, ${perfLine.join(', ')}.`);
+        if (hasUsbC) blocks.push('USB‑C simplifies laptop hookup (video/data; power delivery may vary).');
+        if (hdrGrade) blocks.push(`HDR${hdrGrade} is entry‑level—expect modest highlights rather than true HDR.`);
+        blocks.push('Ergonomics and ports are sensible, and setup is straightforward.');
     } else if (cat.includes('keyboard')) {
         blocks.push(`The ${displayName} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
@@ -416,11 +435,37 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         blocks.push(`Performance feels consistent and build quality inspires confidence for the price.`);
     }
 
-    const specLine = features ? `Notable specs — ${features}.` : '';
-    const whoFor = `If you want strong value without obvious compromises, this should suit most needs in its class.`;
-    const verdict = `Bottom line: the ${displayName} is worth shortlisting—check current pricing and compare against a close rival before you decide.`;
+    // Build a concise spec summary rather than dumping page labels
+    const specBits: string[] = [];
+    if (sizeInch) specBits.push(`${sizeInch}"`);
+    if (res) specBits.push(res);
+    if (refresh) specBits.push(`${refresh}Hz`);
+    if (panelRaw) specBits.push(panelRaw.toUpperCase());
+    if (hdrGrade) specBits.push(`HDR${hdrGrade}`);
+    if (hasUsbC) specBits.push('USB‑C');
+    const specLine = specBits.length ? `Key specs — ${specBits.join(', ')}.` : '';
 
-    return [...blocks, specLine, whoFor, verdict]
+    const whoFor = `If you want smooth gameplay and sharp text without chasing flagship pricing, this monitor fits well.`;
+
+    // Add Pros/Cons bullets as plain lines inside the paragraph text
+    const pros: string[] = [];
+    if (res) pros.push(`${res} sharpness at ${sizeInch || 'this'}"`);
+    if (refresh) pros.push(`${refresh}Hz with ${vrr || 'VRR'} for fluid motion`);
+    if (panelRaw) pros.push(`${panelRaw.toUpperCase()} viewing consistency`);
+    if (hasUsbC) pros.push('USB‑C convenience for laptops');
+
+    const cons: string[] = [];
+    if (hdrGrade) cons.push('HDR at this tier is limited');
+    cons.push('No true HDR dimming zones');
+
+    const prosCons = [
+        pros.length ? `Pros:\n- ${pros.join('\n- ')}` : '',
+        cons.length ? `Cons:\n- ${cons.join('\n- ')}` : ''
+    ].filter(Boolean).join('\n');
+
+    const verdict = `Bottom line: this monitor is worth shortlisting—check current pricing and compare against a close rival before you decide.`;
+
+    return [...blocks, specLine, whoFor, prosCons, verdict]
         .filter(Boolean)
         .join(' ')
         .replace(/\s+/g, ' ')
