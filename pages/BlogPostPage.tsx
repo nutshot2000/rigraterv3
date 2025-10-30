@@ -7,7 +7,7 @@ import { BlogPost, Product } from '../types';
 import { fetchBlogPostBySlug } from '../services/blogService';
 import { fetchProductById } from '../services/productService';
 import { FALLBACK_IMAGE_URL } from '../constants';
-import { ProductCard } from '../components/public/ProductCard';
+import ProductCard from '../components/public/ProductCard';
 
 const ProductEmbed: React.FC<{ id: string }> = ({ id }) => {
     const [product, setProduct] = useState<Product | null>(null);
