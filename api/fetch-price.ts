@@ -1,5 +1,6 @@
 export const config = { runtime: 'nodejs' };
 
+// --- Shared helpers (also used for metadata mode) ---
 function extractJsonLdProduct(html: string): any {
   const scripts = [...html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
   for (const m of scripts) {
@@ -17,6 +18,58 @@ function extractJsonLdProduct(html: string): any {
     } catch {}
   }
   return null;
+}
+
+function sanitizeTitle(raw: string): string {
+  if (!raw) return '';
+  let t = raw.trim();
+  t = t.replace(/^Amazon\.(com|co\.uk)\s*:?\s*/i, '');
+  t = t.replace(/\s*:\s*Amazon\.(com|co\.uk).*$/i, '');
+  t = t.replace(/\s*\|\s*Amazon\.(com|co\.uk).*$/i, '');
+  t = t.replace(/\s*:\s*Electronics.*$/i, '');
+  return t.trim();
+}
+
+function extractBrand(html: string, title: string): string {
+  const byline = html.match(/id=["']bylineInfo["'][^>]*>([^<]+)</i)?.[1]?.trim() || '';
+  if (byline) {
+    const visit = byline.replace(/Visit the\s+|Store/gi, '').trim();
+    if (visit) return visit;
+  }
+  const json = extractJsonLdProduct(html);
+  const fromJson = typeof json?.brand === 'string' ? json.brand : (json?.brand?.name || '');
+  if (fromJson) return fromJson;
+  const fromTitle = title.split(' ')[0] || '';
+  return fromTitle;
+}
+
+function extractAmazonSpecs(html: string): Record<string, string> {
+  const specs: Record<string, string> = {};
+  const overview = html.match(/id=["']productOverview_feature_div["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+  if (overview) {
+    const rows = [...overview.matchAll(/<tr[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    for (const r of rows) {
+      const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      let val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      if (/function\s*\(|window\.|var\s+\w+/.test(val)) continue;
+      val = val.replace(/See more\.?$/i, '').trim();
+      if (key && val) specs[key] = val;
+    }
+  }
+  const tech1 = html.match(/id=["']productDetails_techSpec_section_1["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+  const tech2 = html.match(/id=["']productDetails_techSpec_section_2["'][\s\S]*?<table[\s\S]*?<\/table>/i)?.[0] || '';
+  for (const block of [tech1, tech2]) {
+    if (!block) continue;
+    const rows = [...block.matchAll(/<tr[\s\S]*?<th[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>/gi)];
+    for (const r of rows) {
+      const key = r[1].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      let val = r[2].replace(/<[^>]+>/g, '').replace(/&[^;]+;/g, ' ').trim();
+      if (/function\s*\(|window\.|var\s+\w+/.test(val)) continue;
+      val = val.replace(/See more\.?$/i, '').trim();
+      if (key && val) specs[key] = val;
+    }
+  }
+  return specs;
 }
 
 function extractPrice(html: string): string {
@@ -51,7 +104,7 @@ function extractPrice(html: string): string {
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const { url } = req.body || {};
+    const { url, mode } = req.body || {};
     if (!url) return res.status(400).json({ error: 'url is required' });
 
     const apiKey = process.env.SCRAPER_API_KEY;
@@ -77,8 +130,18 @@ export default async function handler(req: any, res: any) {
         source = 'googlebot-fallback';
       } catch {}
     }
-    console.log(`[fetch-price] source=${source} price=${price}`);
+    // Metadata mode
+    if (mode === 'meta') {
+      const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
+      const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1];
+      const name = sanitizeTitle(titleMatch ? titleMatch[1] : (ogTitle || '')) || '';
+      const brand = extractBrand(html, name);
+      const specs = extractAmazonSpecs(html);
+      console.log(`[fetch-meta] source=${source} name=${!!name} brand=${!!brand} specs=${Object.keys(specs).length}`);
+      return res.status(200).json({ name, brand, specifications: Object.entries(specs).map(([k,v])=>`${k}: ${v}`).join(', ') });
+    }
 
+    console.log(`[fetch-price] source=${source} price=${price}`);
     return res.status(200).json({ price });
   } catch (e: any) {
     return res.status(500).json({ error: 'Failed to fetch price', details: e?.message || String(e) });

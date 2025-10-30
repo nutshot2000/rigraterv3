@@ -125,10 +125,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
     }
     try {
       setIsRefreshingMeta(true);
-      const resp = await fetch('/api/fetch-metadata', {
+      const resp = await fetch('/api/fetch-price', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url, mode: 'meta' })
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data?.error || 'Failed to fetch details');
