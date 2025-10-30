@@ -582,7 +582,11 @@ export default async function handler(req: any, res: any) {
             // URL path: fetch page, extract data
             try {
                 const pageResponse = await fetch(input, {
-                    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8'
+                    }
                 });
                 const html = await pageResponse.text();
                 const cleanHtml = sanitizeHtml(html);
@@ -615,7 +619,8 @@ export default async function handler(req: any, res: any) {
 
                 // Extract basic data from HTML first
                 const titleMatch = html.match(/<title[^>]*>([^<]+)</i);
-                const title = titleMatch ? sanitizeTitle(titleMatch[1]) : '';
+                const ogTitle = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1];
+                const title = sanitizeTitle(titleMatch ? titleMatch[1] : (ogTitle || '')) || '';
                 const brand = extractBrand(html, title);
                 const price = extractPrice(html);
                 const specMap = extractAmazonSpecs(html);
