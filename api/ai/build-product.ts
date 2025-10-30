@@ -453,7 +453,7 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     const blocks: string[] = [];
     const lcAll = (name + ' ' + combined).toLowerCase();
     const isMotherboard = /(motherboard|lga\s?\d{3,5}|am4|am5|z\d{3}\b|b\d{3}\b|x\d{3}\b|pci\s?-?e|vrm|m\.?2|\batx\b|micro[-\s]?atx)/i.test(lcAll);
-    const catNormalized = isMotherboard ? 'motherboard' : cat;
+    const catNormalized = (!cat || cat === 'misc') && isMotherboard ? 'motherboard' : cat;
 
     if (catNormalized.includes('monitor') || catNormalized.includes('display')) {
         const introParts: string[] = [];
@@ -479,6 +479,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         blocks.push(`The ${firstMention} targets builders who want reliable power delivery, modern connectivity, and painless setup.`);
         blocks.push('VRM design keeps thermals in check for sustained loads, and BIOS updates are straightforward.');
         blocks.push('You get plenty of storage and I/O: fast M.2 slots, PCIe for GPUs/expansion, and ample USB—including high‑speed rear I/O.');
+    } else if (catNormalized.includes('thermal paste')) {
+        blocks.push(`The ${firstMention} is a dependable thermal compound that helps your cooler make solid contact for steady temps.`);
+        blocks.push('It spreads evenly, resists pump‑out, and cleans up easily when you remount hardware.');
     } else if (cat.includes('keyboard')) {
         blocks.push(`The ${firstMention} focuses on comfortable typing with a solid, fuss‑free layout.`);
         blocks.push(`Switch feel is consistent, stabilizers are decent, and acoustics are well‑controlled for the class.`);
@@ -513,6 +516,10 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (form) specBits.push(String(form));
         if (m2) specBits.push(`${m2} M.2`);
         if (pcie) specBits.push(`PCIe ${pcie}`);
+    } else if (catNormalized.includes('thermal paste')) {
+        const grams = getSpecVal(['g', 'grams', 'amount']);
+        if (grams) specBits.push(grams);
+        specBits.push('Non‑conductive');
     } else {
         if (sizeInch) specBits.push(`${sizeInch}"`);
         if (res) specBits.push(res);
@@ -525,6 +532,8 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
 
     const whoFor = catNormalized.includes('motherboard')
         ? `Ideal if you want a stable build with fast storage and next‑gen connectivity without paying for halo boards.`
+        : catNormalized.includes('thermal paste')
+        ? `Great if you want consistent temperatures and easy, mess‑free application for CPU/GPU cooler mounts.`
         : `If you want smooth gameplay and sharp text without chasing flagship pricing, this monitor fits well.`;
 
     // Add Pros/Cons bullets as plain lines inside the paragraph text
@@ -535,6 +544,10 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
         if (getSpecVal(['m.2'])) pros.push('Multiple M.2 NVMe slots');
         if (getSpecVal(['wifi'])) pros.push('Integrated Wi‑Fi for easy networking');
         pros.push('Solid VRM and cooling for sustained loads');
+    } else if (catNormalized.includes('thermal paste')) {
+        pros.push('Easy application and cleanup');
+        pros.push('Non‑conductive, component‑safe');
+        pros.push('Reliable thermal performance');
     } else {
         if (res) pros.push(`${res} sharpness at ${sizeInch || 'this'}"`);
         if (refresh) pros.push(`${refresh}Hz with ${vrr || 'VRR'} for fluid motion`);
@@ -546,6 +559,9 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
     if (catNormalized.includes('motherboard')) {
         cons.push('Front‑panel USB/headers vary by case');
         cons.push('Overclocking headroom depends on cooling and CPU');
+    } else if (catNormalized.includes('thermal paste')) {
+        cons.push('Performance depends on application method');
+        cons.push('Shelf life varies after opening');
     } else {
         if (hdrGrade) cons.push('HDR at this tier is limited');
         cons.push('No true HDR dimming zones');
@@ -558,6 +574,8 @@ function expandReviewIfShort(review: string, name: string, brand: string, catego
 
     const verdict = catNormalized.includes('motherboard')
         ? `Bottom line: a dependable board with the right I/O for modern builds—shortlist it and check current pricing against close rivals.`
+        : catNormalized.includes('thermal paste')
+        ? `Bottom line: dependable thermal paste that’s easy to apply and clean—cheap insurance for cooler performance.`
         : `Bottom line: this monitor is an easy shortlist pick—check current pricing and compare against a close rival before you decide.`;
 
     return [...blocks, specLine, whoFor, prosCons, verdict]
@@ -851,7 +869,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                             review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
                             seoTitle: `${title || 'Product'} | Review & Specs`,
                             seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review for informed decisions.`,
-                            slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                            slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
                             affiliateLink: generateAffiliateLink(input)
                         };
                     }
@@ -865,7 +883,7 @@ Original (may be short or messy):\n${productData.review || '(none)'}\n\nReturn O
                         review: expandReviewIfShort('', title || 'Product', brand || '', 'tech', specMap),
                         seoTitle: `${title || 'Product'} | Review & Specs`,
                         seoDescription: `Explore ${title || 'this product'}: key specs, pricing, and detailed review.`,
-                        slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+                        slug: (title || 'product').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
                         affiliateLink: generateAffiliateLink(input)
                     };
                 }
