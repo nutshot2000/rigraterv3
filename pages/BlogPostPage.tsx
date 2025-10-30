@@ -1,9 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { BlogPost } from '../types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { BlogPost, Product } from '../types';
 import { fetchBlogPostBySlug } from '../services/blogService';
+import { fetchProductById } from '../services/productService';
 import { FALLBACK_IMAGE_URL } from '../constants';
+import { ProductCard } from '../components/public/ProductCard';
+
+const ProductEmbed: React.FC<{ id: string }> = ({ id }) => {
+    const [product, setProduct] = useState<Product | null>(null);
+
+    useEffect(() => {
+        const getProduct = async () => {
+            const p = await fetchProductById(id);
+            setProduct(p);
+        };
+        getProduct();
+    }, [id]);
+
+    if (!product) return <div className="text-center my-8 text-slate-400">Loading product...</div>;
+
+    return (
+        <div className="not-prose my-8">
+            <ProductCard product={product} />
+        </div>
+    );
+};
 
 const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -89,8 +113,25 @@ const BlogPostPage: React.FC = () => {
                     </div>
                 )}
 
-                <div className="prose prose-invert max-w-none whitespace-pre-wrap">
-                    {post.content}
+                <div className="prose prose-invert max-w-none">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                            p: (paragraph) => {
+                                const { node } = paragraph;
+                                const textChild = node.children[0];
+                                if (textChild && textChild.type === 'text') {
+                                    const match = /\[product id="([^"]+)"\]/.exec(textChild.value);
+                                    if (match) {
+                                        return <ProductEmbed id={match[1]} />;
+                                    }
+                                }
+                                return <p>{paragraph.children}</p>;
+                            },
+                        }}
+                    >
+                        {post.content}
+                    </ReactMarkdown>
                 </div>
             </article>
         </>

@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { BlogPost, User } from '../../types';
-import { ArrowPathIcon, DocumentPlusIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { BlogPost, User, Product } from '../../types';
+import { ArrowPathIcon, DocumentPlusIcon, TrashIcon, PlusIcon, CubeIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { createBlogPost, updateBlogPostById } from '../../services/blogService';
 import { EditableField } from './EditableField';
 import { FALLBACK_IMAGE_URL } from '../../constants';
+import { useApp } from '../../context/AppContext';
 
 // Helper function to proxy image URLs
 const getProxiedImageUrl = (url: string) => {
@@ -29,12 +32,15 @@ interface BlogWorkspaceProps {
 }
 
 export const BlogWorkspace: React.FC<BlogWorkspaceProps> = ({ user, currentPost, setCurrentPost, onPostSaved }) => {
+  const { products } = useApp();
   const [source, setSource] = useState('');
   const [buildType, setBuildType] = useState<'url' | 'topic'>('topic');
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingSeo, setIsGeneratingSeo] = useState(false);
   const [blogImages, setBlogImages] = useState<string[]>([]); // Array for additional blog images
+  const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
   
   // Initialize blogImages from currentPost when it changes
   useEffect(() => {
@@ -231,192 +237,266 @@ ${text}` })
       setIsGeneratingSeo(false);
     }
   };
-  
-  return (
-    <div className="flex-1 flex flex-col bg-slate-900/50 overflow-y-auto">
-      <div className="p-6 space-y-6">
-        {/* Builder UI */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
-          <h2 className="text-xl font-semibold text-white mb-4">AI Blog Post Builder</h2>
-          <div className="flex items-center gap-2 mb-4">
-            <button 
-              onClick={() => setBuildType('topic')} 
-              className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-            >
-              From Topic
-            </button>
-            <button 
-              onClick={() => setBuildType('url')} 
-              className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-            >
-              From URL
-            </button>
-          </div>
-          <div className="flex gap-4">
-            <input
-              type="text"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              placeholder={buildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
-              className="input-blueprint flex-grow"
-              disabled={isLoading}
-            />
-            <button onClick={handleGenerate} className="btn-blueprint" disabled={isLoading}>
-              <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Generating...' : 'Generate'}</span>
-            </button>
-          </div>
-        </div>
 
-        {/* Editor Form */}
-        {currentPost && (
-          <div className="space-y-6">
-            <EditableField
-              label="Title"
-              value={currentPost.title || ''}
-              onChange={(v) => updateField('title', v)}
-            />
-            <EditableField
-              label="Slug"
-              value={currentPost.slug || ''}
-              onChange={(v) => updateField('slug', v)}
-            />
-             <EditableField
-              label="Summary"
-              value={currentPost.summary || ''}
-              onChange={(v) => updateField('summary', v)}
-              isTextarea
-            />
-            <EditableField
-              label="Content (Markdown)"
-              value={currentPost.content || ''}
-              onChange={(v) => updateField('content', v)}
-              isTextarea
-              rows={15}
-            />
-            {/* Cover Image with Clear Button */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="flex-grow">
-                  <EditableField
-                    label="Cover Image URL"
-                    value={currentPost.cover_image_url || ''}
-                    onChange={(v) => updateField('cover_image_url', v)}
-                    helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
-                  />
-                </div>
-                <button
-                  onClick={suggestImages}
-                  className="btn-blueprint h-10 self-end"
-                  title="Suggest Images"
+  const insertProductLink = (product: Product) => {
+    const link = `\n\n[product id="${product.id}"]\n\n`;
+    const currentContent = currentPost?.content || '';
+    updateField('content', currentContent + link);
+    toast.success(`${product.name} inserted!`);
+  };
+  
+  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
+
+  return (
+    <div className="flex-1 flex flex-row bg-slate-900/50 overflow-hidden relative">
+      {/* Left Pane: Editor */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <div className="p-6 space-y-6">
+          {/* Builder UI */}
+          <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+            <h2 className="text-xl font-semibold text-white mb-4">AI Blog Post Builder</h2>
+            <div className="flex items-center gap-2 mb-4">
+              <button 
+                onClick={() => setBuildType('topic')} 
+                className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+              >
+                From Topic
+              </button>
+              <button 
+                onClick={() => setBuildType('url')} 
+                className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+              >
+                From URL
+              </button>
+            </div>
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                placeholder={buildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
+                className="input-blueprint flex-grow"
+                disabled={isLoading}
+              />
+              <button onClick={handleGenerate} className="btn-blueprint" disabled={isLoading}>
+                <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
+                <span>{isLoading ? 'Generating...' : 'Generate'}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Editor Form */}
+          {currentPost && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-white">Content Editor</h2>
+                <button 
+                  onClick={() => setIsProductDrawerOpen(!isProductDrawerOpen)}
+                  className="btn-blueprint flex items-center gap-2"
                 >
-                  Suggest Images
+                  <CubeIcon className="h-5 w-5" />
+                  <span>Insert Product</span>
                 </button>
-                {currentPost.cover_image_url && (
-                  <button 
-                    onClick={() => updateField('cover_image_url', '')} 
-                    className="btn-blueprint-danger h-10 self-end"
-                    title="Clear Image"
+              </div>
+              <EditableField
+                label="Title"
+                value={currentPost.title || ''}
+                onChange={(v) => updateField('title', v)}
+              />
+              <EditableField
+                label="Slug"
+                value={currentPost.slug || ''}
+                onChange={(v) => updateField('slug', v)}
+              />
+               <EditableField
+                label="Summary"
+                value={currentPost.summary || ''}
+                onChange={(v) => updateField('summary', v)}
+                isTextarea
+              />
+              <EditableField
+                label="Content (Markdown)"
+                value={currentPost.content || ''}
+                onChange={(v) => updateField('content', v)}
+                isTextarea
+                rows={15}
+              />
+              {/* Cover Image with Clear Button */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex-grow">
+                    <EditableField
+                      label="Cover Image URL"
+                      value={currentPost.cover_image_url || ''}
+                      onChange={(v) => updateField('cover_image_url', v)}
+                      helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
+                    />
+                  </div>
+                  <button
+                    onClick={suggestImages}
+                    className="btn-blueprint h-10 self-end"
+                    title="Suggest Images"
                   >
-                    <TrashIcon className="h-5 w-5" />
+                    Suggest Images
                   </button>
+                  {currentPost.cover_image_url && (
+                    <button 
+                      onClick={() => updateField('cover_image_url', '')} 
+                      className="btn-blueprint-danger h-10 self-end"
+                      title="Clear Image"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                  )}
+                </div>
+                {currentPost.cover_image_url && (
+                  <div className="mt-2">
+                    <p className="text-sm text-slate-400 mb-2">Cover Image Preview:</p>
+                    <img
+                      src={getProxiedImageUrl(currentPost.cover_image_url)}
+                      alt="Cover Preview"
+                      className="max-h-40 object-cover rounded border border-slate-700"
+                      onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
+                    />
+                  </div>
                 )}
               </div>
-              {currentPost.cover_image_url && (
-                <div className="mt-2">
-                  <p className="text-sm text-slate-400 mb-2">Cover Image Preview:</p>
-                  <img
-                    src={getProxiedImageUrl(currentPost.cover_image_url)}
-                    alt="Cover Preview"
-                    className="max-h-40 object-cover rounded border border-slate-700"
-                    onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
-                  />
-                </div>
-              )}
-            </div>
-            
-            {/* Additional Blog Images */}
-            <details className="form-section" open>
-              <summary>Additional Blog Images</summary>
-              <div className="form-section-content">
-                <div className="space-y-4">
-                  {blogImages.map((image, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <div className="flex-grow">
-                        <EditableField
-                          label={`Image ${index + 1}`}
-                          value={image}
-                          onChange={(v) => updateBlogImage(index, v)}
-                        />
-                      </div>
-                      <button 
-                        onClick={() => removeBlogImage(index)}
-                        className="btn-blueprint-danger h-10 self-end"
-                        title="Remove Image"
-                      >
-                        <TrashIcon className="h-5 w-5" />
-                      </button>
-                      
-                      {/* Image Preview */}
-                      {image && (
-                        <img
-                          src={getProxiedImageUrl(image)}
-                          alt={`Image ${index + 1}`}
-                          className="h-10 w-10 object-cover rounded border border-slate-700"
-                          onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                  
-                  <button 
-                    onClick={addBlogImage} 
-                    className="btn-blueprint flex gap-2 items-center"
-                  >
-                    <PlusIcon className="h-5 w-5" />
-                    Add Image
-                  </button>
-                </div>
-              </div>
-            </details>
-
-            {/* SEO Section */}
-            <details className="form-section" open>
-                <summary>SEO Settings</summary>
+              
+              {/* Additional Blog Images */}
+              <details className="form-section" open>
+                <summary>Additional Blog Images</summary>
                 <div className="form-section-content">
-                    <EditableField
-                        label="SEO Title"
-                        value={currentPost.seo_title || ''}
-                        onChange={(v) => updateField('seo_title', v)}
-                    />
-                    <EditableField
-                        label="SEO Description"
-                        value={currentPost.seo_description || ''}
-                        onChange={(v) => updateField('seo_description', v)}
-                        isTextarea
-                    />
-                  <button
-                    className="btn-blueprint mt-2"
-                    onClick={handleGenerateSeo}
-                    disabled={isGeneratingSeo}
-                  >
-                    {isGeneratingSeo ? 'Generating...' : 'Auto-generate SEO'}
-                  </button>
+                  <div className="space-y-4">
+                    {blogImages.map((image, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="flex-grow">
+                          <EditableField
+                            label={`Image ${index + 1}`}
+                            value={image}
+                            onChange={(v) => updateBlogImage(index, v)}
+                          />
+                        </div>
+                        <button 
+                          onClick={() => removeBlogImage(index)}
+                          className="btn-blueprint-danger h-10 self-end"
+                          title="Remove Image"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                        
+                        {/* Image Preview */}
+                        {image && (
+                          <img
+                            src={getProxiedImageUrl(image)}
+                            alt={`Image ${index + 1}`}
+                            className="h-10 w-10 object-cover rounded border border-slate-700"
+                            onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
+                          />
+                        )}
+                      </div>
+                    ))}
+                    
+                    <button 
+                      onClick={addBlogImage} 
+                      className="btn-blueprint flex gap-2 items-center"
+                    >
+                      <PlusIcon className="h-5 w-5" />
+                      Add Image
+                    </button>
+                  </div>
                 </div>
-            </details>
-            
-            <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
-              <button onClick={() => setCurrentPost(null)} className="btn-blueprint-danger">
-                Clear
-              </button>
-              <button onClick={handleSave} className="btn-blueprint-primary" disabled={isSaving}>
-                <DocumentPlusIcon className="h-5 w-5" />
-                <span>{isSaving ? 'Saving...' : (currentPost.id ? 'Update Post' : 'Create Post')}</span>
-              </button>
+              </details>
+
+              {/* SEO Section */}
+              <details className="form-section" open>
+                  <summary>SEO Settings</summary>
+                  <div className="form-section-content">
+                      <EditableField
+                          label="SEO Title"
+                          value={currentPost.seo_title || ''}
+                          onChange={(v) => updateField('seo_title', v)}
+                      />
+                      <EditableField
+                          label="SEO Description"
+                          value={currentPost.seo_description || ''}
+                          onChange={(v) => updateField('seo_description', v)}
+                          isTextarea
+                      />
+                    <button
+                      className="btn-blueprint mt-2"
+                      onClick={handleGenerateSeo}
+                      disabled={isGeneratingSeo}
+                    >
+                      {isGeneratingSeo ? 'Generating...' : 'Auto-generate SEO'}
+                    </button>
+                  </div>
+              </details>
+              
+              <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
+                <button onClick={() => setCurrentPost(null)} className="btn-blueprint-danger">
+                  Clear
+                </button>
+                <button onClick={handleSave} className="btn-blueprint-primary" disabled={isSaving}>
+                  <DocumentPlusIcon className="h-5 w-5" />
+                  <span>{isSaving ? 'Saving...' : (currentPost.id ? 'Update Post' : 'Create Post')}</span>
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* Right Pane: Live Preview */}
+      <div className="flex-1 border-l border-slate-700 overflow-y-auto">
+          <div className="p-6 prose prose-invert prose-slate max-w-none">
+              {currentPost ? (
+                  <>
+                      <h1>{currentPost.title || 'Untitled Post'}</h1>
+                      {currentPost.cover_image_url && (
+                          <img src={getProxiedImageUrl(currentPost.cover_image_url)} alt="Cover" className="rounded-lg" />
+                      )}
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {currentPost.content || ''}
+                      </ReactMarkdown>
+                  </>
+              ) : (
+                  <div className="flex items-center justify-center h-full text-slate-500">
+                      <p>Live preview will appear here.</p>
+                  </div>
+              )}
+          </div>
+        </div>
+      </div>
+
+      {/* Product Drawer */}
+      {isProductDrawerOpen && (
+        <div className="absolute top-0 right-0 h-full w-1/3 bg-slate-800 border-l border-slate-700 shadow-lg z-20 flex flex-col">
+          <div className="p-4 border-b border-slate-700">
+            <h3 className="text-lg font-semibold text-white">Insert a Product</h3>
+            <input 
+              type="text"
+              placeholder="Search products..."
+              className="input-blueprint w-full mt-2"
+              value={productSearch}
+              onChange={(e) => setProductSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {filteredProducts.map(product => (
+              <div key={product.id} className="bg-slate-700/50 p-2 rounded flex items-center gap-4">
+                <img src={product.imageUrl || FALLBACK_IMAGE_URL} alt={product.name} className="w-12 h-12 object-cover rounded" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">{product.name}</p>
+                  <p className="text-xs text-slate-400">{product.category}</p>
+                </div>
+                <button onClick={() => insertProductLink(product)} className="btn-blueprint-primary text-sm px-3 py-1">
+                  Insert
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
