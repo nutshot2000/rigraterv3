@@ -14,15 +14,16 @@ async function generateSitemap() {
     urls.push({ loc: `${BASE_URL}/blog`, lastmod: new Date().toISOString(), changefreq: 'weekly', priority: 0.8 });
     
     // Add dynamic product pages
-    const { data: products, error: productsError } = await supabase
+    const { data: products } = await supabase
         .from('products')
-        .select('slug, updated_at');
+        .select('slug, updated_at, created_at');
 
     if (products) {
         products.forEach(product => {
+            const lm = product.updated_at || product.created_at || new Date().toISOString();
             urls.push({
                 loc: `${BASE_URL}/products/${product.slug}`,
-                lastmod: new Date(product.updated_at).toISOString(),
+                lastmod: new Date(lm).toISOString(),
                 changefreq: 'weekly',
                 priority: 0.9
             });
@@ -30,15 +31,16 @@ async function generateSitemap() {
     }
 
     // Add dynamic blog pages
-    const { data: blogPosts, error: blogError } = await supabase
+    const { data: blogPosts } = await supabase
         .from('blog_posts')
-        .select('slug, updated_at');
+        .select('slug, updated_at, created_at');
     
     if (blogPosts) {
         blogPosts.forEach(post => {
+            const lm = post.updated_at || post.created_at || new Date().toISOString();
             urls.push({
                 loc: `${BASE_URL}/blog/${post.slug}`,
-                lastmod: new Date(post.updated_at).toISOString(),
+                lastmod: new Date(lm).toISOString(),
                 changefreq: 'monthly',
                 priority: 0.7
             });

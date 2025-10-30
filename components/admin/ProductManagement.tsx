@@ -32,6 +32,7 @@ const ProductManagement: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [categories, setCategories] = useState<string[]>([]);
+  const [needsSeoOnly, setNeedsSeoOnly] = useState(false);
 
   const loadProducts = useCallback(async (params: ProductQueryParams = {}) => {
     setLoading(true);
@@ -313,6 +314,15 @@ const ProductManagement: React.FC = () => {
               <option value="priceLow">Price: Low to High</option>
               <option value="priceHigh">Price: High to Low</option>
             </select>
+
+            <label className="inline-flex items-center gap-2 bg-slate-800 border border-slate-700 rounded-lg text-white px-3 py-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={needsSeoOnly}
+                onChange={(e) => setNeedsSeoOnly(e.target.checked)}
+              />
+              <span className="text-sm">Needs SEO</span>
+            </label>
           </div>
         </div>
 
@@ -360,14 +370,14 @@ const ProductManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-slate-900 divide-y divide-slate-800">
-                  {products.length === 0 ? (
+                  {(needsSeoOnly ? products.filter(p => !p.seoTitle || !p.seoDescription) : products).length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
                         {searchTerm || categoryFilter ? 'No products match your search' : 'No products found'}
                       </td>
                     </tr>
                   ) : (
-                    products.map((product) => (
+                    (needsSeoOnly ? products.filter(p => !p.seoTitle || !p.seoDescription) : products).map((product) => (
                       <tr key={product.id} className="hover:bg-slate-800/50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="h-12 w-12 bg-slate-800 rounded overflow-hidden flex items-center justify-center">
