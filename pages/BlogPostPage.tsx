@@ -8,6 +8,7 @@ import { fetchBlogPostBySlug } from '../services/blogService';
 import { fetchProductById } from '../services/productService';
 import { FALLBACK_IMAGE_URL } from '../constants';
 import ProductCard from '../components/public/ProductCard';
+import BuyButtons from '../components/public/BuyButtons';
 
 const ProductEmbed: React.FC<{ id: string }> = ({ id }) => {
     const [product, setProduct] = useState<Product | null>(null);
@@ -24,10 +25,22 @@ const ProductEmbed: React.FC<{ id: string }> = ({ id }) => {
 
     return (
         <div className="not-prose my-8">
-            <ProductCard product={product} />
+            <ProductCard product={product} onCardClick={() => {}} onAddToComparison={() => {}} isInComparison={false} />
         </div>
     );
 };
+
+function parseAffiliateLinks(content: string): { body: string; links: string[] } {
+    const m = content.match(/\[links\]([\s\S]*?)\[\/links\]/i);
+    if (!m) return { body: content, links: [] };
+    const block = m[0];
+    const links = m[1]
+      .split(/\r?\n|,/) 
+      .map(s => s.trim())
+      .filter(s => /^https?:\/\//i.test(s));
+    const body = content.replace(block, '').trim();
+    return { body, links };
+}
 
 const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -79,6 +92,8 @@ const BlogPostPage: React.FC = () => {
     const ogDesc = post.seoDescription || post.summary || '';
     const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
 
+    const { body, links } = parseAffiliateLinks(post.content || '');
+
     return (
         <>
             <Helmet>
@@ -121,7 +136,7 @@ const BlogPostPage: React.FC = () => {
                                 const { node } = paragraph;
                                 const textChild = node.children[0];
                                 if (textChild && textChild.type === 'text') {
-                                    const match = /\[product id="([^"]+)"\]/.exec(textChild.value);
+                                    const match = /\[product id=\"([^\"]+)\"\]/.exec(textChild.value);
                                     if (match) {
                                         return <ProductEmbed id={match[1]} />;
                                     }
@@ -130,9 +145,17 @@ const BlogPostPage: React.FC = () => {
                             },
                         }}
                     >
-                        {post.content}
+                        {body}
                     </ReactMarkdown>
                 </div>
+
+                {links.length > 0 && (
+                    <div className="not-prose mt-8 flex flex-col gap-3">
+                        {links.map((u, idx) => (
+                            <BuyButtons key={idx} affiliateLink={u} productName={post.title} productCategory={'BLOG'} />
+                        ))}
+                    </div>
+                )}
             </article>
         </>
     );

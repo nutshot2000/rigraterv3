@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { createBlogPost, updateBlogPostById } from '../../services/blogService';
 import { EditableField } from './EditableField';
 import { FALLBACK_IMAGE_URL } from '../../constants';
+import BuyButtons from '../public/BuyButtons';
 
 // Helper function to proxy image URLs
 const getProxiedImageUrl = (url: string) => {
@@ -233,6 +234,43 @@ ${text}` })
       setIsGeneratingSeo(false);
     }
   };
+
+  // Affiliate links helpers
+  const extractAffiliateLinks = (content: string): string[] => {
+    const m = content.match(/\[links\]([\s\S]*?)\[\/links\]/i);
+    if (!m) return [];
+    return m[1]
+      .split(/\r?\n|,/) // newline or comma separated
+      .map(s => s.trim())
+      .filter(s => /^https?:\/\//i.test(s));
+  };
+
+  const injectAffiliateLinks = (content: string, links: string[]): string => {
+    const block = links.length
+      ? `\n\n[links]\n${links.join('\n')}\n[/links]\n\n`
+      : '';
+    if (/\[links\][\s\S]*?\[\/links\]/i.test(content)) {
+      return content.replace(/\[links\][\s\S]*?\[\/links\]/i, block.trim() ? block : '');
+    }
+    return content + block;
+  };
+
+  const [affiliateLinksInput, setAffiliateLinksInput] = useState<string>('');
+
+  useEffect(() => {
+    const links = extractAffiliateLinks(currentPost?.content || '');
+    setAffiliateLinksInput(links.join('\n'));
+  }, [currentPost?.id]);
+
+  const handleAffiliateLinksChange = (val: string) => {
+    setAffiliateLinksInput(val);
+    const links = val
+      .split(/\r?\n|,/) 
+      .map(s => s.trim())
+      .filter(s => /^https?:\/\//i.test(s));
+    const next = injectAffiliateLinks(currentPost?.content || '', links);
+    updateField('content', next);
+  };
   
   return (
     <div className="flex-1 flex flex-row bg-slate-900/50 overflow-hidden">
@@ -408,6 +446,20 @@ ${text}` })
                   </button>
                 </div>
             </details>
+
+            {/* Affiliate Links */}
+            <details className="form-section" open>
+              <summary>Affiliate Links</summary>
+              <div className="form-section-content">
+                <p className="text-sm text-slate-400 mb-2">Paste one Amazon URL per line. Buttons will appear in the post.</p>
+                <textarea
+                  className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-28"
+                  value={affiliateLinksInput}
+                  onChange={(e) => handleAffiliateLinksChange(e.target.value)}
+                  placeholder="https://www.amazon.com/dp/ASIN...\nhttps://www.amazon.co.uk/dp/ASIN..."
+                />
+              </div>
+            </details>
             
             <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
               <button onClick={() => setCurrentPost(null)} className="btn-blueprint-danger">
@@ -432,9 +484,18 @@ ${text}` })
               {currentPost.cover_image_url && (
                 <img src={getProxiedImageUrl(currentPost.cover_image_url)} alt="Cover" className="rounded-lg" />
               )}
+              {/* Render markdown without [links] block */}
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {currentPost.content || ''}
+                {(currentPost.content || '').replace(/\[links\][\s\S]*?\[\/links\]/i, '').trim()}
               </ReactMarkdown>
+              {/* Render affiliate buttons */}
+              {extractAffiliateLinks(currentPost.content || '').length > 0 && (
+                <div className="not-prose mt-6 flex flex-col gap-3">
+                  {extractAffiliateLinks(currentPost.content || '').map((u, idx) => (
+                    <BuyButtons key={idx} affiliateLink={u} productName={currentPost.title || 'Blog'} productCategory={'BLOG'} />
+                  ))}
+                </div>
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center h-full text-slate-500">
