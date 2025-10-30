@@ -47,6 +47,7 @@ const HomePage: React.FC = () => {
     });
     // redesigned toolbar replaces collapsible filters
     const [page, setPage] = useState(1);
+    const [hasUserScrolled, setHasUserScrolled] = useState(false);
     const pageSize = 12;
 
     // URL sync
@@ -134,14 +135,23 @@ const HomePage: React.FC = () => {
         return filteredProducts.slice(start, start + pageSize);
     }, [filteredProducts, page]);
 
-    // Infinite scroll: advance page when bottom sentinel is visible
+    // Mark when the user has actually scrolled, to avoid auto-advancing pages
+    useEffect(() => {
+        const onScroll = () => {
+            if (window.scrollY > 100) setHasUserScrolled(true);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
+    // Infinite scroll: advance page when bottom sentinel is visible (only after user scrolls)
     const sentinelRef = useRef<HTMLDivElement | null>(null);
     const onIntersect = useCallback((entries: IntersectionObserverEntry[]) => {
         const entry = entries[0];
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && hasUserScrolled) {
             setPage(p => (p < totalPages ? p + 1 : p));
         }
-    }, [totalPages]);
+    }, [totalPages, hasUserScrolled]);
     useEffect(() => {
         const el = sentinelRef.current;
         if (!el) return;
