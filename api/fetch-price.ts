@@ -117,12 +117,13 @@ export default async function handler(req: any, res: any) {
 
       const ai = new GoogleGenerativeAI(GEMINI_KEY);
       const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
-      const prompt = `Rewrite the product review with variety and specificity. Product: - Name: ${name} - Brand: ${brand} - Category (one of a fixed set like CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair): ${category} - Specifications: ${specifications} Requirements: - 200–260 words, natural paragraphs, no fluff or generic phrases. - Avoid using wording like "balanced tech pick", "easy shortlist pick", or any monitor-specific language unless category is Monitor. - Be specific: mention 2–4 concrete details from the specs when useful. - Include a short Pros and Cons section (3 bullets each) using "- " bullets. - End with a calm, useful verdict. Previous text (avoid reusing phrasing): ${prior || ''} Return only the new review as plain text.`;
+      const prompt = `Rewrite the product review with variety and specificity. Product: - Name: ${name} - Brand: ${brand} - Category (one of a fixed set like CPU, GPU, Motherboard, RAM, Storage, Case, CPU COOLER, PSU, Keyboard, Mouse, Monitor, Headset, Microphone, Thermal Paste, Chair): ${category} - Specifications: ${specifications} Requirements: - 200–260 words, natural paragraphs, no fluff or generic phrases. - Avoid using wording like "balanced tech pick", "easy shortlist pick", or any monitor-specific language unless category is Monitor. - Be specific: mention 2–4 concrete details from the specs when useful. - Include a short Pros and Cons section (3 bullets each) using "- " bullets. - End with a calm, useful verdict. Previous text (avoid reusing phrasing): ${prior || 'none'} Return only the new review as plain text.`;
 
       const result = await model.generateContent(prompt);
       const review = (result.response.text() || '').trim();
       return res.status(200).json({ review });
     } catch (e: any) {
+      console.error('[regenerate-review-error]', e); // Detailed server-side logging
       return res.status(500).json({ error: 'Failed to regenerate review', details: e?.message || String(e) });
     }
   }
