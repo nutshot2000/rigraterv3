@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { CloseIcon } from './Icons';
 import { FALLBACK_IMAGE_URL } from '../../constants';
+import { trackEvent } from '../../services/analytics';
 
 const ComparisonModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const { comparisonList } = useApp();
@@ -59,11 +60,12 @@ const ComparisonModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 />
                                 <h3 className="font-semibold text-white">{product.name}</h3>
                                 <p className="text-lg font-bold text-teal-400">{product.price}</p>
-                                 <a 
+                                <a 
                                     href={product.affiliateLink} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="mt-2 inline-block bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1 px-3 rounded-md transition-colors"
+                                    onClick={() => trackEvent('affiliate_click', { context: 'ComparisonModal', product_name: product.name, product_category: product.category, link_url: product.affiliateLink })}
                                 >
                                     Buy Now
                                 </a>

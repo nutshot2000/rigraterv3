@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { trackEvent } from '../../services/analytics';
 import { AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
 
 const enrichAmazonLink = (url: string, tag: string): string => {
@@ -26,15 +27,13 @@ const BuyButtons: React.FC<BuyButtonsProps> = ({ affiliateLink, productName, pro
     const { preferredRegion } = useApp();
 
     const handleAffiliateClick = (region: 'US' | 'UK', url: string) => {
-        if (typeof window.gtag === 'function') {
-            window.gtag('event', 'click_affiliate_link', {
-                event_category: 'Affiliate',
-                event_label: productName,
-                product_category: productCategory,
-                region: region,
-                link_url: url,
-            });
-        }
+        trackEvent('affiliate_click', {
+            product_name: productName,
+            product_category: productCategory,
+            region,
+            link_url: url,
+            context: 'ProductPage'
+        });
     };
 
     // Generate US link

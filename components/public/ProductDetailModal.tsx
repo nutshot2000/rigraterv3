@@ -3,6 +3,7 @@ import React from 'react';
 import { Product } from '../../types';
 import { CloseIcon } from './Icons';
 import { FALLBACK_IMAGE_URL, AMAZON_TAG_US, AMAZON_TAG_UK } from '../../constants';
+import { trackEvent } from '../../services/analytics';
 
 // Helper function to proxy image URLs
 const getProxiedImageUrl = (url: string) => {
@@ -186,14 +187,14 @@ const BuyButtons: React.FC<{ affiliateLink: string }> = ({ affiliateLink }) => {
             <div className="pl-5 flex flex-col sm:flex-row gap-3">
                 {preferredRegion === 'UK' && uk ? (
                     <>
-                        <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base">Buy on Amazon (UK)</a>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base">Buy on Amazon (US)</a>
+                        <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'UK', link_url: uk, context: 'ProductDetailModal' })}>Buy on Amazon (UK)</a>
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'US', link_url: us, context: 'ProductDetailModal' })}>Buy on Amazon (US)</a>
                     </>
                 ) : (
                     <>
-                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base">Buy on Amazon (US)</a>
+                        <a href={us} target="_blank" rel="noopener noreferrer" className="btn-blueprint btn-blueprint--primary flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'US', link_url: us, context: 'ProductDetailModal' })}>Buy on Amazon (US)</a>
                         {uk && (
-                            <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base">Buy on Amazon (UK)</a>
+                            <a href={uk} target="_blank" rel="noopener noreferrer" className="btn-blueprint flex-1 justify-center py-3 text-base" onClick={() => trackEvent('affiliate_click', { region: 'UK', link_url: uk, context: 'ProductDetailModal' })}>Buy on Amazon (UK)</a>
                         )}
                     </>
                 )}
