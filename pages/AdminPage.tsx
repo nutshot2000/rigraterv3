@@ -12,7 +12,7 @@ import { BlogPost } from '../types';
 import BlogEditorModal from '../components/admin/BlogEditorModal';
 
 export const AdminPage: React.FC = () => {
-    const { page, setPage, currentUserEmail } = useApp();
+    const { page, setPage, currentUserEmail, addBlogPost, updateBlogPost } = useApp();
     const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -28,9 +28,45 @@ export const AdminPage: React.FC = () => {
         setEditingPost(null);
     };
 
-    const handlePostSaved = () => {
-        setEditingPost(null);
-        // The BlogManagement component will auto-refresh its list
+    const normalizeDraftForCreate = (draft: Partial<BlogPost>): Omit<BlogPost, 'id' | 'createdAt'> => ({
+        title: draft.title || '',
+        slug: draft.slug || (draft.title || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+        coverImageUrl: draft.coverImageUrl || draft.cover_image_url || '',
+        summary: draft.summary || '',
+        content: draft.content || '',
+        tags: Array.isArray(draft.tags) ? draft.tags : [],
+        blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+        seoTitle: draft.seoTitle || draft.seo_title || '',
+        seoDescription: draft.seoDescription || draft.seo_description || '',
+    });
+
+    const normalizeDraftForUpdate = (draft: Partial<BlogPost>): BlogPost => ({
+        id: String(draft.id),
+        title: draft.title || '',
+        slug: draft.slug || '',
+        coverImageUrl: draft.coverImageUrl || draft.cover_image_url || '',
+        cover_image_url: draft.cover_image_url || draft.coverImageUrl || '',
+        summary: draft.summary || '',
+        content: draft.content || '',
+        tags: Array.isArray(draft.tags) ? draft.tags : [],
+        blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+        createdAt: draft.createdAt || new Date().toISOString(),
+        seoTitle: draft.seoTitle || draft.seo_title || '',
+        seo_title: draft.seo_title || draft.seoTitle || '',
+        seoDescription: draft.seoDescription || draft.seo_description || '',
+        seo_description: draft.seo_description || draft.seoDescription || '',
+    });
+
+    const handleSavePost = (draft: Partial<BlogPost>) => {
+        try {
+            if (draft.id) {
+                updateBlogPost(normalizeDraftForUpdate(draft));
+            } else {
+                addBlogPost(normalizeDraftForCreate(draft));
+            }
+        } finally {
+            setEditingPost(null);
+        }
     };
     
     return (
@@ -56,7 +92,7 @@ export const AdminPage: React.FC = () => {
                 <BlogEditorModal
                     user={{ id: 'admin', email: currentUserEmail || 'admin@rigrater.com' }}
                     post={editingPost}
-                    onSave={handlePostSaved}
+                    onSave={handleSavePost}
                     onClose={handleCloseEditor}
                 />
             )}
