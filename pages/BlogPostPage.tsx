@@ -159,6 +159,7 @@ const BlogPostPage: React.FC = () => {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
+    // Defer early returns until after hooks to keep hook order stable across renders
     if (loading) {
         return <div className="text-center py-20 text-slate-400">Loading Post…</div>;
     }
@@ -208,10 +209,7 @@ const BlogPostPage: React.FC = () => {
         }
     }, [lightboxOpen, handleKeyboardNav]);
 
-    if (!post) {
-        // This should be caught by the loading/error state, but as a fallback:
-        return <div className="text-center py-20 text-slate-400">Post not available.</div>;
-    }
+    
 
     return (
         <>
