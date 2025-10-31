@@ -60,6 +60,7 @@ const BlogPostPage: React.FC = () => {
     const [post, setPost] = useState<BlogPost | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [activeImage, setActiveImage] = useState<string | null>(null);
 
     useEffect(() => {
         if (!slug) {
@@ -85,6 +86,12 @@ const BlogPostPage: React.FC = () => {
         load();
     }, [slug]);
 
+    useEffect(() => {
+        if (post && post.coverImageUrl) {
+            setActiveImage(post.coverImageUrl);
+        }
+    }, [post]);
+
     if (loading) {
         return <div className="text-center py-20 text-slate-400">Loading Post…</div>;
     }
@@ -108,6 +115,9 @@ const BlogPostPage: React.FC = () => {
     const { body, links } = parseAffiliateLinks(post.content || '');
     const contentWithoutTitle = removeTitleFromContent(body, post.title);
 
+    // Combine cover image and gallery images into a single list
+    const allImages = [post.coverImageUrl, ...(post.blog_images || [])].filter(Boolean);
+
     return (
         <>
             <Helmet>
@@ -130,49 +140,36 @@ const BlogPostPage: React.FC = () => {
                     <h1 className="text-4xl font-bold text-white leading-tight">{post.title}</h1>
                     <p className="text-slate-400 mt-2">{new Date(post.createdAt).toLocaleDateString()}</p>
                 </div>
-
-                {post.coverImageUrl && (
-                    <div className="rounded-lg overflow-hidden border border-slate-700 mb-8 bg-slate-800/50">
-                        <img
-                            src={`/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}`}
-                            alt={post.title}
-                            className="w-full h-80 object-contain"
-                            onError={(e) => {
-                                const img = e.currentTarget as HTMLImageElement;
-                                if ((img as any)._triedDirect !== true) {
-                                    (img as any)._triedDirect = true;
-                                    img.src = post.coverImageUrl; // try direct URL
-                                } else {
-                                    img.src = FALLBACK_IMAGE_URL; // final fallback
-                                }
-                            }}
-                        />
-                    </div>
-                )}
                 
-                {/* Image Gallery */}
-                {post.blog_images && post.blog_images.length > 0 && (
-                    <div className="my-8 grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {post.blog_images.map((url, idx) => (
-                            url.trim() && (
-                                <div key={idx} className="rounded-lg overflow-hidden border border-slate-700">
-                                    <img 
-                                        src={`/api/proxy-image?url=${encodeURIComponent(url)}`} 
-                                        alt={`${post.title} gallery image ${idx + 1}`}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            const img = e.currentTarget as HTMLImageElement;
-                                            if ((img as any)._triedDirect !== true) {
-                                                (img as any)._triedDirect = true;
-                                                img.src = url; // try direct URL
-                                            } else {
-                                                img.src = FALLBACK_IMAGE_URL; // final fallback
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            )
-                        ))}
+                {allImages.length > 0 && (
+                    <div className="mb-8">
+                        {/* Main Image */}
+                        <div className="rounded-lg overflow-hidden border border-slate-700 mb-4 bg-slate-800/50">
+                            <img
+                                src={`/api/proxy-image?url=${encodeURIComponent(activeImage || allImages[0])}`}
+                                alt={post.title}
+                                className="w-full h-96 object-contain"
+                            />
+                        </div>
+
+                        {/* Thumbnails */}
+                        {allImages.length > 1 && (
+                            <div className="flex gap-2">
+                                {allImages.map((url, idx) => (
+                                    <button 
+                                        key={idx} 
+                                        onClick={() => setActiveImage(url)}
+                                        className={`rounded overflow-hidden border-2 ${activeImage === url ? 'border-sky-500' : 'border-slate-700 hover:border-slate-500'}`}
+                                    >
+                                        <img 
+                                            src={`/api/proxy-image?url=${encodeURIComponent(url)}`} 
+                                            alt={`thumbnail ${idx + 1}`}
+                                            className="w-20 h-20 object-cover"
+                                        />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
