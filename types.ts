@@ -19,6 +19,8 @@ export interface Product {
 export enum Page {
     HOME = 'HOME',
     ADMIN = 'ADMIN',
+    ADMIN_PRODUCTS = 'ADMIN_PRODUCTS',
+    ADMIN_BLOG = 'ADMIN_BLOG',
     CATEGORIES = 'CATEGORIES',
     BLOG = 'BLOG',
     COMPARISONS = 'COMPARISONS'
