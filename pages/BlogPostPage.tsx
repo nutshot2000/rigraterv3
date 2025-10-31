@@ -123,7 +123,15 @@ const BlogPostPage: React.FC = () => {
                             src={`/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}`}
                             alt={post.title}
                             className="w-full h-80 object-cover"
-                            onError={(e) => (e.currentTarget.src = FALLBACK_IMAGE_URL)}
+                            onError={(e) => {
+                                const img = e.currentTarget as HTMLImageElement;
+                                if ((img as any)._triedDirect !== true) {
+                                    (img as any)._triedDirect = true;
+                                    img.src = post.coverImageUrl; // try direct URL
+                                } else {
+                                    img.src = FALLBACK_IMAGE_URL; // final fallback
+                                }
+                            }}
                         />
                     </div>
                 )}
