@@ -42,38 +42,38 @@ export const AdminPage: React.FC = () => {
         setEditingPost(null);
     };
 
-    const normalizeDraftForCreate = (draft: Partial<BlogPost>): Omit<BlogPost, 'id' | 'createdAt'> => ({
-        title: draft.title || '',
-        slug: draft.slug || (draft.title || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-        coverImageUrl: normalizeImageUrl(draft.coverImageUrl),
-        summary: draft.summary || '',
-        content: draft.content || '',
-        tags: Array.isArray(draft.tags) ? draft.tags : [],
-        blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
-        seoTitle: draft.seoTitle || '',
-        seoDescription: draft.seoDescription || '',
-    });
-
-    const normalizeDraftForUpdate = (draft: Partial<BlogPost>): BlogPost => ({
-        id: String(draft.id),
-        title: draft.title || '',
-        slug: draft.slug || '',
-        coverImageUrl: normalizeImageUrl(draft.coverImageUrl),
-        summary: draft.summary || '',
-        content: draft.content || '',
-        tags: Array.isArray(draft.tags) ? draft.tags : [],
-        blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
-        createdAt: draft.createdAt || new Date().toISOString(),
-        seoTitle: draft.seoTitle || '',
-        seoDescription: draft.seoDescription || '',
-    });
-
     const handleSavePost = (draft: Partial<BlogPost>) => {
         try {
             if (draft.id) {
-                updateBlogPost(normalizeDraftForUpdate(draft));
+                // This is an UPDATE
+                const postToUpdate: BlogPost = {
+                    id: String(draft.id),
+                    createdAt: draft.createdAt || new Date().toISOString(),
+                    title: draft.title || '',
+                    slug: draft.slug || '',
+                    coverImageUrl: normalizeImageUrl(draft.coverImageUrl),
+                    summary: draft.summary || '',
+                    content: draft.content || '',
+                    tags: Array.isArray(draft.tags) ? draft.tags : [],
+                    blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+                    seoTitle: draft.seoTitle || '',
+                    seoDescription: draft.seoDescription || '',
+                };
+                updateBlogPost(postToUpdate);
             } else {
-                addBlogPost(normalizeDraftForCreate(draft));
+                // This is a CREATE
+                const postToCreate: Omit<BlogPost, 'id' | 'createdAt'> = {
+                    title: draft.title || '',
+                    slug: draft.slug || (draft.title || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+                    coverImageUrl: normalizeImageUrl(draft.coverImageUrl),
+                    summary: draft.summary || '',
+                    content: draft.content || '',
+                    tags: Array.isArray(draft.tags) ? draft.tags : [],
+                    blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+                    seoTitle: draft.seoTitle || '',
+                    seoDescription: draft.seoDescription || '',
+                };
+                addBlogPost(postToCreate);
             }
         } finally {
             setEditingPost(null);
