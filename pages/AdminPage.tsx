@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp, Page } from '../context/AppContext';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
-import { AdminTopbar } from '../components/admin/AdminTopbar';
+import AdminTopbar from '../components/admin/AdminTopbar';
 import { ProductWorkspace } from '../components/admin/ProductWorkspace';
 import BlogManagement from '../components/admin/BlogManagement';
 // import { BlogWorkspace } from '../components/admin/BlogWorkspace';
