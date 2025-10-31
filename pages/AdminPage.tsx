@@ -11,6 +11,20 @@ import CommandPalette from '../components/admin/CommandPalette';
 import { BlogPost } from '../types';
 import BlogEditorModal from '../components/admin/BlogEditorModal';
 
+const normalizeImageUrl = (val?: string): string => {
+    if (!val) return '';
+    const s = val.trim();
+    if (!s) return '';
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    if (s.startsWith('//')) return `https:${s}`;
+    if (s.startsWith('/images/')) return `https://m.media-amazon.com${s}`;
+    // Filename-only (common for Amazon assets like 81J3QqVGRPL._AC_SL1500_.jpg)
+    if (/^[A-Za-z0-9][A-Za-z0-9._-]+\.(jpg|jpeg|png|webp|gif)$/i.test(s)) {
+        return `https://m.media-amazon.com/images/I/${s}`;
+    }
+    return s;
+};
+
 export const AdminPage: React.FC = () => {
     const { page, setPage, currentUserEmail, addBlogPost, updateBlogPost } = useApp();
     const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
@@ -31,7 +45,7 @@ export const AdminPage: React.FC = () => {
     const normalizeDraftForCreate = (draft: Partial<BlogPost>): Omit<BlogPost, 'id' | 'createdAt'> => ({
         title: draft.title || '',
         slug: draft.slug || (draft.title || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-        coverImageUrl: draft.coverImageUrl || draft.cover_image_url || '',
+        coverImageUrl: normalizeImageUrl(draft.coverImageUrl || draft.cover_image_url),
         summary: draft.summary || '',
         content: draft.content || '',
         tags: Array.isArray(draft.tags) ? draft.tags : [],
@@ -44,8 +58,8 @@ export const AdminPage: React.FC = () => {
         id: String(draft.id),
         title: draft.title || '',
         slug: draft.slug || '',
-        coverImageUrl: draft.coverImageUrl || draft.cover_image_url || '',
-        cover_image_url: draft.cover_image_url || draft.coverImageUrl || '',
+        coverImageUrl: normalizeImageUrl(draft.coverImageUrl || draft.cover_image_url),
+        cover_image_url: normalizeImageUrl(draft.cover_image_url || draft.coverImageUrl),
         summary: draft.summary || '',
         content: draft.content || '',
         tags: Array.isArray(draft.tags) ? draft.tags : [],
