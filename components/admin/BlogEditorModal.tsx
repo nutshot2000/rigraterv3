@@ -40,6 +40,7 @@ const BlogEditorModal: React.FC<{
 }> = ({ user, post, onSave, onClose }) => {
     const { products } = useApp();
     const [currentPost, setCurrentPost] = useState<Partial<BlogPost>>(post);
+    const [galleryText, setGalleryText] = useState('');
     const [mode, setMode] = useState<'manual' | 'ai'>('manual');
     const [view, setView] = useState<'write' | 'preview'>('write');
     const [aiSource, setAiSource] = useState('');
@@ -52,6 +53,7 @@ const BlogEditorModal: React.FC<{
 
     useEffect(() => {
         setCurrentPost(post);
+        setGalleryText((post.blog_images || []).join('\n'));
     }, [post]);
 
     const updateField = (field: keyof BlogPost, value: any) => {
@@ -59,7 +61,11 @@ const BlogEditorModal: React.FC<{
     };
 
     const handleSave = () => {
-        onSave(currentPost);
+        const postToSave: Partial<BlogPost> = {
+            ...currentPost,
+            blog_images: galleryText.split('\n').filter(url => url.trim() !== ''),
+        };
+        onSave(postToSave);
     };
 
     const handleGenerate = async () => {
@@ -163,8 +169,8 @@ const BlogEditorModal: React.FC<{
                 <div>
                     <label className="text-sm font-medium">Image Gallery (one URL per line)</label>
                     <textarea 
-                        value={(currentPost.blog_images || []).join('\n')} 
-                        onChange={e => updateField('blog_images', e.target.value.split('\n'))} 
+                        value={galleryText} 
+                        onChange={e => setGalleryText(e.target.value)} 
                         className="input-blueprint w-full" 
                         rows={5} 
                     />
