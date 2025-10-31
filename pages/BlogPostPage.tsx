@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
@@ -162,33 +162,45 @@ const BlogPostPage: React.FC = () => {
     const galleryParsed = parseGallery(contentWithoutTitle);
 
     // images list & captions
-    const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
-    const allImages = dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
-    const captions = allImages.map(u => captionFromUrl(u, post.title));
+    const allImages = useCallback(() => {
+        const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
+        if (!post) return [];
+        const { body } = parseAffiliateLinks(post.content || '');
+        const contentWithoutTitle = removeTitleFromContent(body, post.title);
+        const galleryParsed = parseGallery(contentWithoutTitle);
+        return dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
+    }, [post]);
+
+    const captions = useCallback(() => allImages.map(u => captionFromUrl(u, post?.title || '')), [allImages, post?.title]);
 
     // initialize active
     useEffect(() => {
         if (allImages.length && !activeImage) setActiveImage(allImages[0]);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [post, allImages.length]);
+    }, [allImages, activeImage]);
 
-    // keyboard nav (run only when lightbox open and after allImages computed)
+    const handleKeyboardNav = useCallback((e: KeyboardEvent) => {
+        const idx = Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])));
+        if (e.key === 'Escape') setLightboxOpen(false);
+        else if (e.key === 'ArrowRight') {
+            const next = allImages[(idx + 1) % allImages.length];
+            setActiveImage(next);
+        } else if (e.key === 'ArrowLeft') {
+            const prev = allImages[(idx - 1 + allImages.length) % allImages.length];
+            setActiveImage(prev);
+        }
+    }, [activeImage, allImages]);
+
+    // keyboard nav listener
     useEffect(() => {
         if (!lightboxOpen || !allImages.length) return;
-        const onKey = (e: KeyboardEvent) => {
-            const idx = Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])));
-            if (e.key === 'Escape') setLightboxOpen(false);
-            if (e.key === 'ArrowRight') {
-                const next = allImages[(idx + 1) % allImages.length];
-                setActiveImage(next);
-            } else if (e.key === 'ArrowLeft') {
-                const prev = allImages[(idx - 1 + allImages.length) % allImages.length];
-                setActiveImage(prev);
-            }
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [lightboxOpen, activeImage, allImages]);
+        window.addEventListener('keydown', handleKeyboardNav);
+        return () => window.removeEventListener('keydown', handleKeyboardNav);
+    }, [lightboxOpen, allImages.length, handleKeyboardNav]);
+
+    if (!post) {
+        // This should be caught by the loading/error state, but as a fallback:
+        return <div className="text-center py-20 text-slate-400">Post not available.</div>;
+    }
 
     return (
         <>
