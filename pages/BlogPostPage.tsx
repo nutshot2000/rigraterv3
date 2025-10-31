@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
@@ -98,6 +98,28 @@ const BlogPostPage: React.FC = () => {
     const [showTop, setShowTop] = useState(false);
     const articleRef = useRef<HTMLDivElement | null>(null);
 
+    // Parsed content, memoized
+    const { body, links, galleryImages } = useMemo(() => {
+        if (!post?.content) return { body: '', links: [], galleryImages: [] };
+        const affiliateParsed = parseAffiliateLinks(post.content);
+        const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, post.title);
+        const galleryParsed = parseGallery(contentWithoutTitle);
+        return {
+            body: galleryParsed.body,
+            links: affiliateParsed.links,
+            galleryImages: galleryParsed.images,
+        };
+    }, [post]);
+
+    // All images for slideshow/lightbox, memoized
+    const allImages = useMemo(() => {
+        if (!post) return [];
+        const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
+        return dedupe([post.coverImageUrl, ...(post.blogImages || []), ...galleryImages]);
+    }, [post, galleryImages]);
+
+    const captions = useMemo(() => allImages.map(u => captionFromUrl(u, post?.title || '')), [allImages, post?.title]);
+
     useEffect(() => {
         if (!slug) {
             setError('No post specified');
@@ -157,45 +179,34 @@ const BlogPostPage: React.FC = () => {
     const ogDesc = post.seoDescription || post.summary || '';
     const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
 
-    const { body, links } = parseAffiliateLinks(post.content || '');
-    const contentWithoutTitle = removeTitleFromContent(body, post.title);
-    const galleryParsed = parseGallery(contentWithoutTitle);
-
-    // images list & captions
-    const allImages = useCallback(() => {
-        const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
-        if (!post) return [];
-        const { body } = parseAffiliateLinks(post.content || '');
-        const contentWithoutTitle = removeTitleFromContent(body, post.title);
-        const galleryParsed = parseGallery(contentWithoutTitle);
-        return dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
-    }, [post]);
-
-    const captions = useCallback(() => allImages.map(u => captionFromUrl(u, post?.title || '')), [allImages, post?.title]);
-
-    // initialize active
     useEffect(() => {
-        if (allImages.length && !activeImage) setActiveImage(allImages[0]);
+        if (allImages.length > 0 && !activeImage) {
+            setActiveImage(allImages[0]);
+        }
     }, [allImages, activeImage]);
 
+    // Keyboard navigation handler
     const handleKeyboardNav = useCallback((e: KeyboardEvent) => {
-        const idx = Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])));
-        if (e.key === 'Escape') setLightboxOpen(false);
-        else if (e.key === 'ArrowRight') {
-            const next = allImages[(idx + 1) % allImages.length];
-            setActiveImage(next);
+        if (!allImages.length) return;
+        const idx = allImages.findIndex(u => u === activeImage);
+        if (e.key === 'Escape') {
+            setLightboxOpen(false);
+        } else if (e.key === 'ArrowRight') {
+            const nextIdx = (idx + 1) % allImages.length;
+            setActiveImage(allImages[nextIdx]);
         } else if (e.key === 'ArrowLeft') {
-            const prev = allImages[(idx - 1 + allImages.length) % allImages.length];
-            setActiveImage(prev);
+            const prevIdx = (idx - 1 + allImages.length) % allImages.length;
+            setActiveImage(allImages[prevIdx]);
         }
     }, [activeImage, allImages]);
 
-    // keyboard nav listener
+    // Keyboard nav listener
     useEffect(() => {
-        if (!lightboxOpen || !allImages.length) return;
-        window.addEventListener('keydown', handleKeyboardNav);
-        return () => window.removeEventListener('keydown', handleKeyboardNav);
-    }, [lightboxOpen, allImages.length, handleKeyboardNav]);
+        if (lightboxOpen) {
+            window.addEventListener('keydown', handleKeyboardNav);
+            return () => window.removeEventListener('keydown', handleKeyboardNav);
+        }
+    }, [lightboxOpen, handleKeyboardNav]);
 
     if (!post) {
         // This should be caught by the loading/error state, but as a fallback:
@@ -242,7 +253,7 @@ const BlogPostPage: React.FC = () => {
                             />
                         </div>
                         {/* Caption */}
-                        <p className="text-center text-slate-400 text-sm mb-4">{captions[Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])))]}</p>
+                        <p className="text-center text-slate-400 text-sm mb-4">{captions[allImages.findIndex(u => u === activeImage)] || ''}</p>
 
                         {/* Thumbnails */}
                         {allImages.length > 1 && (
@@ -279,7 +290,7 @@ const BlogPostPage: React.FC = () => {
                             },
                         }}
                     >
-                        {galleryParsed.body}
+                        {body}
                     </ReactMarkdown>
                 </div>
 
@@ -310,7 +321,7 @@ const BlogPostPage: React.FC = () => {
                     <div className="max-w-5xl w-full max-h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
                         <img src={`/api/proxy-image?url=${encodeURIComponent(activeImage || allImages[0])}`} alt={post.title} className="max-h-[80vh] w-auto object-contain" />
                     </div>
-                    <p className="mt-4 text-slate-300 text-sm text-center" onClick={(e) => e.stopPropagation()}>{captions[Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])))]}</p>
+                    <p className="mt-4 text-slate-300 text-sm text-center" onClick={(e) => e.stopPropagation()}>{captions[allImages.findIndex(u => u === activeImage)] || ''}</p>
                     {allImages.length > 1 && (
                         <div className="mt-4 flex flex-wrap gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
                             {allImages.map((url, idx) => (
