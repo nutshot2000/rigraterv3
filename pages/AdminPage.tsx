@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp, Page } from '../context/AppContext';
 import { AdminSidebar } from '../components/admin/AdminSidebar';
 import AdminTopbar from '../components/admin/AdminTopbar';
-import ProductWorkspace from '../components/admin/ProductWorkspace';
+import { ProductWorkspace } from '../components/admin/ProductWorkspace';
 import BlogManagement from '../components/admin/BlogManagement';
 // import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import AIChatModal from '../components/admin/AIChatModal';
@@ -13,6 +13,7 @@ import BlogEditorModal from '../components/admin/BlogEditorModal';
 export const AdminPage: React.FC = () => {
     const { page, setPage, currentUserEmail } = useApp();
     const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     const handleCreateNewPost = () => {
         setEditingPost({}); // Start with a new, empty post object
@@ -35,7 +36,7 @@ export const AdminPage: React.FC = () => {
         <div className="flex h-screen bg-slate-900 text-white">
             <AdminSidebar currentPage={page} onNavigate={setPage} />
             <div className="flex-1 flex flex-col overflow-hidden">
-                <AdminTopbar />
+                <AdminTopbar onOpenChat={() => setIsChatOpen(true)} />
                 <main className="flex-1 overflow-y-auto">
                     {page === Page.ADMIN_PRODUCTS && <ProductWorkspace />}
                     {page === Page.ADMIN_BLOG && (
@@ -56,7 +57,7 @@ export const AdminPage: React.FC = () => {
                 />
             )}
 
-            <AIChatModal />
+            {isChatOpen && <AIChatModal onClose={() => setIsChatOpen(false)} />}
             <CommandPalette />
         </div>
     );

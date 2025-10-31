@@ -9,6 +9,15 @@ interface SimpleProductBuilderProps {
     onProductBuilt: (product: Partial<Product>) => void;
 }
 
+const isValidHttpUrl = (s: string) => {
+    try {
+        const url = new URL(s);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch (_) {
+        return false;
+    }
+};
+
 const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBuilt }) => {
     const { addToast } = useApp();
     const [input, setInput] = useState('');
@@ -87,7 +96,9 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
         name: builtProduct.name || 'Product Name',
         category: builtProduct.category || 'Category',
         price: builtProduct.price || '$0.00',
-        imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0]) ? `/api/proxy-image?url=${encodeURIComponent(builtProduct.imageUrls[0])}` : (builtProduct.imageUrl || FALLBACK_IMAGE_URL),
+        imageUrl: (builtProduct.imageUrls && builtProduct.imageUrls[0] && isValidHttpUrl(builtProduct.imageUrls[0]))
+            ? `/api/proxy-image?url=${encodeURIComponent(builtProduct.imageUrls[0])}`
+            : (builtProduct.imageUrl && isValidHttpUrl(builtProduct.imageUrl) ? `/api/proxy-image?url=${encodeURIComponent(builtProduct.imageUrl)}` : FALLBACK_IMAGE_URL),
         imageUrls: builtProduct.imageUrls || [],
         affiliateLink: builtProduct.affiliateLink || '#',
         review: builtProduct.review || '',
@@ -208,7 +219,7 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                                         {(builtProduct.imageUrls || []).map((url, index) => (
                                             <div key={index} className="relative">
                                                 <img
-                                                    src={`/api/proxy-image?url=${encodeURIComponent(url)}`}
+                                                    src={isValidHttpUrl(url) ? `/api/proxy-image?url=${encodeURIComponent(url)}` : FALLBACK_IMAGE_URL}
                                                     alt={`Product ${index + 1}`}
                                                     className="w-full h-24 object-cover rounded border border-slate-600"
                                                     onError={(e) => {
