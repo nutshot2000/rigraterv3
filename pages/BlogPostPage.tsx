@@ -119,27 +119,6 @@ const BlogPostPage: React.FC = () => {
         load();
     }, [slug]);
 
-    // keyboard nav
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if (!post) return;
-            if (!lightboxOpen) return; // only when lightbox is open
-            if (e.key === 'Escape') setLightboxOpen(false);
-            if (!allImages.length) return;
-            const idx = Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])));
-            if (e.key === 'ArrowRight') {
-                const next = allImages[(idx + 1) % allImages.length];
-                setActiveImage(next);
-            } else if (e.key === 'ArrowLeft') {
-                const prev = allImages[(idx - 1 + allImages.length) % allImages.length];
-                setActiveImage(prev);
-            }
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lightboxOpen, post, activeImage]);
-
     // reading progress
     useEffect(() => {
         const onScroll = () => {
@@ -182,17 +161,34 @@ const BlogPostPage: React.FC = () => {
     const contentWithoutTitle = removeTitleFromContent(body, post.title);
     const galleryParsed = parseGallery(contentWithoutTitle);
 
-    // images list
+    // images list & captions
     const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
     const allImages = dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
-
-    // captions
     const captions = allImages.map(u => captionFromUrl(u, post.title));
 
+    // initialize active
     useEffect(() => {
         if (allImages.length && !activeImage) setActiveImage(allImages[0]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [post, allImages.length]);
+
+    // keyboard nav (run only when lightbox open and after allImages computed)
+    useEffect(() => {
+        if (!lightboxOpen || !allImages.length) return;
+        const onKey = (e: KeyboardEvent) => {
+            const idx = Math.max(0, allImages.findIndex(u => u === (activeImage || allImages[0])));
+            if (e.key === 'Escape') setLightboxOpen(false);
+            if (e.key === 'ArrowRight') {
+                const next = allImages[(idx + 1) % allImages.length];
+                setActiveImage(next);
+            } else if (e.key === 'ArrowLeft') {
+                const prev = allImages[(idx - 1 + allImages.length) % allImages.length];
+                setActiveImage(prev);
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [lightboxOpen, activeImage, allImages]);
 
     return (
         <>
