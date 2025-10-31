@@ -10,6 +10,8 @@ import { loginWithEmailPassword, logoutSession } from '../services/authService';
 
 const MAX_COMPARISON_ITEMS = 3;
 
+export { Page };
+
 interface AppContextType {
     products: Product[];
     addProduct: (productData: Omit<Product, 'id'>) => void;
