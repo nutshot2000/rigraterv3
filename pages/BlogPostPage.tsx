@@ -139,36 +139,22 @@ const BlogPostPage: React.FC = () => {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    // Defer early returns until after hooks to keep hook order stable across renders
-    if (loading) {
-        return <div className="text-center py-20 text-slate-400">Loading Post…</div>;
-    }
-
-    if (error || !post) {
-        return (
-            <div className="text-center py-20">
-                <h1 className="text-2xl font-bold text-red-400 mb-4">Could Not Load Post</h1>
-                <p className="text-slate-400 mb-6">{error}</p>
-                <Link to="/blog" className="btn-blueprint btn-blueprint--primary">Back to Blog</Link>
-            </div>
-        );
-    }
-
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.rigrater.tech';
-    const pageUrl = `${origin}/blog/${post.slug}`;
-    const ogTitle = `${post.seoTitle || post.title} | RIGRATER Blog`;
-    const ogDesc = post.seoDescription || post.summary || '';
-    const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
+    const safeTitle = post?.title || '';
+    const pageUrl = `${origin}/blog/${post?.slug || ''}`;
+    const ogTitle = `${(post?.seoTitle || safeTitle) ? (post?.seoTitle || safeTitle) : 'RIGRATER Blog'}${post ? ' | RIGRATER Blog' : ''}`;
+    const ogDesc = post?.seoDescription || post?.summary || '';
+    const ogImage = post?.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
 
-    // Compute derived content now that post exists
-    const affiliateParsed = parseAffiliateLinks(post.content || '');
-    const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, post.title);
+    // Compute derived content safely even during loading
+    const affiliateParsed = parseAffiliateLinks(post?.content || '');
+    const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, safeTitle);
     const galleryParsed = parseGallery(contentWithoutTitle);
     const body = galleryParsed.body;
     const links = affiliateParsed.links;
-    const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
-    const allImages = dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
-    const captions = allImages.map(u => captionFromUrl(u, post.title || ''));
+    const dedupe = (arr: (string | undefined)[]) => Array.from(new Set(arr.filter((v): v is string => Boolean(v))));
+    const allImages = dedupe([post?.coverImageUrl, ...(post?.blogImages || []), ...(galleryParsed.images || [])]);
+    const captions = allImages.map(u => captionFromUrl(u, safeTitle));
 
     useEffect(() => {
         if (allImages.length > 0 && !activeImage) {
@@ -199,7 +185,21 @@ const BlogPostPage: React.FC = () => {
         }
     }, [lightboxOpen, handleKeyboardNav]);
 
-    
+    // Defer early returns until after hooks to keep hook order stable across renders
+    if (loading) {
+        return <div className="text-center py-20 text-slate-400">Loading Post…</div>;
+    }
+
+    if (error || !post) {
+        return (
+            <div className="text-center py-20">
+                <h1 className="text-2xl font-bold text-red-400 mb-4">Could Not Load Post</h1>
+                <p className="text-slate-400 mb-6">{error}</p>
+                <Link to="/blog" className="btn-blueprint btn-blueprint--primary">Back to Blog</Link>
+            </div>
+        );
+    }
+
 
     return (
         <>
