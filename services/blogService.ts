@@ -21,7 +21,7 @@ export async function createBlogPost(input: Omit<BlogPost, 'id' | 'createdAt'>):
         summary: input.summary,
         content: input.content,
         tags: input.tags || [],
-        blog_images: input.blogImages || [],
+        blog_images: input.blog_images || [],
         seo_title: input.seoTitle || '',
         seo_description: input.seoDescription || '',
     };
@@ -61,7 +61,7 @@ export async function updateBlogPostById(id: string, input: Omit<BlogPost, 'id' 
         summary: input.summary,
         content: input.content,
         tags: input.tags || [],
-        blog_images: input.blogImages || [],
+        blog_images: input.blog_images || [],
         seo_title: input.seoTitle || '',
         seo_description: input.seoDescription || '',
     };
