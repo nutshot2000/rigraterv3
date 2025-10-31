@@ -1,90 +1,243 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BlogPost, User, Product } from '../../types';
+import { XMarkIcon, DocumentPlusIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { generateBlogPost } from '../../services/geminiService'; // Assuming you have this service
 import { useApp } from '../../context/AppContext';
-import { BlogPost } from '../../types';
-import { generateBlogPost } from '../../services/geminiService';
-import Spinner from '../shared/Spinner';
-import { CloseIcon, SparklesIcon } from '../public/Icons';
 
-const BlogEditorModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const { addBlogPost, addToast } = useApp();
-    const [title, setTitle] = useState('');
-    const [coverImageUrl, setCoverImageUrl] = useState('');
-    const [summary, setSummary] = useState('');
-    const [content, setContent] = useState('');
-    const [tags, setTags] = useState<string>('');
+// Inserter Menu Component
+const InserterMenu: React.FC<{ onInsert: (type: 'image' | 'product' | 'button') => void }> = ({ onInsert }) => (
+    <div className="absolute z-10 bg-slate-700 rounded-md shadow-lg p-2 flex gap-2">
+        <button onClick={() => onInsert('image')} className="p-2 hover:bg-slate-600 rounded">Image</button>
+        <button onClick={() => onInsert('product')} className="p-2 hover:bg-slate-600 rounded">Product</button>
+        <button onClick={() => onInsert('button')} className="p-2 hover:bg-slate-600 rounded">Button</button>
+    </div>
+);
+
+// Product Embed Modal
+const ProductEmbedModal: React.FC<{ products: Product[], onSelect: (p: Product) => void, onClose: () => void }> = ({ products, onSelect, onClose }) => {
+    const [search, setSearch] = useState('');
+    const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+    return (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={onClose}>
+            <div className="bg-slate-800 rounded-lg p-4 w-96" onClick={e => e.stopPropagation()}>
+                <input type="text" placeholder="Search products..." value={search} onChange={e => setSearch(e.target.value)} className="input-blueprint w-full mb-4" />
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {filtered.map(p => <div key={p.id} onClick={() => onSelect(p)} className="p-2 hover:bg-slate-700 rounded cursor-pointer">{p.name}</div>)}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+const BlogEditorModal: React.FC<{
+    user: User;
+    post: Partial<BlogPost>;
+    onSave: (post: Partial<BlogPost>) => void;
+    onClose: () => void;
+}> = ({ user, post, onSave, onClose }) => {
+    const { products } = useApp();
+    const [currentPost, setCurrentPost] = useState<Partial<BlogPost>>(post);
+    const [mode, setMode] = useState<'manual' | 'ai'>('manual');
+    const [view, setView] = useState<'write' | 'preview'>('write');
+    const [aiSource, setAiSource] = useState('');
+    const [aiBuildType, setAiBuildType] = useState<'topic' | 'url'>('topic');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [showInserter, setShowInserter] = useState(false);
+    const [inserterPos, setInserterPos] = useState({ top: 0, left: 0 });
+    const [isProductEmbedOpen, setIsProductEmbedOpen] = useState(false);
+    const contentRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        setCurrentPost(post);
+    }, [post]);
+
+    const updateField = (field: keyof BlogPost, value: any) => {
+        setCurrentPost(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSave = () => {
+        onSave(currentPost);
+    };
 
     const handleGenerate = async () => {
-        if (!title) { addToast('Enter a title first.', 'error'); return; }
         setIsGenerating(true);
         try {
-            const post = await generateBlogPost(title);
-            setCoverImageUrl(post.coverImageUrl || '');
-            setSummary(post.summary || '');
-            setContent(post.content || '');
-            setTags((post.tags || []).join(', '));
-            addToast('AI draft generated', 'success');
+            const result = await generateBlogPost(aiSource); // Simplified call
+            // Merge AI content into the current post without overwriting user edits on other fields
+            setCurrentPost(prev => ({
+                ...prev,
+                title: result.title || prev.title,
+                content: result.content || prev.content,
+                summary: result.summary || prev.summary,
+                cover_image_url: result.coverImageUrl || prev.cover_image_url,
+                tags: result.tags || prev.tags,
+            }));
+            setMode('manual'); // Switch to editor to refine
         } catch (e) {
-            addToast('Failed to generate blog draft.', 'error');
+            console.error(e); // Replace with a toast notification
         } finally {
             setIsGenerating(false);
         }
     };
 
-    const handleSave = () => {
-        const newPost = {
-            title,
-            slug: title.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
-            coverImageUrl,
-            summary,
-            content,
-            tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-        } as Omit<BlogPost, 'id' | 'createdAt'>;
-        addBlogPost(newPost);
-        addToast('Blog post saved', 'success');
-        onClose();
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const val = e.target.value;
+        updateField('content', val);
+        if (val.endsWith('\n+')) {
+            const pos = e.currentTarget.getBoundingClientRect();
+            setInserterPos({ top: pos.top + 20, left: pos.left + 20 });
+            setShowInserter(true);
+        } else {
+            setShowInserter(false);
+        }
     };
 
-    return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className="bg-gray-800 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto relative border border-gray-700 animate-scale-in" onClick={e => e.stopPropagation()}>
-                <div className="p-6 space-y-4">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold text-white">New Blog Post</h2>
-                        <button onClick={onClose} className="text-gray-400 hover:text-white"><CloseIcon className="w-6 h-6" /></button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-gray-300 mb-1">Title</label>
-                            <input className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white" value={title} onChange={e => setTitle(e.target.value)} />
-                        </div>
-                        <div>
-                            <label className="block text-sm text-gray-300 mb-1">Cover Image URL</label>
-                            <input className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white" value={coverImageUrl} onChange={e => setCoverImageUrl(e.target.value)} />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-300 mb-1">Summary</label>
-                        <textarea className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white" rows={2} value={summary} onChange={e => setSummary(e.target.value)} />
-                    </div>
-                    <div>
-                        <label className="block text-sm text-gray-300 mb-1">Content (Markdown)</label>
-                        <textarea className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white" rows={10} value={content} onChange={e => setContent(e.target.value)} />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                        <div>
-                            <label className="block text-sm text-gray-300 mb-1">Tags (comma separated)</label>
-                            <input className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-md text-white" value={tags} onChange={e => setTags(e.target.value)} />
-                        </div>
-                        <div className="flex gap-2">
-                            <button onClick={handleGenerate} disabled={isGenerating || !title} className="flex-1 flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
-                                {isGenerating ? <Spinner /> : <SparklesIcon className="w-5 h-5" />} AI Draft
-                            </button>
-                            <button onClick={handleSave} className="flex-1 bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-4 rounded-lg">Save</button>
-                        </div>
-                    </div>
+    const handleInsert = (type: 'image' | 'product' | 'button') => {
+        let snippet = '';
+        if (type === 'image') {
+            const url = prompt('Enter image URL:');
+            if (url) snippet = `\n![alt text](${url})\n`;
+        } else if (type === 'button') {
+            const url = prompt('Enter button URL:');
+            const text = prompt('Enter button text:');
+            if (url && text) snippet = `\n[${text}](${url})\n`;
+        } else if (type === 'product') {
+            setIsProductEmbedOpen(true);
+        }
+        
+        if (snippet && contentRef.current) {
+            const current = contentRef.current.value.replace(/\+\s*$/, '');
+            updateField('content', current + snippet);
+        }
+        setShowInserter(false);
+    };
+
+    const handleProductSelect = (p: Product) => {
+        const snippet = `\n[product id="${p.id}"]\n`;
+        if (contentRef.current) {
+            const current = contentRef.current.value.replace(/\+\s*$/, '');
+            updateField('content', current + snippet);
+        }
+        setIsProductEmbedOpen(false);
+    };
+
+    const renderManualEditor = () => (
+        <div className="flex flex-1 overflow-hidden">
+            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                <input
+                    type="text"
+                    placeholder="Post Title"
+                    value={currentPost.title || ''}
+                    onChange={e => updateField('title', e.target.value)}
+                    className="input-blueprint text-2xl font-bold w-full"
+                />
+                <div className="relative">
+                    <textarea
+                        ref={contentRef}
+                        placeholder="Start writing... type '+' on a new line for commands"
+                        value={currentPost.content || ''}
+                        onChange={handleContentChange}
+                        className="input-blueprint w-full flex-1 h-full"
+                        rows={20}
+                    />
+                    {showInserter && <InserterMenu onInsert={handleInsert} />}
                 </div>
             </div>
+            <div className="w-80 bg-slate-800 p-6 space-y-4 overflow-y-auto border-l border-slate-700">
+                <h3 className="font-bold text-lg">Post Settings</h3>
+                <div>
+                    <label className="text-sm font-medium">Slug</label>
+                    <input type="text" value={currentPost.slug || ''} onChange={e => updateField('slug', e.target.value)} className="input-blueprint w-full" />
+                </div>
+                <div>
+                    <label className="text-sm font-medium">Summary</label>
+                    <textarea value={currentPost.summary || ''} onChange={e => updateField('summary', e.target.value)} className="input-blueprint w-full" rows={3} />
+                </div>
+                <div>
+                    <label className="text-sm font-medium">Cover Image URL</label>
+                    <input type="text" value={currentPost.cover_image_url || ''} onChange={e => updateField('cover_image_url', e.target.value)} className="input-blueprint w-full" />
+                </div>
+                <details open={false}>
+                    <summary className="font-semibold cursor-pointer">SEO</summary>
+                    <div className="mt-2 space-y-2">
+                        <label className="text-sm font-medium">SEO Title</label>
+                        <input type="text" value={currentPost.seo_title || ''} onChange={e => updateField('seo_title', e.target.value)} className="input-blueprint w-full" />
+                        <label className="text-sm font-medium">SEO Description</label>
+                        <textarea value={currentPost.seo_description || ''} onChange={e => updateField('seo_description', e.target.value)} className="input-blueprint w-full" rows={3} />
+                    </div>
+                </details>
+            </div>
+        </div>
+    );
+
+    const renderPreview = () => (
+        <div className="p-8 prose prose-invert max-w-none">
+            <h1>{currentPost.title}</h1>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentPost.content || ''}</ReactMarkdown>
+        </div>
+    );
+
+    const renderAiAssist = () => (
+        <div className="p-8 max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">AI Assist</h2>
+            <div className="bg-slate-700/50 p-6 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                    <button 
+                      onClick={() => setAiBuildType('topic')} 
+                      className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                    >
+                      From Topic
+                    </button>
+                    <button 
+                      onClick={() => setAiBuildType('url')} 
+                      className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                    >
+                      From URL
+                    </button>
+                </div>
+                <div className="flex gap-4">
+                    <input
+                      type="text"
+                      value={aiSource}
+                      onChange={(e) => setAiSource(e.target.value)}
+                      placeholder={aiBuildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
+                      className="input-blueprint flex-grow"
+                      disabled={isGenerating}
+                    />
+                    <button onClick={handleGenerate} className="btn-blueprint-primary" disabled={isGenerating}>
+                      <ArrowPathIcon className={`h-5 w-5 ${isGenerating ? 'animate-spin' : ''}`} />
+                      <span>{isGenerating ? 'Generating...' : 'Generate & Edit'}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-8">
+            <div className="bg-slate-800/90 border border-slate-700 rounded-lg shadow-2xl w-full h-full flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-slate-700">
+                    <div className="flex items-center gap-4">
+                        <button className={`px-3 py-1 rounded-md text-sm ${mode === 'manual' ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setMode('manual')}>Manual</button>
+                        <button className={`px-3 py-1 rounded-md text-sm ${mode === 'ai' ? 'bg-sky-600' : 'bg-slate-700'}`} onClick={() => setMode('ai')}>AI Assist</button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {mode === 'manual' && (
+                            <div className="flex items-center gap-2">
+                                <button className={`px-3 py-1 rounded-md text-sm ${view === 'write' ? 'bg-slate-600' : 'bg-slate-700'}`} onClick={() => setView('write')}>Write</button>
+                                <button className={`px-3 py-1 rounded-md text-sm ${view === 'preview' ? 'bg-slate-600' : 'bg-slate-700'}`} onClick={() => setView('preview')}>Preview</button>
+                            </div>
+                        )}
+                        <button className="btn-blueprint-primary" onClick={handleSave}>Save Post</button>
+                        <button onClick={onClose}><XMarkIcon className="w-6 h-6" /></button>
+                    </div>
+                </div>
+                {mode === 'manual' ? (view === 'write' ? renderManualEditor() : renderPreview()) : renderAiAssist()}
+            </div>
+            {isProductEmbedOpen && <ProductEmbedModal products={products} onSelect={handleProductSelect} onClose={() => setIsProductEmbedOpen(false)} />}
         </div>
     );
 };
