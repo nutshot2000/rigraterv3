@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
@@ -98,27 +98,7 @@ const BlogPostPage: React.FC = () => {
     const [showTop, setShowTop] = useState(false);
     const articleRef = useRef<HTMLDivElement | null>(null);
 
-    // Parsed content, memoized
-    const { body, links, galleryImages } = useMemo(() => {
-        if (!post?.content) return { body: '', links: [], galleryImages: [] };
-        const affiliateParsed = parseAffiliateLinks(post.content);
-        const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, post.title);
-        const galleryParsed = parseGallery(contentWithoutTitle);
-        return {
-            body: galleryParsed.body,
-            links: affiliateParsed.links,
-            galleryImages: galleryParsed.images,
-        };
-    }, [post]);
-
-    // All images for slideshow/lightbox, memoized
-    const allImages = useMemo(() => {
-        if (!post) return [];
-        const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
-        return dedupe([post.coverImageUrl, ...(post.blogImages || []), ...galleryImages]);
-    }, [post, galleryImages]);
-
-    const captions = useMemo(() => allImages.map(u => captionFromUrl(u, post?.title || '')), [allImages, post?.title]);
+    // Derived values are computed later after post is loaded
 
     useEffect(() => {
         if (!slug) {
@@ -179,6 +159,16 @@ const BlogPostPage: React.FC = () => {
     const ogTitle = `${post.seoTitle || post.title} | RIGRATER Blog`;
     const ogDesc = post.seoDescription || post.summary || '';
     const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
+
+    // Compute derived content now that post exists
+    const affiliateParsed = parseAffiliateLinks(post.content || '');
+    const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, post.title);
+    const galleryParsed = parseGallery(contentWithoutTitle);
+    const body = galleryParsed.body;
+    const links = affiliateParsed.links;
+    const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
+    const allImages = dedupe([post.coverImageUrl, ...(post.blogImages || []), ...(galleryParsed.images || [])]);
+    const captions = allImages.map(u => captionFromUrl(u, post.title || ''));
 
     useEffect(() => {
         if (allImages.length > 0 && !activeImage) {
@@ -277,9 +267,9 @@ const BlogPostPage: React.FC = () => {
                         components={{
                             p: (paragraph) => {
                                 const { node } = paragraph;
-                                const textChild = node.children[0];
-                                if (textChild && textChild.type === 'text') {
-                                    const match = /\[product id=\"([^\"]+)\"\]/.exec(textChild.value);
+                                const textChild = (node as any).children[0];
+                                if (textChild && (textChild as any).type === 'text') {
+                                    const match = /\[product id=\"([^\"]+)\"\]/.exec((textChild as any).value);
                                     if (match) {
                                         return <ProductEmbed id={match[1]} />;
                                     }
