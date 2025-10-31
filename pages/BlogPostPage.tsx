@@ -42,6 +42,19 @@ function parseAffiliateLinks(content: string): { body: string; links: string[] }
     return { body, links };
 }
 
+function removeTitleFromContent(content: string, title: string): string {
+    if (!content || !title) return content;
+    const lines = content.split('\n');
+    const firstLine = lines[0].trim();
+    if (firstLine.startsWith('# ')) {
+        const headingText = firstLine.substring(2).trim();
+        if (headingText.toLowerCase() === title.toLowerCase().trim()) {
+            return lines.slice(1).join('\n').trim();
+        }
+    }
+    return content;
+}
+
 const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [post, setPost] = useState<BlogPost | null>(null);
@@ -93,6 +106,7 @@ const BlogPostPage: React.FC = () => {
     const ogImage = post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
 
     const { body, links } = parseAffiliateLinks(post.content || '');
+    const contentWithoutTitle = removeTitleFromContent(body, post.title);
 
     return (
         <>
@@ -153,7 +167,7 @@ const BlogPostPage: React.FC = () => {
                             },
                         }}
                     >
-                        {body}
+                        {contentWithoutTitle}
                     </ReactMarkdown>
                 </div>
 
