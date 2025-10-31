@@ -277,38 +277,44 @@ ${text}` })
       {/* Left Pane: Editor */}
       <div className="flex-1 flex flex-col overflow-y-auto">
         <div className="p-6 space-y-6">
-        {/* Builder UI */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
-          <h2 className="text-xl font-semibold text-white mb-4">AI Blog Post Builder</h2>
-          <div className="flex items-center gap-2 mb-4">
-            <button 
-              onClick={() => setBuildType('topic')} 
-              className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-            >
-              From Topic
-            </button>
-            <button 
-              onClick={() => setBuildType('url')} 
-              className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
-            >
-              From URL
-            </button>
+        <h2 className="text-xl font-semibold text-white">Simple Editor</h2>
+        {/* AI Assist (optional) */}
+        <details className="form-section" open={false}>
+          <summary>AI Assist (optional)</summary>
+          <div className="form-section-content">
+            <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-white mb-3">AI Blog Post Builder</h3>
+              <div className="flex items-center gap-2 mb-4">
+                <button 
+                  onClick={() => setBuildType('topic')} 
+                  className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                >
+                  From Topic
+                </button>
+                <button 
+                  onClick={() => setBuildType('url')} 
+                  className={`px-4 py-2 rounded-md text-sm font-medium ${buildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-700 hover:bg-slate-600 text-slate-300'}`}
+                >
+                  From URL
+                </button>
+              </div>
+              <div className="flex gap-4">
+                <input
+                  type="text"
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  placeholder={buildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
+                  className="input-blueprint flex-grow"
+                  disabled={isLoading}
+                />
+                <button onClick={handleGenerate} className="btn-blueprint" disabled={isLoading}>
+                  <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
+                  <span>{isLoading ? 'Generating...' : 'Generate'}</span>
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <input
-              type="text"
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              placeholder={buildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
-              className="input-blueprint flex-grow"
-              disabled={isLoading}
-            />
-            <button onClick={handleGenerate} className="btn-blueprint" disabled={isLoading}>
-              <ArrowPathIcon className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>{isLoading ? 'Generating...' : 'Generate'}</span>
-            </button>
-          </div>
-        </div>
+        </details>
 
         {/* Editor Form */}
         {currentPost && (
@@ -317,17 +323,20 @@ ${text}` })
               label="Title"
               value={currentPost.title || ''}
               onChange={(v) => updateField('title', v)}
+              placeholder="Catchy headline…"
             />
             <EditableField
               label="Slug"
               value={currentPost.slug || ''}
               onChange={(v) => updateField('slug', v)}
+              placeholder="auto-generated if left blank"
             />
              <EditableField
               label="Summary"
               value={currentPost.summary || ''}
               onChange={(v) => updateField('summary', v)}
               isTextarea
+              placeholder="1–2 sentences intro…"
             />
             <EditableField
               label="Content (Markdown)"
@@ -335,6 +344,8 @@ ${text}` })
               onChange={(v) => updateField('content', v)}
               isTextarea
               rows={15}
+              placeholder="Write your post… Use # for headings, **bold**, *italics*."
+              helpText="Tip: Paste affiliate URLs in the Affiliate Links box below – they will render as buttons."
             />
             {/* Cover Image with Clear Button */}
             <div className="space-y-4">
@@ -344,7 +355,8 @@ ${text}` })
                     label="Cover Image URL"
                     value={currentPost.cover_image_url || ''}
                     onChange={(v) => updateField('cover_image_url', v)}
-                    helpText="This can be a direct URL or an Unsplash/Pexels search query from the AI."
+                    helpText="Direct URL or a simple Unsplash/Pexels search query."
+                    placeholder="https://… or e.g. rtx 5090 product photo"
                   />
                 </div>
                 <button
@@ -377,9 +389,9 @@ ${text}` })
               )}
             </div>
             
-            {/* Additional Blog Images */}
-            <details className="form-section" open>
-              <summary>Additional Blog Images</summary>
+            {/* Additional Blog Images (advanced) */}
+            <details className="form-section" open={false}>
+              <summary>Additional Blog Images (optional)</summary>
               <div className="form-section-content">
                 <div className="space-y-4">
                   {blogImages.map((image, index) => (
@@ -422,9 +434,9 @@ ${text}` })
               </div>
             </details>
 
-            {/* SEO Section */}
-            <details className="form-section" open>
-                <summary>SEO Settings</summary>
+            {/* SEO Section (advanced) */}
+            <details className="form-section" open={false}>
+                <summary>SEO Settings (optional)</summary>
                 <div className="form-section-content">
                     <EditableField
                         label="SEO Title"
@@ -461,7 +473,7 @@ ${text}` })
               </div>
             </details>
             
-            <div className="flex justify-end gap-4 pt-4 border-t border-slate-700">
+            <div className="sticky bottom-0 bg-slate-900/80 backdrop-blur-sm border-t border-slate-700 flex justify-end gap-4 p-4">
               <button onClick={() => setCurrentPost(null)} className="btn-blueprint-danger">
                 Clear
               </button>
