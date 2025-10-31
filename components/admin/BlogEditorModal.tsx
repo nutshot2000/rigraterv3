@@ -40,7 +40,6 @@ const BlogEditorModal: React.FC<{
 }> = ({ user, post, onSave, onClose }) => {
     const { products } = useApp();
     const [currentPost, setCurrentPost] = useState<Partial<BlogPost>>(post);
-    const [galleryText, setGalleryText] = useState('');
     const [mode, setMode] = useState<'manual' | 'ai'>('manual');
     const [view, setView] = useState<'write' | 'preview'>('write');
     const [aiSource, setAiSource] = useState('');
@@ -51,6 +50,8 @@ const BlogEditorModal: React.FC<{
     const [isProductEmbedOpen, setIsProductEmbedOpen] = useState(false);
     const contentRef = useRef<HTMLTextAreaElement>(null);
 
+    const [galleryText, setGalleryText] = useState('');
+
     useEffect(() => {
         setCurrentPost(post);
         setGalleryText((post.blogImages || []).join('\n'));
@@ -60,10 +61,34 @@ const BlogEditorModal: React.FC<{
         setCurrentPost(prev => ({ ...prev, [field]: value }));
     };
 
+    const buildGalleryBlock = (urls: string[]) => {
+        if (!urls.length) return '';
+        return `\n\n[gallery]\n${urls.join('\n')}\n[/gallery]\n\n`;
+    };
+
+    const upsertGalleryBlock = (body: string, urls: string[]) => {
+        const block = buildGalleryBlock(urls);
+        if (!block) {
+            return body.replace(/\[gallery\][\s\S]*?\[\/gallery\]/i, '').trim();
+        }
+        if (/\[gallery\][\s\S]*?\[\/gallery\]/i.test(body)) {
+            return body.replace(/\[gallery\][\s\S]*?\[\/gallery\]/i, block.trim());
+        }
+        return (body || '').trim() + block;
+    };
+
     const handleSave = () => {
+        const images = galleryText
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        const contentWithGallery = upsertGalleryBlock(currentPost.content || '', images);
+
         const postToSave: Partial<BlogPost> = {
             ...currentPost,
-            blogImages: galleryText.split('\n').filter(url => url.trim() !== ''),
+            content: contentWithGallery,
+            blogImages: images,
         };
         onSave(postToSave);
     };
@@ -250,7 +275,101 @@ const BlogEditorModal: React.FC<{
                         <button onClick={onClose}><XMarkIcon className="w-6 h-6" /></button>
                     </div>
                 </div>
-                {mode === 'manual' ? (view === 'write' ? renderManualEditor() : renderPreview()) : renderAiAssist()}
+                {mode === 'manual' ? (view === 'write' ? (
+                    <div className="flex flex-1 overflow-hidden">
+                        <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                            <input
+                                type="text"
+                                placeholder="Post Title"
+                                value={currentPost.title || ''}
+                                onChange={e => updateField('title', e.target.value)}
+                                className="input-blueprint text-2xl font-bold w-full"
+                            />
+                            <div className="relative">
+                                <textarea
+                                    ref={contentRef}
+                                    placeholder="Start writing... type '+' on a new line for commands"
+                                    value={currentPost.content || ''}
+                                    onChange={(e) => updateField('content', e.target.value)}
+                                    className="input-blueprint w-full flex-1 h-full"
+                                    rows={20}
+                                />
+                            </div>
+                        </div>
+                        <div className="w-80 bg-slate-800 p-6 space-y-4 overflow-y-auto border-l border-slate-700">
+                            <h3 className="font-bold text-lg">Post Settings</h3>
+                            <div>
+                                <label className="text-sm font-medium">Slug</label>
+                                <input type="text" value={currentPost.slug || ''} onChange={e => updateField('slug', e.target.value)} className="input-blueprint w-full" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Summary</label>
+                                <textarea value={currentPost.summary || ''} onChange={e => updateField('summary', e.target.value)} className="input-blueprint w-full" rows={3} />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Cover Image URL</label>
+                                <input type="text" value={currentPost.coverImageUrl || ''} onChange={e => updateField('coverImageUrl', e.target.value)} className="input-blueprint w-full" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium">Image Gallery (one URL per line)</label>
+                                <textarea 
+                                    value={galleryText} 
+                                    onChange={e => setGalleryText(e.target.value)} 
+                                    className="input-blueprint w-full" 
+                                    rows={5} 
+                                />
+                            </div>
+                            <details open={false}>
+                                <summary className="font-semibold cursor-pointer">SEO</summary>
+                                <div className="mt-2 space-y-2">
+                                    <label className="text-sm font-medium">SEO Title</label>
+                                    <input type="text" value={currentPost.seoTitle || ''} onChange={e => updateField('seoTitle', e.target.value)} className="input-blueprint w-full" />
+                                    <label className="text-sm font-medium">SEO Description</label>
+                                    <textarea value={currentPost.seoDescription || ''} onChange={e => updateField('seoDescription', e.target.value)} className="input-blueprint w-full" rows={3} />
+                                </div>
+                            </details>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-8 prose prose-invert max-w-none">
+                        <h1>{currentPost.title}</h1>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentPost.content || ''}</ReactMarkdown>
+                    </div>
+                )) : (
+                    <div className="p-8 max-w-2xl mx-auto">
+                        <h2 className="text-2xl font-bold mb-4">AI Assist</h2>
+                        <div className="bg-slate-700/50 p-6 rounded-lg">
+                            <div className="flex items-center gap-2 mb-4">
+                                <button 
+                                  onClick={() => setAiBuildType('topic')} 
+                                  className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                                >
+                                  From Topic
+                                </button>
+                                <button 
+                                  onClick={() => setAiBuildType('url')} 
+                                  className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                                >
+                                  From URL
+                                </button>
+                            </div>
+                            <div className="flex gap-4">
+                                <input
+                                  type="text"
+                                  value={aiSource}
+                                  onChange={(e) => setAiSource(e.target.value)}
+                                  placeholder={aiBuildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
+                                  className="input-blueprint flex-grow"
+                                  disabled={isGenerating}
+                                />
+                                <button onClick={handleGenerate} className="btn-blueprint-primary" disabled={isGenerating}>
+                                  <ArrowPathIcon className={`h-5 w-5 ${isGenerating ? 'animate-spin' : ''}`} />
+                                  <span>{isGenerating ? 'Generating...' : 'Generate & Edit'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
             {isProductEmbedOpen && <ProductEmbedModal products={products} onSelect={handleProductSelect} onClose={() => setIsProductEmbedOpen(false)} />}
         </div>

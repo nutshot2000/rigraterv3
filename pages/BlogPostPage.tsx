@@ -55,6 +55,19 @@ function removeTitleFromContent(content: string, title: string): string {
     return content;
 }
 
+function parseGallery(content: string): { body: string; images: string[] } {
+    if (!content) return { body: content, images: [] };
+    const m = content.match(/\[gallery\]([\s\S]*?)\[\/gallery\]/i);
+    if (!m) return { body: content, images: [] };
+    const block = m[0];
+    const images = m[1]
+        .split(/\r?\n/)
+        .map(s => s.trim())
+        .filter(s => /^https?:\/\//i.test(s));
+    const body = content.replace(block, '').trim();
+    return { body, images };
+}
+
 const BlogPostPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
     const [post, setPost] = useState<BlogPost | null>(null);
@@ -114,9 +127,11 @@ const BlogPostPage: React.FC = () => {
 
     const { body, links } = parseAffiliateLinks(post.content || '');
     const contentWithoutTitle = removeTitleFromContent(body, post.title);
+    const galleryParsed = parseGallery(contentWithoutTitle);
 
-    // Combine cover image and gallery images into a single list
-    const allImages = [post.coverImageUrl, ...(post.blogImages || [])].filter(Boolean);
+    // Combine cover image, DB gallery, and parsed gallery
+    const dedupe = (arr: string[]) => Array.from(new Set(arr.filter(Boolean)));
+    const allImages = dedupe([post.coverImageUrl, ...((post.blogImages) || []), ...(galleryParsed.images || [])]);
 
     return (
         <>
@@ -154,7 +169,7 @@ const BlogPostPage: React.FC = () => {
 
                         {/* Thumbnails */}
                         {allImages.length > 1 && (
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-wrap">
                                 {allImages.map((url, idx) => (
                                     <button 
                                         key={idx} 
@@ -190,7 +205,7 @@ const BlogPostPage: React.FC = () => {
                             },
                         }}
                     >
-                        {contentWithoutTitle}
+                        {galleryParsed.body}
                     </ReactMarkdown>
                 </div>
 
