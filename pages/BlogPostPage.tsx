@@ -169,18 +169,10 @@ const BlogPostPage: React.FC = () => {
 
                         {/* Thumbnails */}
                         {allImages.length > 1 && (
-                            <div className="flex gap-2 flex-wrap">
+                            <div className="flex flex-wrap gap-2 justify-center">
                                 {allImages.map((url, idx) => (
-                                    <button 
-                                        key={idx} 
-                                        onClick={() => setActiveImage(url)}
-                                        className={`rounded overflow-hidden border-2 ${activeImage === url ? 'border-sky-500' : 'border-slate-700 hover:border-slate-500'}`}
-                                    >
-                                        <img 
-                                            src={`/api/proxy-image?url=${encodeURIComponent(url)}`} 
-                                            alt={`thumbnail ${idx + 1}`}
-                                            className="w-20 h-20 object-cover"
-                                        />
+                                    <button key={idx} onClick={() => setActiveImage(url)} className={`rounded overflow-hidden border-2 ${activeImage === url ? 'border-sky-500' : 'border-slate-700 hover:border-slate-500'}`}>
+                                        <img src={`/api/proxy-image?url=${encodeURIComponent(url)}`} alt={`thumbnail ${idx + 1}`} className="w-20 h-20 object-cover" />
                                     </button>
                                 ))}
                             </div>
