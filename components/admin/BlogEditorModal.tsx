@@ -160,6 +160,15 @@ const BlogEditorModal: React.FC<{
                     <label className="text-sm font-medium">Cover Image URL</label>
                     <input type="text" value={currentPost.coverImageUrl || ''} onChange={e => updateField('coverImageUrl', e.target.value)} className="input-blueprint w-full" />
                 </div>
+                <div>
+                    <label className="text-sm font-medium">Image Gallery (one URL per line)</label>
+                    <textarea 
+                        value={(currentPost.blog_images || []).join('\n')} 
+                        onChange={e => updateField('blog_images', e.target.value.split('\n'))} 
+                        className="input-blueprint w-full" 
+                        rows={5} 
+                    />
+                </div>
                 <details open={false}>
                     <summary className="font-semibold cursor-pointer">SEO</summary>
                     <div className="mt-2 space-y-2">

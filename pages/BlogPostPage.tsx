@@ -149,6 +149,32 @@ const BlogPostPage: React.FC = () => {
                         />
                     </div>
                 )}
+                
+                {/* Image Gallery */}
+                {post.blog_images && post.blog_images.length > 0 && (
+                    <div className="my-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {post.blog_images.map((url, idx) => (
+                            url.trim() && (
+                                <div key={idx} className="rounded-lg overflow-hidden border border-slate-700">
+                                    <img 
+                                        src={`/api/proxy-image?url=${encodeURIComponent(url)}`} 
+                                        alt={`${post.title} gallery image ${idx + 1}`}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            const img = e.currentTarget as HTMLImageElement;
+                                            if ((img as any)._triedDirect !== true) {
+                                                (img as any)._triedDirect = true;
+                                                img.src = url; // try direct URL
+                                            } else {
+                                                img.src = FALLBACK_IMAGE_URL; // final fallback
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            )
+                        ))}
+                    </div>
+                )}
 
                 <div className="prose prose-invert max-w-none">
                     <ReactMarkdown
