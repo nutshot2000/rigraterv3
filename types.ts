@@ -52,7 +52,7 @@ export interface BlogPost {
     createdAt: string; // ISO date
     author_id?: string;
     published_at?: string;
-    blog_images?: string[]; // Array of additional blog images
+    blogImages?: string[]; // Array of additional blog images
     seoTitle?: string;
     seoDescription?: string;
 }

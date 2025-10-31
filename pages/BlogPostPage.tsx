@@ -116,7 +116,7 @@ const BlogPostPage: React.FC = () => {
     const contentWithoutTitle = removeTitleFromContent(body, post.title);
 
     // Combine cover image and gallery images into a single list
-    const allImages = [post.coverImageUrl, ...(post.blog_images || [])].filter(Boolean);
+    const allImages = [post.coverImageUrl, ...(post.blogImages || [])].filter(Boolean);
 
     return (
         <>

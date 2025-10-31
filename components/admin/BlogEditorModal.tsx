@@ -53,7 +53,7 @@ const BlogEditorModal: React.FC<{
 
     useEffect(() => {
         setCurrentPost(post);
-        setGalleryText((post.blog_images || []).join('\n'));
+        setGalleryText((post.blogImages || []).join('\n'));
     }, [post]);
 
     const updateField = (field: keyof BlogPost, value: any) => {
@@ -63,7 +63,7 @@ const BlogEditorModal: React.FC<{
     const handleSave = () => {
         const postToSave: Partial<BlogPost> = {
             ...currentPost,
-            blog_images: galleryText.split('\n').filter(url => url.trim() !== ''),
+            blogImages: galleryText.split('\n').filter(url => url.trim() !== ''),
         };
         onSave(postToSave);
     };

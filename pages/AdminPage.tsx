@@ -55,7 +55,7 @@ export const AdminPage: React.FC = () => {
                     summary: draft.summary || '',
                     content: draft.content || '',
                     tags: Array.isArray(draft.tags) ? draft.tags : [],
-                    blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+                    blogImages: Array.isArray(draft.blogImages) ? draft.blogImages : [],
                     seoTitle: draft.seoTitle || '',
                     seoDescription: draft.seoDescription || '',
                 };
@@ -69,7 +69,7 @@ export const AdminPage: React.FC = () => {
                     summary: draft.summary || '',
                     content: draft.content || '',
                     tags: Array.isArray(draft.tags) ? draft.tags : [],
-                    blog_images: Array.isArray(draft.blog_images) ? draft.blog_images : [],
+                    blogImages: Array.isArray(draft.blogImages) ? draft.blogImages : [],
                     seoTitle: draft.seoTitle || '',
                     seoDescription: draft.seoDescription || '',
                 };
