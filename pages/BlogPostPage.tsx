@@ -122,7 +122,7 @@ const BlogPostPage: React.FC = () => {
                         <img
                             src={`/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}`}
                             alt={post.title}
-                            className="w-full h-80 object-cover"
+                            className="w-full h-80 object-contain"
                             onError={(e) => {
                                 const img = e.currentTarget as HTMLImageElement;
                                 if ((img as any)._triedDirect !== true) {

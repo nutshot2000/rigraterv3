@@ -76,7 +76,7 @@ const BlogPage: React.FC = () => {
                                     <img
                                         src={post.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL}
                                         alt={post.title}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                         loading="lazy"
                                         onError={(e) => {
                                             const img = e.currentTarget as HTMLImageElement;
