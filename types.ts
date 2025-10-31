@@ -46,7 +46,6 @@ export interface BlogPost {
     title: string;
     slug: string;
     coverImageUrl: string;
-    cover_image_url?: string; // For backward compatibility
     summary: string;
     content: string; // markdown
     tags: string[];
@@ -55,9 +54,7 @@ export interface BlogPost {
     published_at?: string;
     blog_images?: string[]; // Array of additional blog images
     seoTitle?: string;
-    seo_title?: string; // For backward compatibility
     seoDescription?: string;
-    seo_description?: string; // For backward compatibility
 }
 
 export interface ComparisonDoc {

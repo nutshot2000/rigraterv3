@@ -158,15 +158,15 @@ const BlogEditorModal: React.FC<{
                 </div>
                 <div>
                     <label className="text-sm font-medium">Cover Image URL</label>
-                    <input type="text" value={currentPost.cover_image_url || ''} onChange={e => updateField('cover_image_url', e.target.value)} className="input-blueprint w-full" />
+                    <input type="text" value={currentPost.coverImageUrl || ''} onChange={e => updateField('coverImageUrl', e.target.value)} className="input-blueprint w-full" />
                 </div>
                 <details open={false}>
                     <summary className="font-semibold cursor-pointer">SEO</summary>
                     <div className="mt-2 space-y-2">
                         <label className="text-sm font-medium">SEO Title</label>
-                        <input type="text" value={currentPost.seo_title || ''} onChange={e => updateField('seo_title', e.target.value)} className="input-blueprint w-full" />
+                        <input type="text" value={currentPost.seoTitle || ''} onChange={e => updateField('seoTitle', e.target.value)} className="input-blueprint w-full" />
                         <label className="text-sm font-medium">SEO Description</label>
-                        <textarea value={currentPost.seo_description || ''} onChange={e => updateField('seo_description', e.target.value)} className="input-blueprint w-full" rows={3} />
+                        <textarea value={currentPost.seoDescription || ''} onChange={e => updateField('seoDescription', e.target.value)} className="input-blueprint w-full" rows={3} />
                     </div>
                 </details>
             </div>
