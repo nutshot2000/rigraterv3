@@ -136,6 +136,11 @@ const HomePage: React.FC = () => {
         return filteredProducts.slice(start, start + pageSize);
     }, [filteredProducts, page]);
 
+    // Scroll to top when paginating
+    useEffect(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }, [page]);
+
     // Mark when the user has actually scrolled, to avoid auto-advancing pages
     useEffect(() => {
         const onScroll = () => {
