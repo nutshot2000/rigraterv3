@@ -1,5 +1,6 @@
 import React from 'react';
 import BrandMultiSelect from './BrandMultiSelect';
+import CategorySelect from './CategorySelect';
 
 export type SortKey = 'relevance' | 'priceLow' | 'priceHigh' | 'nameAZ' | 'nameZA';
 
@@ -68,16 +69,11 @@ const FiltersToolbar: React.FC<FiltersToolbarProps> = ({
           </div>
         </div>
         <div className="md:col-span-4">
-          <label className="block text-sm font-medium text-gray-300 mb-1">Category</label>
-          <select
+          <CategorySelect
+            categories={categories}
             value={category}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition"
-          >
-            {categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+            onChange={onCategoryChange}
+          />
         </div>
         <div className="md:col-span-3">
           <label className="block text-sm font-medium text-gray-300 mb-1">Sort By</label>
