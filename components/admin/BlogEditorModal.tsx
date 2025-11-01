@@ -307,6 +307,22 @@ const BlogEditorModal: React.FC<{
                                 <textarea value={currentPost.summary || ''} onChange={e => updateField('summary', e.target.value)} className="input-blueprint w-full" rows={3} />
                             </div>
                             <div>
+                                <label className="text-sm font-medium">Tags (comma separated)</label>
+                                <input
+                                    type="text"
+                                    value={(currentPost.tags || []).join(', ')}
+                                    onChange={e => {
+                                        const tags = e.target.value
+                                            .split(',')
+                                            .map(t => t.trim())
+                                            .filter(Boolean);
+                                        updateField('tags' as any, tags);
+                                    }}
+                                    placeholder="e.g., gaming pc, budget, rtx"
+                                    className="input-blueprint w-full"
+                                />
+                            </div>
+                            <div>
                                 <label className="text-sm font-medium">Cover Image URL</label>
                                 <input type="text" value={currentPost.coverImageUrl || ''} onChange={e => updateField('coverImageUrl', e.target.value)} className="input-blueprint w-full" />
                             </div>
