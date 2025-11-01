@@ -267,6 +267,13 @@ const HomePage: React.FC = () => {
                 <button
                     className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
                     disabled={page === 1}
+                    onClick={() => setPage(1)}
+                >
+                    Start
+                </button>
+                <button
+                    className="px-3 py-2 bg-gray-700 text-white rounded disabled:opacity-50"
+                    disabled={page === 1}
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                 >
                     Prev
