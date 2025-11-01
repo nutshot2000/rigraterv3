@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import Header from './components/public/Header';
 import Footer from './components/public/Footer';
 import HomePage from './pages/HomePage';
@@ -11,6 +11,19 @@ const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import ToastContainer from './components/shared/ToastContainer';
 import { HelmetProvider } from 'react-helmet-async';
 import GoogleAnalytics from './components/shared/GoogleAnalytics';
+import AdminLogin from './components/admin/AdminLogin';
+
+const AdminGate: React.FC = () => {
+    const { isAuthenticated } = useApp();
+    if (!isAuthenticated) {
+        return <AdminLogin />;
+    }
+    return (
+        <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
+            <AdminPage />
+        </Suspense>
+    );
+};
 
 const App: React.FC = () => {
     return (
@@ -26,11 +39,7 @@ const App: React.FC = () => {
                                 <Route path="/blog" element={<BlogPage />} />
                                 <Route path="/products/:slug" element={<ProductPage />} />
                                 <Route path="/blog/:slug" element={<BlogPostPage />} />
-                                <Route path="/admin" element={
-                                    <Suspense fallback={<div className="py-20 text-center">Loading…</div>}>
-                                        <AdminPage />
-                                    </Suspense>
-                                } />
+                                <Route path="/admin" element={<AdminGate />} />
                             </Routes>
                         </main>
                         <Footer />
