@@ -332,6 +332,45 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                 <p className="text-xs text-slate-500 mt-1">Format as "Key: Value, Key: Value" pairs</p>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Quick Verdict (short TL;DR)</label>
+                  <textarea
+                    value={editedProduct.quickVerdict || ''}
+                    onChange={(e) => handleChange('quickVerdict' as any, e.target.value)}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-28"
+                    placeholder="1–3 sentences that quickly explain who this is for and why it’s good."
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Pros (short bullets)</label>
+                    <textarea
+                      value={Array.isArray(editedProduct.prosShort) ? editedProduct.prosShort.join('\n') : ''}
+                      onChange={(e) => {
+                        const lines = e.target.value.split('\n').map(l => l.trim()).filter(Boolean);
+                        handleChange('prosShort' as any, lines);
+                      }}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-24"
+                      placeholder="One bullet per line, e.g. \"1440p at 240Hz\""
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-400 mb-1">Cons (short bullets)</label>
+                    <textarea
+                      value={Array.isArray(editedProduct.consShort) ? editedProduct.consShort.join('\n') : ''}
+                      onChange={(e) => {
+                        const lines = e.target.value.split('\n').map(l => l.trim()).filter(Boolean);
+                        handleChange('consShort' as any, lines);
+                      }}
+                      className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-24"
+                      placeholder="One bullet per line, e.g. \"HDR is basic\""
+                    />
+                  </div>
+                </div>
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-slate-400 mb-1">Review</label>
                 <textarea

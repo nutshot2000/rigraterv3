@@ -808,15 +808,17 @@ Your assignment:
 3. Category (must be one of ALLOWED_CATEGORIES)
 4. Price in USD format like "$XXX.XX"
 5. Detailed specifications based on your expertise and any specs found on the page (format as "Key: Value, Key: Value")
-6. Write a professional review (230–320 words). Structure it exactly as:
+6. A SHORT \"quick verdict\" paragraph (1–3 sentences, max ~40 words) that gives the immediate TL;DR for who this is for and why it’s good. This should be benefit‑focused and snappy.
+7. Short pros and cons bullets for a compact summary box:\n   - prosShort: an ARRAY of 3–5 short bullet strings focused on concrete benefits (e.g. \"1440p with 240Hz\", \"Strong VRM for mid‑range CPUs\").\n   - consShort: an ARRAY of 2–4 short bullet strings with honest trade‑offs (e.g. \"HDR is basic\", \"No USB‑C\").\n8. Write a professional long‑form review (230–320 words). Structure it exactly as:
+8. Write a professional review (230–320 words). Structure it exactly as:
    - 2–3 sentence intro that frames the core benefit/outcome
    - Performance and build (what it feels like to use)
    - Who it’s for (and who should skip)
    - Pros and Cons (3 concise bullets each; prefix bullets with "- ")
    - Verdict with a soft CTA (e.g., "worth shortlisting", "check current price") without hard-selling
-7. SEO title (under 60 chars, include brand and key feature)
-8. SEO description (under 155 chars, compelling summary)
-9. URL-friendly slug (lowercase, hyphens, no special chars)
+9. SEO title (under 60 chars, include brand and key feature)
+10. SEO description (under 155 chars, compelling summary)
+11. URL-friendly slug (lowercase, hyphens, no special chars)
 
 WRITING STYLE:
  - Benefit‑led and outcome‑oriented; tangible advantages the reader gets
@@ -841,7 +843,7 @@ WRITING STYLE:
 HTML Content (first 40k chars):
 ${cleanHtml.substring(0, 40000)}
 
-Return ONLY valid JSON with these exact keys: name, brand, category, price, specifications, review, seoTitle, seoDescription, slug, affiliateLink`;
+Return ONLY valid JSON with these exact keys: name, brand, category, price, specifications, quickVerdict, prosShort, consShort, review, seoTitle, seoDescription, slug, affiliateLink`;
                         
                         const result = await model.generateContent(prompt);
                         const jsonText = result.response.text().replace(/```json|```/g, '').trim();
@@ -853,6 +855,9 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         }
                         if (productData.review) {
                             productData.review = cleanAiOutput(productData.review);
+                        }
+                        if (productData.quickVerdict) {
+                            productData.quickVerdict = cleanAiOutput(productData.quickVerdict);
                         }
 
                         // Ensure essential fields and merge extracted specs/price when missing
@@ -939,7 +944,10 @@ Return ONLY JSON with keys: name, brand, category, price (USD like "$XXX.XX"), s
             seoDescription: clamp(productData.seoDescription || `Explore ${productData.name}: key specs, pricing, and quick AI-style summary.`, 155),
             slug: productData.slug || productData.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || '',
             affiliateLink: productData.affiliateLink || (isUrl ? generateAffiliateLink(input) : ''),
-            imageUrls: imageUrls.slice(0, 10) // Limit to 10 images
+            imageUrls: imageUrls.slice(0, 10), // Limit to 10 images
+            quickVerdict: productData.quickVerdict || '',
+            prosShort: Array.isArray(productData.prosShort) ? productData.prosShort : [],
+            consShort: Array.isArray(productData.consShort) ? productData.consShort : [],
         };
 
         return res.status(200).json(finalProduct);

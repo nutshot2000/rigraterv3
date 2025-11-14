@@ -70,6 +70,9 @@ const ProductPage: React.FC = () => {
     const ogDesc = product.seoDescription || (product.review || '').substring(0, 160);
     const ogImage = product.imageUrl ? `/api/proxy-image?url=${encodeURIComponent(product.imageUrl)}` : FALLBACK_IMAGE_URL;
 
+    const prosShort = Array.isArray((product as any).prosShort) ? (product as any).prosShort as string[] : [];
+    const consShort = Array.isArray((product as any).consShort) ? (product as any).consShort as string[] : [];
+
     return (
         <>
             <Helmet>
@@ -114,6 +117,33 @@ const ProductPage: React.FC = () => {
                         productCategory={product.category}
                     />
                 </div>
+
+                {(product as any).quickVerdict && (
+                    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 mb-8">
+                        <h2 className="text-2xl font-bold text-white mb-2">Quick Verdict</h2>
+                        <p className="text-slate-200 mb-4">{(product as any).quickVerdict}</p>
+                        {(prosShort.length > 0 || consShort.length > 0) && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
+                                {prosShort.length > 0 && (
+                                    <div>
+                                        <h3 className="font-semibold text-emerald-400 mb-1">Pros</h3>
+                                        <ul className="list-disc list-inside text-slate-200 space-y-1">
+                                            {prosShort.map((p, idx) => <li key={idx}>{p}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                                {consShort.length > 0 && (
+                                    <div>
+                                        <h3 className="font-semibold text-rose-400 mb-1">Cons</h3>
+                                        <ul className="list-disc list-inside text-slate-200 space-y-1">
+                                            {consShort.map((c, idx) => <li key={idx}>{c}</li>)}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="prose prose-invert max-w-none mb-8">
                     <h2 className="text-3xl font-bold text-white">Review</h2>

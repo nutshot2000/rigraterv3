@@ -14,6 +14,12 @@ export interface Product {
     priceHistory?: PricePoint[];
     seoTitle?: string;
     seoDescription?: string;
+    // Short, benefit-led summary and bullets to reduce bounce on product pages
+    quickVerdict?: string;
+    prosShort?: string;
+    consShort?: string;
+    // Used for homepage/editor picks later if needed
+    isFeatured?: boolean;
 }
 
 export enum Page {

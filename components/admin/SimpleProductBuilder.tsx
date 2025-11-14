@@ -77,6 +77,9 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                 slug: builtProduct.slug,
                 seoTitle: builtProduct.seoTitle,
                 seoDescription: builtProduct.seoDescription,
+                quickVerdict: (builtProduct as any).quickVerdict,
+                prosShort: (builtProduct as any).prosShort,
+                consShort: (builtProduct as any).consShort,
             };
 
             const saved = await createProduct(payload);
@@ -201,6 +204,47 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
                                         className="input-blueprint w-full"
                                         rows={4}
                                     />
+                                </div>
+
+                                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Quick Verdict (short TL;DR)</label>
+                                        <textarea
+                                            value={(builtProduct as any).quickVerdict || ''}
+                                            onChange={(e) => setBuiltProduct(prev => prev ? { ...prev, quickVerdict: e.target.value } : prev)}
+                                            className="input-blueprint w-full"
+                                            rows={3}
+                                            placeholder="1–3 sentences that quickly explain who this is for and why it’s good."
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-300 mb-2">Pros (short bullets)</label>
+                                            <textarea
+                                                value={Array.isArray((builtProduct as any).prosShort) ? (builtProduct as any).prosShort.join('\n') : ''}
+                                                onChange={(e) => {
+                                                    const lines = e.target.value.split('\n').map(l => l.trim()).filter(Boolean);
+                                                    setBuiltProduct(prev => prev ? { ...prev, prosShort: lines } as any : prev);
+                                                }}
+                                                className="input-blueprint w-full"
+                                                rows={3}
+                                                placeholder="One bullet per line, e.g. '1440p at 240Hz'"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-300 mb-2">Cons (short bullets)</label>
+                                            <textarea
+                                                value={Array.isArray((builtProduct as any).consShort) ? (builtProduct as any).consShort.join('\n') : ''}
+                                                onChange={(e) => {
+                                                    const lines = e.target.value.split('\n').map(l => l.trim()).filter(Boolean);
+                                                    setBuiltProduct(prev => prev ? { ...prev, consShort: lines } as any : prev);
+                                                }}
+                                                className="input-blueprint w-full"
+                                                rows={3}
+                                                placeholder="One bullet per line, e.g. 'HDR is basic'"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="mt-6">

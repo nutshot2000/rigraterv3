@@ -78,6 +78,10 @@ export async function fetchProducts(params?: ProductQueryParams): Promise<Produc
         slug: row.slug ?? undefined,
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
+        quickVerdict: row.quick_verdict ?? undefined,
+        prosShort: row.pros_short ?? undefined,
+        consShort: row.cons_short ?? undefined,
+        isFeatured: row.is_featured ?? false,
     }));
     
     return {
@@ -152,6 +156,10 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         slug: slug ?? null,
         seo_title: input.seoTitle ?? null,
         seo_description: input.seoDescription ?? null,
+        quick_verdict: (input as any).quickVerdict ?? null,
+        pros_short: (input as any).prosShort ?? null,
+        cons_short: (input as any).consShort ?? null,
+        is_featured: (input as any).isFeatured ?? false,
     };
     const { data, error } = await supabase.from('products').insert(payload).select('*').single();
     if (error) throw error;
@@ -206,6 +214,10 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
         slug: row.slug ?? undefined,
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
+        quickVerdict: row.quick_verdict ?? undefined,
+        prosShort: row.pros_short ?? undefined,
+        consShort: row.cons_short ?? undefined,
+        isFeatured: row.is_featured ?? false,
     };
 }
 
