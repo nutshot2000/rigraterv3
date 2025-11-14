@@ -120,7 +120,14 @@ const BlogEditorModal: React.FC<{
                     tags = Array.from(new Set(words)).slice(0, 5);
                 }
 
-            // Merge AI content into the current post without overwriting user edits on unrelated fields
+                // SEO: use AI fields if present; otherwise derive from title/summary.
+                const derivedSeoTitle = (result.seoTitle || prev.seoTitle || nextTitle || '').trim();
+                const derivedSeoDesc = (result.seoDescription || prev.seoDescription || result.summary || prev.summary || '').trim();
+
+                const seoTitle = derivedSeoTitle.length > 60 ? derivedSeoTitle.slice(0, 57).trimEnd() + '…' : derivedSeoTitle;
+                const seoDescription = derivedSeoDesc.length > 155 ? derivedSeoDesc.slice(0, 152).trimEnd() + '…' : derivedSeoDesc;
+
+                // Merge AI content into the current post without overwriting user edits on unrelated fields
                 return {
                     ...prev,
                     title: nextTitle,
@@ -129,6 +136,8 @@ const BlogEditorModal: React.FC<{
                     summary: result.summary || prev.summary,
                     coverImageUrl: result.coverImageUrl || prev.coverImageUrl,
                     tags,
+                    seoTitle,
+                    seoDescription,
                 };
             });
 
