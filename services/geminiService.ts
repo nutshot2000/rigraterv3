@@ -186,30 +186,51 @@ export const suggestNewProducts = async (category: string, count: number = 3, ex
     }
 };
 
-export const generateBlogPost = async (title: string, outline?: string): Promise<Omit<BlogPost, 'id' | 'createdAt'>> => {
-    const serverless = (process.env.SERVERLESS_AI || '').trim();
-    if (serverless) {
-        const resp = await fetch(`${serverless}/generateBlogPost`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, outline }) });
-        if (!resp.ok) throw new Error('Serverless AI error');
-        return await resp.json();
+// Generate a blog post for the admin editor. We always route this through the
+// Next.js API endpoint (/api/ai/build-blog-post) so the API key lives on the
+// server, not in the browser. The source can be either a topic or a URL; we
+// auto-detect based on whether it looks like http(s).
+export const generateBlogPost = async (source: string): Promise<Omit<BlogPost, 'id' | 'createdAt'>> => {
+    const trimmed = (source || '').trim();
+    if (!trimmed) {
+        throw new Error('Source is required');
     }
-    if (!isAIEnabled) throw new Error('GEMINI_API_KEY is not configured');
-    const model = ai.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-    const response = await model.generateContent(
-        `You are an expert tech blogger for RIGRATER (PC hardware). Tone: knowledgeable, energetic, benefit‑led, persuasive but not pushy. Make readers feel good about smart choices.
 
-Write an SEO-optimized blog post about: ${title}.
-${outline ? `Outline to follow: ${outline}.` : ''}
+    // Detect whether the user entered a URL or a topic.
+    const isUrl = /^https?:\/\//i.test(trimmed);
+    const type = isUrl ? 'url' : 'topic';
 
-Return ONLY JSON with keys {"title","slug","coverImageUrl","summary","content","tags"}.
-Rules:
-- content: Markdown, structured with H2/H3, includes "## Key Takeaways" (3-5 bullets) and a short "## Pros and Cons" (3 each). 800-1100 words, no fluff.
-- summary: 2-3 sentences, compelling and benefit‑led.
-- slug: kebab-case from title.
-`
-    );
-    const jsonText = cleanJsonString(response.response.text());
-    const post = JSON.parse(jsonText);
+    const resp = await fetch('/api/ai/build-blog-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: trimmed, type }),
+    });
+
+    if (!resp.ok) {
+        let message = 'Failed to generate blog post from AI.';
+        try {
+            const err = await resp.json();
+            if (err?.error) message = err.error;
+        } catch {
+            // ignore JSON parse issues
+        }
+        throw new Error(message);
+    }
+
+    const data: any = await resp.json();
+    // Normalise into our BlogPost shape
+    const post: Omit<BlogPost, 'id' | 'createdAt'> = {
+        title: data.title || '',
+        slug: data.slug || '',
+        coverImageUrl: data.cover_image_url || data.coverImageUrl || '',
+        summary: data.summary || '',
+        content: data.content || '',
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        seoTitle: data.seoTitle || '',
+        seoDescription: data.seoDescription || '',
+        blogImages: Array.isArray(data.blogImages) ? data.blogImages : [],
+    };
+
     return post;
 };
 
