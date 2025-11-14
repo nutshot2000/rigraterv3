@@ -407,39 +407,7 @@ const BlogEditorModal: React.FC<{
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentPost.content || ''}</ReactMarkdown>
                     </div>
                 )) : (
-                    <div className="p-8 max-w-2xl mx-auto">
-                        <h2 className="text-2xl font-bold mb-4">AI Assist</h2>
-                        <div className="bg-slate-700/50 p-6 rounded-lg">
-                            <div className="flex items-center gap-2 mb-4">
-                                <button 
-                                  onClick={() => setAiBuildType('topic')} 
-                                  className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'topic' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
-                                >
-                                  From Topic
-                                </button>
-                                <button 
-                                  onClick={() => setAiBuildType('url')} 
-                                  className={`px-4 py-2 rounded-md text-sm font-medium ${aiBuildType === 'url' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
-                                >
-                                  From URL
-                                </button>
-                            </div>
-                            <div className="flex gap-4">
-                                <input
-                                  type="text"
-                                  value={aiSource}
-                                  onChange={(e) => setAiSource(e.target.value)}
-                                  placeholder={aiBuildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
-                                  className="input-blueprint flex-grow"
-                                  disabled={isGenerating}
-                                />
-                                <button onClick={handleGenerate} className="btn-blueprint-primary" disabled={isGenerating}>
-                                  <ArrowPathIcon className={`h-5 w-5 ${isGenerating ? 'animate-spin' : ''}`} />
-                                  <span>{isGenerating ? 'Generating...' : 'Generate & Edit'}</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    renderAiAssist()
                 )}
             </div>
             {isProductEmbedOpen && <ProductEmbedModal products={products} onSelect={handleProductSelect} onClose={() => setIsProductEmbedOpen(false)} />}
