@@ -96,19 +96,41 @@ const BlogEditorModal: React.FC<{
     const handleGenerate = async () => {
         setIsGenerating(true);
         try {
-            const result = await generateBlogPost(aiSource); // Simplified call
-            // Merge AI content into the current post without overwriting user edits on other fields
-            setCurrentPost(prev => ({
-                ...prev,
-                title: result.title || prev.title,
-                content: result.content || prev.content,
-                summary: result.summary || prev.summary,
-                cover_image_url: result.coverImageUrl || prev.cover_image_url,
-                tags: result.tags || prev.tags,
-            }));
+            const result = await generateBlogPost(aiSource);
+
+            setCurrentPost(prev => {
+                const nextTitle = result.title || prev.title || '';
+
+                // Prefer slug from AI; otherwise derive from title or keep existing.
+                const baseSlug = (result.slug || prev.slug || nextTitle)
+                    .toLowerCase()
+                    .trim()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+
+                // Tags: use AI tags if provided; otherwise derive simple tags from title.
+                let tags: string[] = Array.isArray(result.tags) ? result.tags : (prev.tags || []);
+                if (!tags || tags.length === 0) {
+                    const stop = new Set(['the','for','and','with','from','your','you','usb','rgb','pc','mic','microphone','gaming','best','guide']);
+                    const words = nextTitle.toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !stop.has(w));
+                    tags = Array.from(new Set(words)).slice(0, 5);
+                }
+
+            // Merge AI content into the current post without overwriting user edits on unrelated fields
+                return {
+                    ...prev,
+                    title: nextTitle,
+                    slug: baseSlug,
+                    content: result.content || prev.content,
+                    summary: result.summary || prev.summary,
+                    coverImageUrl: result.coverImageUrl || prev.coverImageUrl,
+                    tags,
+                };
+            });
+
             setMode('manual'); // Switch to editor to refine
         } catch (e) {
-            console.error(e); // Replace with a toast notification
+            console.error(e); // TODO: replace with a toast notification
         } finally {
             setIsGenerating(false);
         }
