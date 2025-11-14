@@ -353,9 +353,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 } catch {}
             }
             try {
-                const remoteResponse = await fetchProducts({ page: 1, pageSize: 100, sortBy: 'created_at', sortDirection: 'desc' });
-                if (remoteResponse && Array.isArray(remoteResponse.products)) {
-                    setProducts(remoteResponse.products);
+                // Fetch ALL products from Supabase in pages so the homepage
+                // can paginate over the full catalog (not just the first 100).
+                const firstPage = await fetchProducts({ page: 1, pageSize: 100, sortBy: 'created_at', sortDirection: 'desc' });
+                if (firstPage && Array.isArray(firstPage.products)) {
+                    let allProducts = [...firstPage.products];
+                    const totalPages = firstPage.totalPages || 1;
+
+                    if (totalPages > 1) {
+                        const pageSize = firstPage.pageSize || 100;
+                        const restPages = await Promise.all(
+                            Array.from({ length: totalPages - 1 }, (_, i) =>
+                                fetchProducts({ page: i + 2, pageSize, sortBy: 'created_at', sortDirection: 'desc' })
+                            )
+                        );
+                        for (const resp of restPages) {
+                            if (resp && Array.isArray(resp.products)) {
+                                allProducts = allProducts.concat(resp.products);
+                            }
+                        }
+                    }
+
+                    setProducts(allProducts);
                 }
             } catch (e) {
                 console.error('Failed to fetch products', e);
