@@ -99,9 +99,13 @@ const BlogEditorModal: React.FC<{
             const result = await generateBlogPost(aiSource);
 
             setCurrentPost(prev => {
-                const nextTitle = result.title || prev.title || '';
+                // Prefer AI title; otherwise fall back to existing title or the source text.
+                const sourceFallback = aiSource || '';
+                const nextTitle = (result.title && result.title.trim())
+                    || (prev.title && prev.title.trim())
+                    || sourceFallback.trim();
 
-                // Prefer slug from AI; otherwise derive from title or keep existing.
+                // Prefer slug from AI; otherwise derive from title/source or keep existing.
                 const baseSlug = (result.slug || prev.slug || nextTitle)
                     .toLowerCase()
                     .trim()
