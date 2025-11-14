@@ -8,6 +8,7 @@ export const config = {
 
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
 const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro-latest').trim();
+const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_US || '').trim();
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 async function fetchPageContent(url: string): Promise<string> {
@@ -44,6 +45,21 @@ function toSlug(input: string): string {
 function clampLength(str: string, max: number): string {
   if (!str) return '';
   return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
+}
+
+// --- Affiliate helpers (shared logic with product builder) ---
+// Extract ASIN from an Amazon URL
+function extractASIN(url: string): string | null {
+  const match = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
+  return match ? match[1] : null;
+}
+
+// Generate a clean amazon.com affiliate link for blog posts
+function generateAffiliateLink(url: string): string | null {
+  const asin = extractASIN(url);
+  if (!asin) return null;
+  const tag = AMAZON_TAG_US;
+  return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
 }
 
 function normalizeBlogPost(raw: any): any {
@@ -203,6 +219,18 @@ export default async function handler(req: any, res: any) {
     blogPost = normalizeBlogPost(blogPost);
     if ((!blogPost.cover_image_url || /^\w+(?:\s|$)/.test(blogPost.cover_image_url)) && extractedCoverUrl) {
       blogPost.cover_image_url = extractedCoverUrl;
+    }
+
+    // If this post was created from an Amazon URL, automatically inject an
+    // affiliate link block so the blog page can render Buy buttons.
+    if (type === 'url') {
+      const affiliate = generateAffiliateLink(source);
+      if (affiliate) {
+        const content: string = blogPost.content || '';
+        if (!/\[links\][\s\S]*?\[\/links\]/i.test(content)) {
+          blogPost.content = `${content.trim()}\n\n[links]\n${affiliate}\n[/links]\n`;
+        }
+      }
     }
 
     return res.status(200).json(blogPost);
