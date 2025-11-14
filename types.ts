@@ -16,8 +16,8 @@ export interface Product {
     seoDescription?: string;
     // Short, benefit-led summary and bullets to reduce bounce on product pages
     quickVerdict?: string;
-    prosShort?: string;
-    consShort?: string;
+    prosShort?: string[]; // short bullets
+    consShort?: string[]; // short bullets
     // Used for homepage/editor picks later if needed
     isFeatured?: boolean;
 }

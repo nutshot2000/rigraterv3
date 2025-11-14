@@ -658,6 +658,51 @@ function cleanAiOutput(text: string): string {
         .trim();
 }
 
+// Fallback: derive quick verdict + short pros/cons from the long review if the
+// model didn't return them explicitly.
+function deriveSummaryFromReview(review: string) {
+    if (!review) {
+        return {
+            quickVerdict: '',
+            prosShort: [] as string[],
+            consShort: [] as string[],
+        };
+    }
+
+    // Quick verdict: first 1–2 sentences, clamped.
+    const sentences = review.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const quickVerdictRaw = sentences.slice(0, 2).join(' ');
+    const quickVerdict = clamp(quickVerdictRaw, 210);
+
+    // Try to extract Pros/Cons sections if present.
+    const prosShort: string[] = [];
+    const consShort: string[] = [];
+
+    const prosMatch = review.match(/Pros:\s*([\s\S]*?)(?:Cons:|Bottom line:|$)/i);
+    if (prosMatch) {
+        const block = prosMatch[1];
+        block.split(/\r?\n|-/)
+            .map(s => s.replace(/^Pros?:/i, '').trim())
+            .filter(Boolean)
+            .forEach(line => prosShort.push(line));
+    }
+
+    const consMatch = review.match(/Cons:\s*([\s\S]*?)(?:Bottom line:|$)/i);
+    if (consMatch) {
+        const block = consMatch[1];
+        block.split(/\r?\n|-/)
+            .map(s => s.replace(/^Cons?:/i, '').trim())
+            .filter(Boolean)
+            .forEach(line => consShort.push(line));
+    }
+
+    return {
+        quickVerdict,
+        prosShort,
+        consShort,
+    };
+}
+
 function sanitizeTitle(raw: string): string {
     if (!raw) return '';
     let t = raw.trim();
@@ -870,6 +915,18 @@ Return ONLY valid JSON with these exact keys: name, brand, category, price, spec
                         // If review is too short after the first pass, leave it blank.
                         if (!productData.review || productData.review.split(/\s+/).length < 170) {
                             productData.review = '';
+                        }
+
+                        // Ensure summary fields even if model omitted them.
+                        const summary = deriveSummaryFromReview(productData.review || '');
+                        if (!productData.quickVerdict && summary.quickVerdict) {
+                            productData.quickVerdict = summary.quickVerdict;
+                        }
+                        if (!Array.isArray(productData.prosShort) || !productData.prosShort.length) {
+                            productData.prosShort = summary.prosShort;
+                        }
+                        if (!Array.isArray(productData.consShort) || !productData.consShort.length) {
+                            productData.consShort = summary.consShort;
                         }
                         
                         // Always generate our clean affiliate link

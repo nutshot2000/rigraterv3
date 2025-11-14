@@ -79,8 +79,13 @@ export async function fetchProducts(params?: ProductQueryParams): Promise<Produc
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
         quickVerdict: row.quick_verdict ?? undefined,
-        prosShort: row.pros_short ?? undefined,
-        consShort: row.cons_short ?? undefined,
+        // Stored as newline-separated text in DB, exposed as string[] in app
+        prosShort: row.pros_short
+            ? String(row.pros_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+        consShort: row.cons_short
+            ? String(row.cons_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
         isFeatured: row.is_featured ?? false,
     }));
     
@@ -157,8 +162,12 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         seo_title: input.seoTitle ?? null,
         seo_description: input.seoDescription ?? null,
         quick_verdict: (input as any).quickVerdict ?? null,
-        pros_short: (input as any).prosShort ?? null,
-        cons_short: (input as any).consShort ?? null,
+        pros_short: Array.isArray((input as any).prosShort)
+            ? (input as any).prosShort.join('\n')
+            : (input as any).prosShort ?? null,
+        cons_short: Array.isArray((input as any).consShort)
+            ? (input as any).consShort.join('\n')
+            : (input as any).consShort ?? null,
         is_featured: (input as any).isFeatured ?? false,
     };
     const { data, error } = await supabase.from('products').insert(payload).select('*').single();
@@ -196,6 +205,13 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
         slug: input.slug ?? null,
         seo_title: input.seoTitle ?? null,
         seo_description: input.seoDescription ?? null,
+        quick_verdict: (input as any).quickVerdict ?? null,
+        pros_short: Array.isArray((input as any).prosShort)
+            ? (input as any).prosShort.join('\n')
+            : (input as any).prosShort ?? null,
+        cons_short: Array.isArray((input as any).consShort)
+            ? (input as any).consShort.join('\n')
+            : (input as any).consShort ?? null,
     };
     const { data, error } = await supabase.from('products').update(payload).eq('id', id).select('*').single();
     if (error) throw error;
