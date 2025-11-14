@@ -18,6 +18,38 @@ const isValidHttpUrl = (s: string) => {
     }
 };
 
+// Local fallback: derive a short quick verdict and bullets from the long review
+const deriveSummaryFromReview = (review: string | undefined | null) => {
+    if (!review) {
+        return {
+            quickVerdict: '',
+            prosShort: [] as string[],
+            consShort: [] as string[],
+        };
+    }
+
+    const text = String(review);
+
+    // Quick verdict = first 1–2 sentences, clamped
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const quickVerdictRaw = sentences.slice(0, 2).join(' ');
+    const quickVerdict =
+        quickVerdictRaw.length > 210 ? quickVerdictRaw.slice(0, 207).trimEnd() + '…' : quickVerdictRaw;
+
+    // Try to extract simple "-" bullet lines (we'll treat them all as pros for now)
+    const prosShort: string[] = [];
+    text.split(/\r?\n/)
+        .map(l => l.trim())
+        .filter(l => l.startsWith('- '))
+        .forEach(l => prosShort.push(l.replace(/^-+/, '').trim()));
+
+    return {
+        quickVerdict,
+        prosShort,
+        consShort: [] as string[],
+    };
+};
+
 const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBuilt }) => {
     const { addToast } = useApp();
     const [input, setInput] = useState('');
@@ -44,8 +76,29 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
             }
 
             const product = await response.json();
-            setBuiltProduct(product);
-            onProductBuilt(product);
+
+            // Ensure summary fields exist even if the API didn't return them
+            const needsQuickVerdict = !product.quickVerdict;
+            const needsPros = !Array.isArray(product.prosShort) || product.prosShort.length === 0;
+            const needsCons = !Array.isArray(product.consShort) || product.consShort.length === 0;
+
+            let augmented = product;
+            if (needsQuickVerdict || needsPros || needsCons) {
+                const summary = deriveSummaryFromReview(product.review);
+                augmented = {
+                    ...product,
+                    quickVerdict: product.quickVerdict || summary.quickVerdict,
+                    prosShort: Array.isArray(product.prosShort) && product.prosShort.length
+                        ? product.prosShort
+                        : summary.prosShort,
+                    consShort: Array.isArray(product.consShort) && product.consShort.length
+                        ? product.consShort
+                        : summary.consShort,
+                };
+            }
+
+            setBuiltProduct(augmented);
+            onProductBuilt(augmented);
             addToast('Product built successfully!', 'success');
         } catch (error) {
             addToast('Failed to build product', 'error');
