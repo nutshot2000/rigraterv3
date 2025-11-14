@@ -187,6 +187,13 @@ export async function createProduct(input: Omit<Product, 'id'>): Promise<Product
         slug: row.slug ?? undefined,
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
+        quickVerdict: row.quick_verdict ?? undefined,
+        prosShort: row.pros_short
+            ? String(row.pros_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+        consShort: row.cons_short
+            ? String(row.cons_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
     };
 }
 
@@ -231,8 +238,12 @@ export async function updateProductById(id: string, input: Omit<Product, 'id'>):
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
         quickVerdict: row.quick_verdict ?? undefined,
-        prosShort: row.pros_short ?? undefined,
-        consShort: row.cons_short ?? undefined,
+        prosShort: row.pros_short
+            ? String(row.pros_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+        consShort: row.cons_short
+            ? String(row.cons_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
         isFeatured: row.is_featured ?? false,
     };
 }
@@ -272,6 +283,13 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
         slug: row.slug ?? undefined,
         seoTitle: row.seo_title ?? undefined,
         seoDescription: row.seo_description ?? undefined,
+        quickVerdict: row.quick_verdict ?? undefined,
+        prosShort: row.pros_short
+            ? String(row.pros_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
+        consShort: row.cons_short
+            ? String(row.cons_short).split('\n').map((s: string) => s.trim()).filter(Boolean)
+            : [],
     };
 }
 
