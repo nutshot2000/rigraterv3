@@ -47,6 +47,20 @@ function clampLength(str: string, max: number): string {
   return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
 }
 
+// Extract ASIN from Amazon URL
+function extractASIN(url: string): string | null {
+  const match = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
+  return match ? match[1] : null;
+}
+
+// Generate amazon.com affiliate link using US tag
+function generateAffiliateLink(url: string): string | null {
+  const asin = extractASIN(url);
+  if (!asin) return null;
+  const tag = AMAZON_TAG_US;
+  return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
+}
+
 // --- Affiliate helpers (shared logic with product builder) ---
 // Extract ASIN from an Amazon URL
 function extractASIN(url: string): string | null {
@@ -114,7 +128,7 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'AI service not configured. Missing API key.' });
   }
 
-  const { source, type } = req.body || {}; // source can be URL or topic
+  const { source, type, mode, urls } = req.body || {}; // source can be URL or topic
 
   if (!source || !type) {
     return res.status(400).json({ error: 'Missing source or type' });
@@ -122,8 +136,15 @@ export default async function handler(req: any, res: any) {
 
   let context = '';
   let extractedCoverUrl: string | null = null;
+  const urlList: string[] = Array.isArray(urls) && urls.length ? urls : [source];
+  const primaryUrl = urlList[0];
+  const finalMode: 'review' | 'comparison' =
+    mode === 'comparison' || mode === 'review'
+      ? mode
+      : (urlList.length > 1 ? 'comparison' : 'review');
+
   if (type === 'url') {
-    const htmlContent = await fetchPageContent(source);
+    const htmlContent = await fetchPageContent(primaryUrl);
     if (!htmlContent) {
       return res.status(500).json({ error: 'Failed to fetch content from URL' });
     }
@@ -183,6 +204,9 @@ export default async function handler(req: any, res: any) {
       - Use clear H2/H3 headings, short paragraphs, and bulleted lists where helpful.
       - Include a brief "## Pros and Cons" section with 3 specific bullets each.
       - If rewriting from a URL, DO NOT copy; synthesize in a unique voice.
+      - Post type: ${finalMode === 'comparison'
+        ? 'Write this as a comparison between the key products referenced in the context (for example, different CPUs or GPUs). Call out which is better for which user.'
+        : 'Write this as a focused review of the main product referenced in the context (for example, a single CPU or GPU). You may mention alternatives briefly, but do NOT turn this into a head-to-head comparison article.'}
       - End with a confident conclusion and a natural, non‑pushy CTA.
       - Aim for 800-1100 words (tight, no fluff; avoid filler).
     - **SEO:** Use relevant keywords naturally; no clickbait; respect length limits.
@@ -224,7 +248,7 @@ export default async function handler(req: any, res: any) {
     // If this post was created from an Amazon URL, automatically inject an
     // affiliate link block so the blog page can render Buy buttons.
     if (type === 'url') {
-      const affiliate = generateAffiliateLink(source);
+      const affiliate = generateAffiliateLink(primaryUrl);
       if (affiliate) {
         const content: string = blogPost.content || '';
         if (!/\[links\][\s\S]*?\[\/links\]/i.test(content)) {

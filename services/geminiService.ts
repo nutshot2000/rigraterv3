@@ -190,20 +190,28 @@ export const suggestNewProducts = async (category: string, count: number = 3, ex
 // Next.js API endpoint (/api/ai/build-blog-post) so the API key lives on the
 // server, not in the browser. The source can be either a topic or a URL; we
 // auto-detect based on whether it looks like http(s).
-export const generateBlogPost = async (source: string): Promise<Omit<BlogPost, 'id' | 'createdAt'>> => {
-    const trimmed = (source || '').trim();
+export interface GenerateBlogPostOptions {
+    source: string;
+    type: 'topic' | 'url';
+    mode?: 'review' | 'comparison';
+}
+
+export const generateBlogPost = async (opts: GenerateBlogPostOptions): Promise<Omit<BlogPost, 'id' | 'createdAt'>> => {
+    const trimmed = (opts.source || '').trim();
     if (!trimmed) {
         throw new Error('Source is required');
     }
 
-    // Detect whether the user entered a URL or a topic.
-    const isUrl = /^https?:\/\//i.test(trimmed);
-    const type = isUrl ? 'url' : 'topic';
+    const type = opts.type;
+    const mode = opts.mode || 'review';
+
+    // Best-effort extraction of URLs (for comparison mode or multiple inputs)
+    const urls = Array.from(trimmed.match(/https?:\/\/\S+/gi) || []);
 
     const resp = await fetch('/api/ai/build-blog-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: trimmed, type }),
+        body: JSON.stringify({ source: trimmed, type, mode, urls }),
     });
 
     if (!resp.ok) {

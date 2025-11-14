@@ -44,6 +44,7 @@ const BlogEditorModal: React.FC<{
     const [view, setView] = useState<'write' | 'preview'>('write');
     const [aiSource, setAiSource] = useState('');
     const [aiBuildType, setAiBuildType] = useState<'topic' | 'url'>('topic');
+    const [aiKind, setAiKind] = useState<'review' | 'comparison'>('review');
     const [isGenerating, setIsGenerating] = useState(false);
     const [showInserter, setShowInserter] = useState(false);
     const [inserterPos, setInserterPos] = useState({ top: 0, left: 0 });
@@ -96,7 +97,7 @@ const BlogEditorModal: React.FC<{
     const handleGenerate = async () => {
         setIsGenerating(true);
         try {
-            const result = await generateBlogPost(aiSource);
+            const result = await generateBlogPost({ source: aiSource, type: aiBuildType, mode: aiKind });
 
             setCurrentPost(prev => {
                 // Prefer AI title; otherwise fall back to existing title or the source text.
@@ -273,12 +274,31 @@ const BlogEditorModal: React.FC<{
                       From URL
                     </button>
                 </div>
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-sm text-slate-300">Post Type:</span>
+                    <button
+                      onClick={() => setAiKind('review')}
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${aiKind === 'review' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                    >
+                      Review (single product)
+                    </button>
+                    <button
+                      onClick={() => setAiKind('comparison')}
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${aiKind === 'comparison' ? 'bg-sky-500 text-white' : 'bg-slate-600 hover:bg-slate-500'}`}
+                    >
+                      Comparison (multi-product)
+                    </button>
+                </div>
                 <div className="flex gap-4">
                     <input
                       type="text"
                       value={aiSource}
                       onChange={(e) => setAiSource(e.target.value)}
-                      placeholder={aiBuildType === 'topic' ? 'e.g., Best GPUs for 1440p Gaming' : 'https://example.com/article'}
+                      placeholder={aiBuildType === 'topic'
+                        ? 'e.g., Best GPUs for 1440p Gaming'
+                        : aiKind === 'review'
+                          ? 'Paste product URL (e.g., Amazon product page)'
+                          : 'Paste 2–4 product URLs (one per line) for comparison'}
                       className="input-blueprint flex-grow"
                       disabled={isGenerating}
                     />
