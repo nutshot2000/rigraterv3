@@ -353,7 +353,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                         handleChange('prosShort' as any, lines);
                       }}
                       className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-24"
-                      placeholder="One bullet per line, e.g. \"1440p at 240Hz\""
+                      placeholder='One bullet per line, e.g. "1440p at 240Hz"'
                     />
                   </div>
                   <div>
@@ -365,7 +365,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({ product, onSave, on
                         handleChange('consShort' as any, lines);
                       }}
                       className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-2 text-white h-24"
-                      placeholder="One bullet per line, e.g. \"HDR is basic\""
+                      placeholder='One bullet per line, e.g. "HDR is basic"'
                     />
                   </div>
                 </div>
