@@ -47,21 +47,6 @@ function clampLength(str: string, max: number): string {
   return str.length <= max ? str : str.slice(0, max - 1).trimEnd();
 }
 
-// Extract ASIN from Amazon URL
-function extractASIN(url: string): string | null {
-  const match = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
-  return match ? match[1] : null;
-}
-
-// Generate amazon.com affiliate link using US tag
-function generateAffiliateLink(url: string): string | null {
-  const asin = extractASIN(url);
-  if (!asin) return null;
-  const tag = AMAZON_TAG_US;
-  return `https://www.amazon.com/dp/${asin}${tag ? `?tag=${tag}` : ''}`;
-}
-
-// --- Affiliate helpers (shared logic with product builder) ---
 // Extract ASIN from an Amazon URL
 function extractASIN(url: string): string | null {
   const match = url.match(/\/dp\/([A-Z0-9]{10})/i) || url.match(/\/product\/([A-Z0-9]{10})/i);
@@ -146,33 +131,36 @@ export default async function handler(req: any, res: any) {
   if (type === 'url') {
     const htmlContent = await fetchPageContent(primaryUrl);
     if (!htmlContent) {
-      return res.status(500).json({ error: 'Failed to fetch content from URL' });
-    }
-    context = `Based on the following article content: ${sanitizeHtml(htmlContent)}`;
-    try {
-      const candidates = extractImagesFromHTML(htmlContent);
-      // validate first working image
-      for (const url of candidates) {
-        let candidate = url;
-        if (candidate.includes('amazon.com/images/I/')) {
-          const stripped = candidate
-            .replace(/\._AC_SL\d+_/i, '')
-            .replace(/\._SL\d+_/i, '')
-            .replace(/\._SX\d+_/i, '')
-            .replace(/\._SY\d+_/i, '')
-            .replace(/\._UX\d+_/i, '')
-            .replace(/\._UY\d+_/i, '')
-            .replace(/\._SS\d+_/i, '')
-            .replace(/\._SR\d+,\d+_/i, '')
-            .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
-          if (stripped !== candidate) candidate = stripped;
+      // Graceful fallback: treat the URL itself as context so AI can still
+      // write a review based on the product name/URL, instead of hard failing.
+      context = `Based on this product URL (content could not be fetched, use your knowledge of this product line and naming): ${primaryUrl}`;
+    } else {
+      context = `Based on the following article content: ${sanitizeHtml(htmlContent)}`;
+      try {
+        const candidates = extractImagesFromHTML(htmlContent);
+        // validate first working image
+        for (const url of candidates) {
+          let candidate = url;
+          if (candidate.includes('amazon.com/images/I/')) {
+            const stripped = candidate
+              .replace(/\._AC_SL\d+_/i, '')
+              .replace(/\._SL\d+_/i, '')
+              .replace(/\._SX\d+_/i, '')
+              .replace(/\._SY\d+_/i, '')
+              .replace(/\._UX\d+_/i, '')
+              .replace(/\._UY\d+_/i, '')
+              .replace(/\._SS\d+_/i, '')
+              .replace(/\._SR\d+,\d+_/i, '')
+              .replace(/\._CR\d+,\d+,\d+,\d+_/i, '');
+            if (stripped !== candidate) candidate = stripped;
+          }
+          try {
+            const ok = await fetch(candidate, { method: 'HEAD' });
+            if (ok.ok && (ok.headers.get('content-type') || '').startsWith('image/')) { extractedCoverUrl = candidate; break; }
+          } catch {}
         }
-        try {
-          const ok = await fetch(candidate, { method: 'HEAD' });
-          if (ok.ok && (ok.headers.get('content-type') || '').startsWith('image/')) { extractedCoverUrl = candidate; break; }
-        } catch {}
-      }
-    } catch {}
+      } catch {}
+    }
   } else {
     context = `Based on the following topic: "${source}"`;
   }
