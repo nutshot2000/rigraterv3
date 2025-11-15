@@ -6,6 +6,7 @@ import { isBackendEnabled } from '../services/supabaseClient';
 import { fetchProducts, createProduct as createProductApi, updateProductById, deleteProductById } from '../services/productService';
 import { fetchBlogPosts as fetchBlogPostsApi, createBlogPost as createBlogPostApi, updateBlogPostById as updateBlogPostByIdApi, deleteBlogPostById as deleteBlogPostByIdApi } from '../services/blogService';
 import { fetchComparisonDocs as fetchComparisonDocsApi, createComparisonDoc as createComparisonDocApi, updateComparisonDocById as updateComparisonDocByIdApi, deleteComparisonDocById as deleteComparisonDocByIdApi } from '../services/comparisonService';
+import { fetchDeals as fetchDealsApi, createDeal as createDealApi, updateDealById as updateDealByIdApi, deleteDealById as deleteDealByIdApi } from '../services/dealsService';
 import { loginWithEmailPassword, logoutSession } from '../services/authService';
 
 const MAX_COMPARISON_ITEMS = 3;
@@ -165,7 +166,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (isBackendEnabled) {
             (async () => {
                 try {
-                    await updateProductById(updatedProduct.id, { ...updatedProduct, id: undefined as any });
+                    await updateProductById(updatedProduct.id, updatedProduct as Omit<Product, 'id'>);
                 } catch {}
             })();
         }
@@ -269,7 +270,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setBlogPosts(prev => prev.map(p => p.id === post.id ? post : p));
         recordAudit({ action: 'blog.update', targetType: 'blog', targetId: post.id, details: { title: post.title } });
         if (isBackendEnabled) {
-            (async () => { try { await updateBlogPostByIdApi(post.id, { ...post, id: undefined as any, createdAt: undefined as any }); } catch {} })();
+            (async () => { try { await updateBlogPostByIdApi(post.id, post as Omit<BlogPost, 'id' | 'createdAt'>); } catch {} })();
         }
     }, []);
 
@@ -315,7 +316,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setComparisons(prev => prev.map(d => d.id === doc.id ? doc : d));
         recordAudit({ action: 'comparison.update', targetType: 'comparison', targetId: doc.id, details: { title: doc.title } });
         if (isBackendEnabled) {
-            (async () => { try { await updateComparisonDocByIdApi(doc.id, { ...doc, id: undefined as any, createdAt: undefined as any }); } catch {} })();
+            (async () => { try { await updateComparisonDocByIdApi(doc.id, doc as Omit<ComparisonDoc, 'id' | 'createdAt'>); } catch {} })();
         }
     }, []);
 
@@ -329,6 +330,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     // Deals (local-only for now)
     const addDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt'>) => {
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    const created = await createDealApi(deal);
+                    setDeals(prev => [created, ...prev]);
+                    recordAudit({ action: 'deal.create', targetType: 'deal', targetId: created.id, details: { title: created.title } });
+                    return;
+                } catch (e) {
+                    console.error('Failed to create deal in Supabase, falling back to local', e);
+                }
+            })();
+        }
+
         const full: Deal = {
             id: Date.now().toString(),
             createdAt: new Date().toISOString(),
@@ -341,11 +355,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const updateDeal = useCallback((deal: Deal) => {
         setDeals(prev => prev.map(d => d.id === deal.id ? deal : d));
         recordAudit({ action: 'deal.update', targetType: 'deal', targetId: deal.id, details: { title: deal.title } });
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    await updateDealByIdApi(deal.id, deal as Omit<Deal, 'id' | 'createdAt'>);
+                } catch (e) {
+                    console.error('Failed to update deal in Supabase', e);
+                }
+            })();
+        }
     }, [recordAudit]);
 
     const deleteDeal = useCallback((id: string) => {
         setDeals(prev => prev.filter(d => d.id !== id));
         recordAudit({ action: 'deal.delete', targetType: 'deal', targetId: id });
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    await deleteDealByIdApi(id);
+                } catch (e) {
+                    console.error('Failed to delete deal in Supabase', e);
+                }
+            })();
+        }
     }, [recordAudit]);
 
     // Persistence
@@ -443,6 +475,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             } catch (e) {
                 console.error('Failed to fetch comparisons', e);
                 addToast('Failed to load comparisons from database.', 'error');
+            }
+            try {
+                const remoteDeals = await fetchDealsApi();
+                if (Array.isArray(remoteDeals)) setDeals(remoteDeals);
+            } catch (e) {
+                console.error('Failed to fetch deals', e);
+                // do not toast; deals are a bonus feature
             }
         })();
     }, []);
