@@ -9,6 +9,9 @@ const AdminSettings: React.FC = () => {
     enabled: promoButton?.enabled ?? false,
     label: promoButton?.label ?? 'Deals',
     url: promoButton?.url ?? '/blog',
+    size: promoButton?.size ?? 'md',
+    color: promoButton?.color ?? 'amber',
+    position: promoButton?.position ?? 'center',
   }));
 
   const handleChange = (field: keyof PromoButtonConfig, value: any) => {
@@ -20,6 +23,9 @@ const AdminSettings: React.FC = () => {
       enabled: form.enabled,
       label: form.label.trim() || 'Deals',
       url: form.url.trim() || '/blog',
+      size: form.size ?? 'md',
+      color: form.color ?? 'amber',
+      position: form.position ?? 'center',
     });
   };
 
@@ -74,6 +80,50 @@ const AdminSettings: React.FC = () => {
               Use a relative path to link inside your site (like <code>/blog/my-deals-post</code>), or a full
               URL to link out to another site.
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-1">Size</label>
+              <select
+                value={form.size ?? 'md'}
+                onChange={e => handleChange('size', e.target.value as PromoButtonConfig['size'])}
+                className="input-blueprint w-full"
+                disabled={!form.enabled}
+              >
+                <option value="sm">Small</option>
+                <option value="md">Medium</option>
+                <option value="lg">Large</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-1">Colour</label>
+              <select
+                value={form.color ?? 'amber'}
+                onChange={e => handleChange('color', e.target.value as PromoButtonConfig['color'])}
+                className="input-blueprint w-full"
+                disabled={!form.enabled}
+              >
+                <option value="amber">Gold / Deals</option>
+                <option value="sky">Sky Blue</option>
+                <option value="emerald">Green</option>
+                <option value="rose">Red / Alert</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-1">Position</label>
+              <select
+                value={form.position ?? 'center'}
+                onChange={e => handleChange('position', e.target.value as PromoButtonConfig['position'])}
+                className="input-blueprint w-full"
+                disabled={!form.enabled}
+              >
+                <option value="center">Centre of header</option>
+                <option value="right">Right with nav</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex justify-end">

@@ -12,6 +12,22 @@ const Header: React.FC = () => {
 
     const promo = promoButton && promoButton.enabled && promoButton.url ? promoButton : undefined;
 
+    const sizeClasses =
+        promo?.size === 'lg'
+            ? 'px-5 py-2.5 text-base'
+            : promo?.size === 'sm'
+            ? 'px-3 py-1.5 text-xs'
+            : 'px-4 py-2 text-sm';
+
+    const colorBase =
+        promo?.color === 'sky'
+            ? 'border-sky-500/50 text-sky-200 bg-sky-500/10 hover:bg-sky-500/20 focus-visible:ring-sky-400'
+            : promo?.color === 'emerald'
+            ? 'border-emerald-500/50 text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 focus-visible:ring-emerald-400'
+            : promo?.color === 'rose'
+            ? 'border-rose-500/50 text-rose-200 bg-rose-500/10 hover:bg-rose-500/20 focus-visible:ring-rose-400'
+            : 'border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:ring-amber-400';
+
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">
             <nav className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,6 +39,30 @@ const Header: React.FC = () => {
                            <span className="hidden sm:inline text-xs text-slate-400 tracking-widest">RATE • COMPARE • UPGRADE</span>
                         </Link>
                     </div>
+                    {/* Center promo button on desktop when configured */}
+                    {promo && promo.position === 'center' && (
+                        <div className="hidden md:flex flex-1 justify-center">
+                            {promo.url.startsWith('http') ? (
+                                <a
+                                    href={promo.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
+                                >
+                                    {promo.label || 'Deals'}
+                                </a>
+                            ) : (
+                                <NavLink
+                                    to={promo.url}
+                                    className={() =>
+                                        `btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`
+                                    }
+                                >
+                                    {promo.label || 'Deals'}
+                                </NavLink>
+                            )}
+                        </div>
+                    )}
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
                         <NavLink to="/" className={navLinkClasses}>
                             Storefront
@@ -30,14 +70,15 @@ const Header: React.FC = () => {
                         <NavLink to="/blog" className={navLinkClasses}>
                             Blog
                         </NavLink>
+                        {/* If position is 'right' or we're on mobile, keep promo with nav */}
                         {promo && (
-                            promo.url.startsWith('http')
-                                ? (
+                            <div className="flex md:hidden">
+                                {promo.url.startsWith('http') ? (
                                     <a
                                         href={promo.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="btn-blueprint text-base crt-strong border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                                        className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
                                     >
                                         {promo.label || 'Deals'}
                                     </a>
@@ -45,14 +86,40 @@ const Header: React.FC = () => {
                                     <NavLink
                                         to={promo.url}
                                         className={({ isActive }) =>
-                                            `btn-blueprint text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
-                                                isActive ? 'btn-blueprint--primary border-amber-400/60 text-amber-200' : 'border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'
+                                            `btn-blueprint crt-strong ${sizeClasses} border ${colorBase} ${
+                                                isActive ? 'btn-blueprint--primary' : ''
                                             }`
                                         }
                                     >
                                         {promo.label || 'Deals'}
                                     </NavLink>
-                                )
+                                )}
+                            </div>
+                        )}
+                        {promo && promo.position === 'right' && (
+                            <div className="hidden md:flex">
+                                {promo.url.startsWith('http') ? (
+                                    <a
+                                        href={promo.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
+                                    >
+                                        {promo.label || 'Deals'}
+                                    </a>
+                                ) : (
+                                    <NavLink
+                                        to={promo.url}
+                                        className={({ isActive }) =>
+                                            `btn-blueprint crt-strong ${sizeClasses} border ${colorBase} ${
+                                                isActive ? 'btn-blueprint--primary' : ''
+                                            }`
+                                        }
+                                    >
+                                        {promo.label || 'Deals'}
+                                    </NavLink>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

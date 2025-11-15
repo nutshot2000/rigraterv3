@@ -71,6 +71,10 @@ export interface PromoButtonConfig {
     enabled: boolean;
     label: string;
     url: string;
+    // Visual options
+    size?: 'sm' | 'md' | 'lg';
+    color?: 'amber' | 'sky' | 'emerald' | 'rose';
+    position?: 'center' | 'right';
 }
 
 export interface ComparisonDoc {
