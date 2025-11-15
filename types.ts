@@ -29,12 +29,14 @@ export enum Page {
     ADMIN_MANAGE_PRODUCTS = 'ADMIN_MANAGE_PRODUCTS',
     ADMIN_AI_BLOG = 'ADMIN_AI_BLOG',
     ADMIN_MANAGE_POSTS = 'ADMIN_MANAGE_POSTS',
+    ADMIN_DEALS = 'ADMIN_DEALS',
     // legacy aliases kept for compatibility
     ADMIN_PRODUCTS = 'ADMIN_MANAGE_PRODUCTS',
     ADMIN_BLOG = 'ADMIN_AI_BLOG',
     CATEGORIES = 'CATEGORIES',
     BLOG = 'BLOG',
-    COMPARISONS = 'COMPARISONS'
+    COMPARISONS = 'COMPARISONS',
+    DEALS = 'DEALS',
 }
 
 export interface PricePoint {
@@ -78,6 +80,18 @@ export interface PromoButtonConfig {
     animation?: 'none' | 'pulse' | 'bounce' | 'glow' | 'wiggle';
 }
 
+export interface Deal {
+    id: string;
+    title: string;
+    url: string;
+    description?: string;
+    merchant?: string;
+    priceLabel?: string; // e.g. "£149 (was £199)"
+    tag?: string; // e.g. "Black Friday", "GPU", "Case"
+    imageUrl?: string;
+    createdAt: string; // ISO date
+}
+
 export interface ComparisonDoc {
     id: string;
     title: string;
@@ -92,7 +106,7 @@ export interface AuditEntry {
     ts: string;
     actor: 'admin' | 'system';
     action: string; // e.g., product.create
-    targetType: 'product' | 'blog' | 'comparison' | 'system';
+    targetType: 'product' | 'blog' | 'comparison' | 'deal' | 'system';
     targetId?: string;
     details?: Record<string, any>;
 }

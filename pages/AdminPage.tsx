@@ -5,6 +5,7 @@ import AdminTopbar from '../components/admin/AdminTopbar';
 import ProductManagement from '../components/admin/ProductManagement';
 import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
 import BlogManagement from '../components/admin/BlogManagement';
+import DealsManagement from '../components/admin/DealsManagement';
 // import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import AIChatModal from '../components/admin/AIChatModal';
 import CommandPalette, { CommandItem } from '../components/admin/CommandPalette';
@@ -35,6 +36,7 @@ export const AdminPage: React.FC = () => {
     const commands: CommandItem[] = [
         { id: 'go-products', title: 'Go to Manage Products', shortcut: 'G P', run: () => setPage(Page.ADMIN_MANAGE_PRODUCTS) },
         { id: 'go-blog', title: 'Go to Manage Posts', shortcut: 'G B', run: () => setPage(Page.ADMIN_MANAGE_POSTS) },
+        { id: 'go-deals', title: 'Go to Deals', shortcut: 'G D', run: () => setPage(Page.ADMIN_DEALS) },
         { id: 'go-settings', title: 'Go to Settings', shortcut: 'G S', run: () => setPage(Page.ADMIN) },
     ];
 
@@ -104,6 +106,7 @@ export const AdminPage: React.FC = () => {
                             onEdit={handleEditPost}
                         />
                     )}
+                    {page === Page.ADMIN_DEALS && <DealsManagement />}
                     {page === Page.ADMIN && <AdminSettings />}
                 </main>
             </div>

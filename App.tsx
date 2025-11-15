@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ProductPage from './pages/ProductPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
+import DealsPage from './pages/DealsPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import ToastContainer from './components/shared/ToastContainer';
 import { HelmetProvider } from 'react-helmet-async';
@@ -46,6 +47,7 @@ const App: React.FC = () => {
                             <Routes>
                                 <Route path="/" element={<HomePage />} />
                                 <Route path="/blog" element={<BlogPage />} />
+                                <Route path="/deals" element={<DealsPage />} />
                                 <Route path="/products/:slug" element={<ProductPage />} />
                                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                                 <Route path="/admin" element={<AdminGate />} />

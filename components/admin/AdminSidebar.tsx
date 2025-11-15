@@ -5,7 +5,8 @@ import {
     RectangleStackIcon, 
     BookOpenIcon, 
     NewspaperIcon,
-    LightBulbIcon 
+    LightBulbIcon,
+    TagIcon,
 } from '@heroicons/react/24/outline';
 import { Page } from '../../types';
 
@@ -61,6 +62,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ currentPage, onNavig
         >
           <NewspaperIcon className="h-6 w-6" />
           <span>Manage Posts</span>
+        </button>
+
+        <button
+          className={getButtonClass(currentPage === Page.ADMIN_DEALS)}
+          onClick={() => onNavigate(Page.ADMIN_DEALS)}
+        >
+          <TagIcon className="h-6 w-6" />
+          <span>Deals</span>
         </button>
 
         <div className="px-4">

@@ -10,7 +10,9 @@ const Header: React.FC = () => {
     const navLinkClasses = ({ isActive }: { isActive: boolean }) => 
         `btn-blueprint ${isActive ? 'btn-blueprint--primary' : ''} text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400`;
 
-    const promo = promoButton && promoButton.enabled && promoButton.url ? promoButton : undefined;
+    const promo = promoButton && promoButton.enabled
+        ? { ...promoButton, url: promoButton.url || '/deals' }
+        : undefined;
 
     const sizeClasses =
         promo?.size === 'lg'

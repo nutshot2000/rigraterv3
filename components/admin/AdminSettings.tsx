@@ -8,7 +8,7 @@ const AdminSettings: React.FC = () => {
   const [form, setForm] = useState<PromoButtonConfig>(() => ({
     enabled: promoButton?.enabled ?? false,
     label: promoButton?.label ?? 'Deals',
-    url: promoButton?.url ?? '/blog',
+    url: promoButton?.url ?? '/deals',
     size: promoButton?.size ?? 'md',
     color: promoButton?.color ?? 'amber',
     position: promoButton?.position ?? 'center',
@@ -23,7 +23,7 @@ const AdminSettings: React.FC = () => {
     setPromoButton({
       enabled: form.enabled,
       label: form.label.trim() || 'Deals',
-      url: form.url.trim() || '/blog',
+      url: form.url.trim() || '/deals',
       size: form.size ?? 'md',
       color: form.color ?? 'amber',
       position: form.position ?? 'center',

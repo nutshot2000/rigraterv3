@@ -1,0 +1,238 @@
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { Deal } from '../../types';
+
+const emptyDeal: Omit<Deal, 'id' | 'createdAt'> = {
+  title: '',
+  url: '',
+  description: '',
+  merchant: '',
+  priceLabel: '',
+  tag: '',
+  imageUrl: '',
+};
+
+const DealsManagement: React.FC = () => {
+  const { deals, addDeal, updateDeal, deleteDeal } = useApp();
+  const [editing, setEditing] = useState<Deal | null>(null);
+  const [draft, setDraft] = useState<Omit<Deal, 'id' | 'createdAt'>>(emptyDeal);
+
+  const startCreate = () => {
+    setEditing(null);
+    setDraft(emptyDeal);
+  };
+
+  const startEdit = (deal: Deal) => {
+    setEditing(deal);
+    setDraft({
+      title: deal.title,
+      url: deal.url,
+      description: deal.description || '',
+      merchant: deal.merchant || '',
+      priceLabel: deal.priceLabel || '',
+      tag: deal.tag || '',
+      imageUrl: deal.imageUrl || '',
+    });
+  };
+
+  const handleChange = (field: keyof Omit<Deal, 'id' | 'createdAt'>, value: string) => {
+    setDraft(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    const payload = {
+      ...draft,
+      title: draft.title.trim(),
+      url: draft.url.trim(),
+      description: draft.description?.trim() || undefined,
+      merchant: draft.merchant?.trim() || undefined,
+      priceLabel: draft.priceLabel?.trim() || undefined,
+      tag: draft.tag?.trim() || undefined,
+      imageUrl: draft.imageUrl?.trim() || undefined,
+    };
+    if (!payload.title || !payload.url) return;
+
+    if (editing) {
+      updateDeal({ ...editing, ...payload });
+    } else {
+      addDeal(payload);
+    }
+    setEditing(null);
+    setDraft(emptyDeal);
+  };
+
+  const handleDelete = (deal: Deal) => {
+    if (window.confirm(`Remove deal "${deal.title}"?`)) {
+      deleteDeal(deal.id);
+    }
+  };
+
+  const isEditing = Boolean(editing);
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Deals</h1>
+            <p className="text-slate-400 text-sm">
+              This feeds the <span className="font-semibold text-amber-300">BLACK FRIDAY DEALS</span> button in the header.
+              Add all the offers you find and they will show on the public deals page.
+            </p>
+          </div>
+          <button
+            onClick={startCreate}
+            className="btn-blueprint btn-blueprint--primary"
+          >
+            New Deal
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.4fr)] gap-6">
+          <div className="space-y-4">
+            {deals.length === 0 && (
+              <div className="border border-dashed border-slate-700 rounded-lg p-6 text-slate-400 text-sm">
+                No deals yet. Click <span className="font-semibold text-sky-400">New Deal</span> to add your first Black Friday or Christmas offer.
+              </div>
+            )}
+            {deals.map(deal => (
+              <div
+                key={deal.id}
+                className="flex items-center justify-between gap-4 bg-slate-800/60 border border-slate-700/70 rounded-lg px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-white truncate">{deal.title}</p>
+                    {deal.tag && (
+                      <span className="inline-flex items-center rounded-full bg-amber-500/10 border border-amber-400/40 px-2 py-0.5 text-[11px] uppercase tracking-wide text-amber-200">
+                        {deal.tag}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 truncate">{deal.url}</p>
+                  {deal.priceLabel && (
+                    <p className="text-xs text-emerald-300 mt-1">{deal.priceLabel}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => startEdit(deal)}
+                    className="btn-blueprint text-xs px-3 py-1"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(deal)}
+                    className="btn-blueprint text-xs px-3 py-1 text-rose-300 border border-rose-500/60"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-slate-800/70 border border-slate-700 rounded-lg p-5 space-y-4">
+            <h2 className="text-lg font-semibold text-white">
+              {isEditing ? 'Edit deal' : 'New deal'}
+            </h2>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={draft.title}
+                  onChange={e => handleChange('title', e.target.value)}
+                  className="input-blueprint w-full"
+                  placeholder="e.g. CORSAIR 2500X Black Friday bundle"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Destination URL</label>
+                <input
+                  type="text"
+                  value={draft.url}
+                  onChange={e => handleChange('url', e.target.value)}
+                  className="input-blueprint w-full"
+                  placeholder="Paste your Amazon / retailer URL"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Price / label</label>
+                  <input
+                    type="text"
+                    value={draft.priceLabel}
+                    onChange={e => handleChange('priceLabel', e.target.value)}
+                    className="input-blueprint w-full"
+                    placeholder="£149 (was £199)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Tag</label>
+                  <input
+                    type="text"
+                    value={draft.tag}
+                    onChange={e => handleChange('tag', e.target.value)}
+                    className="input-blueprint w-full"
+                    placeholder="Black Friday / Christmas / GPU"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Merchant</label>
+                <input
+                  type="text"
+                  value={draft.merchant}
+                  onChange={e => handleChange('merchant', e.target.value)}
+                  className="input-blueprint w-full"
+                  placeholder="Amazon / Scan / Overclockers"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Image URL (optional)</label>
+                <input
+                  type="text"
+                  value={draft.imageUrl}
+                  onChange={e => handleChange('imageUrl', e.target.value)}
+                  className="input-blueprint w-full"
+                  placeholder="Paste image URL or leave empty"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Short description</label>
+                <textarea
+                  value={draft.description}
+                  onChange={e => handleChange('description', e.target.value)}
+                  className="input-blueprint w-full min-h-[80px]"
+                  placeholder="Why this deal is good, key specs, etc."
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              {isEditing && (
+                <button
+                  onClick={startCreate}
+                  className="btn-blueprint text-sm"
+                >
+                  Cancel
+                </button>
+              )}
+              <button
+                onClick={handleSave}
+                className="btn-blueprint btn-blueprint--primary text-sm"
+                disabled={!draft.title.trim() || !draft.url.trim()}
+              >
+                {isEditing ? 'Save changes' : 'Add deal'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DealsManagement;
+
+

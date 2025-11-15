@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Product, Page, ToastMessage, BlogPost, ComparisonDoc, AuditEntry, PromoButtonConfig } from '../types';
+import { Product, Page, ToastMessage, BlogPost, ComparisonDoc, AuditEntry, PromoButtonConfig, Deal } from '../types';
 import { MOCK_PRODUCTS } from '../services/mockData';
 import { ADMIN_PASSWORD } from '../constants';
 import { isBackendEnabled } from '../services/supabaseClient';
@@ -52,6 +52,10 @@ interface AppContextType {
     currentUserEmail?: string;
     promoButton?: PromoButtonConfig;
     setPromoButton: (cfg: PromoButtonConfig) => void;
+    deals: Deal[];
+    addDeal: (deal: Omit<Deal, 'id' | 'createdAt'>) => void;
+    updateDeal: (deal: Deal) => void;
+    deleteDeal: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -116,6 +120,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             if (s) return JSON.parse(s) as PromoButtonConfig;
         } catch {}
         return undefined;
+    });
+
+    const [deals, setDeals] = useState<Deal[]>(() => {
+        try {
+            const s = localStorage.getItem('deals');
+            if (s) {
+                const parsed = JSON.parse(s) as Deal[];
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch {}
+        return [];
     });
 
     const recordAudit = useCallback((entry: Omit<AuditEntry, 'id' | 'ts' | 'actor'>) => {
@@ -312,6 +327,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, []);
 
+    // Deals (local-only for now)
+    const addDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt'>) => {
+        const full: Deal = {
+            id: Date.now().toString(),
+            createdAt: new Date().toISOString(),
+            ...deal,
+        };
+        setDeals(prev => [full, ...prev]);
+        recordAudit({ action: 'deal.create', targetType: 'deal', targetId: full.id, details: { title: full.title } });
+    }, [recordAudit]);
+
+    const updateDeal = useCallback((deal: Deal) => {
+        setDeals(prev => prev.map(d => d.id === deal.id ? deal : d));
+        recordAudit({ action: 'deal.update', targetType: 'deal', targetId: deal.id, details: { title: deal.title } });
+    }, [recordAudit]);
+
+    const deleteDeal = useCallback((id: string) => {
+        setDeals(prev => prev.filter(d => d.id !== id));
+        recordAudit({ action: 'deal.delete', targetType: 'deal', targetId: id });
+    }, [recordAudit]);
+
     // Persistence
     useEffect(() => {
         try {
@@ -340,6 +376,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     useEffect(() => {
         try { localStorage.setItem('audits', JSON.stringify(audits)); } catch {}
     }, [audits]);
+
+    useEffect(() => {
+        try { localStorage.setItem('deals', JSON.stringify(deals)); } catch {}
+    }, [deals]);
 
     // Backend bootstrap
     useEffect(() => {
@@ -450,6 +490,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         currentUserEmail,
         promoButton,
         setPromoButton,
+        deals,
+        addDeal,
+        updateDeal,
+        deleteDeal,
     };
 
     return (
