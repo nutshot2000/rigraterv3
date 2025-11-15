@@ -147,13 +147,31 @@ const AdminSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <button
-              onClick={handleSave}
-              className="btn-blueprint btn-blueprint--primary"
-            >
-              Save Settings
-            </button>
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-500">
+              You can also update the public sitemap whenever you want so search engines see the latest deals, products and posts.
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  try {
+                    await fetch('/api/admin/regenerate-sitemap', { method: 'POST' });
+                    alert('Sitemap regeneration requested. Google will pick it up next time it crawls /api/sitemap.xml.');
+                  } catch {
+                    alert('Failed to call sitemap regeneration endpoint.');
+                  }
+                }}
+                className="btn-blueprint text-xs"
+              >
+                Regenerate Sitemap
+              </button>
+              <button
+                onClick={handleSave}
+                className="btn-blueprint btn-blueprint--primary"
+              >
+                Save Settings
+              </button>
+            </div>
           </div>
         </div>
       </div>
