@@ -41,8 +41,7 @@ const DealsPage: React.FC = () => {
         <div className="text-center space-y-2 mb-4">
           <h1 className="text-3xl sm:text-4xl font-bold text-white">Black Friday Deals</h1>
           <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
-            Hand-picked offers on cases, GPUs, CPUs and more. These tiles are powered directly by your admin
-            deals panel, so every time you add a new offer it shows up here automatically.
+            Hand-picked offers on PC cases, GPUs, CPUs and more. Updated whenever we spot a strong deal worth sharing.
           </p>
         </div>
 
