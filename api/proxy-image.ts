@@ -11,7 +11,23 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const decodedUrl = decodeURIComponent(url);
+    let decodedUrl = decodeURIComponent(url);
+
+    // If the caller passed a search phrase instead of a real URL (e.g.
+    // "liquid CPU cooler ARGB inside custom PC case"), avoid throwing a 500.
+    // Instead, either build a generic Unsplash source URL or fall back to a
+    // placeholder image.
+    const looksLikeUrl = /^https?:\/\//i.test(decodedUrl);
+    if (!looksLikeUrl) {
+      // Use Unsplash's simple source API for a relevant image.
+      const query = encodeURIComponent(decodedUrl.trim());
+      if (query) {
+        decodedUrl = `https://source.unsplash.com/1600x900/?${query}`;
+      } else {
+        // If the query is empty after trimming, there is nothing sensible to fetch.
+        return res.status(400).json({ error: 'Invalid image URL or search query' });
+      }
+    }
     const response = await fetch(decodedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
