@@ -14,7 +14,7 @@ const Header: React.FC = () => {
 
     const sizeClasses =
         promo?.size === 'lg'
-            ? 'px-5 py-2.5 text-base'
+            ? 'px-6 py-3 text-base'
             : promo?.size === 'sm'
             ? 'px-3 py-1.5 text-xs'
             : 'px-4 py-2 text-sm';
@@ -47,7 +47,7 @@ const Header: React.FC = () => {
                                     href={promo.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
+                                    className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase} min-w-[220px] md:min-w-[260px]`}
                                 >
                                     {promo.label || 'Deals'}
                                 </a>
@@ -55,7 +55,7 @@ const Header: React.FC = () => {
                                 <NavLink
                                     to={promo.url}
                                     className={() =>
-                                        `btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`
+                                        `btn-blueprint crt-strong ${sizeClasses} border ${colorBase} min-w-[220px] md:min-w-[260px]`
                                     }
                                 >
                                     {promo.label || 'Deals'}
