@@ -12,7 +12,7 @@ const AdminSettings: React.FC = () => {
     size: promoButton?.size ?? 'md',
     color: promoButton?.color ?? 'amber',
     position: promoButton?.position ?? 'center',
-    animation: promoButton?.animation ?? 'pulse',
+    animation: promoButton?.animation ?? 'glow',
   }));
 
   const handleChange = (field: keyof PromoButtonConfig, value: any) => {
@@ -27,7 +27,7 @@ const AdminSettings: React.FC = () => {
       size: form.size ?? 'md',
       color: form.color ?? 'amber',
       position: form.position ?? 'center',
-      animation: form.animation ?? 'pulse',
+      animation: form.animation ?? 'glow',
     });
   };
 
@@ -130,7 +130,7 @@ const AdminSettings: React.FC = () => {
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-1">Animation</label>
               <select
-                value={form.animation ?? 'pulse'}
+                value={form.animation ?? 'glow'}
                 onChange={e => handleChange('animation', e.target.value as PromoButtonConfig['animation'])}
                 className="input-blueprint w-full"
                 disabled={!form.enabled}
@@ -138,6 +138,8 @@ const AdminSettings: React.FC = () => {
                 <option value="none">None</option>
                 <option value="pulse">Soft pulse</option>
                 <option value="bounce">Bounce</option>
+                <option value="glow">Glow</option>
+                <option value="wiggle">Wiggle</option>
               </select>
               <p className="text-xs text-slate-500 mt-1">
                 Animations are subtle and only applied to the promo button so it grabs attention without being annoying.

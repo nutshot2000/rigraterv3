@@ -76,8 +76,33 @@ html, body {
   clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
 }
 
-@keyframes glowPulse { }
-.animate-glow { animation: none; }
+/* Custom promo button animations */
+@keyframes promoGlow {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 0 16px rgba(251, 191, 36, 0.25);
+  }
+  50% {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 0 32px rgba(251, 191, 36, 0.55);
+  }
+}
+
+@keyframes promoWiggle {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20% { transform: translateY(-1px) rotate(-1.5deg); }
+  40% { transform: translateY(1px) rotate(1.5deg); }
+  60% { transform: translateY(-0.5px) rotate(-1deg); }
+  80% { transform: translateY(0.5px) rotate(1deg); }
+}
+
+.promo-animate-glow {
+  animation: promoGlow 1.4s ease-in-out infinite;
+}
+
+.promo-animate-wiggle {
+  animation: promoWiggle 1.2s ease-in-out infinite;
+}
 
 /* --- CRT utilities --- */
 .bg-crt-dark { background: #020617; } /* slate-950 */

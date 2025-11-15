@@ -21,24 +21,28 @@ const Header: React.FC = () => {
 
     const colorBase =
         promo?.color === 'sky'
-            ? 'border-sky-500/50 text-sky-200 bg-sky-500/10 hover:bg-sky-500/20 focus-visible:ring-sky-400'
+            ? 'bg-sky-500 text-slate-950 border border-sky-300 shadow-lg shadow-sky-500/40 hover:bg-sky-400 focus-visible:ring-sky-300'
             : promo?.color === 'emerald'
-            ? 'border-emerald-500/50 text-emerald-200 bg-emerald-500/10 hover:bg-emerald-500/20 focus-visible:ring-emerald-400'
+            ? 'bg-emerald-500 text-emerald-50 border border-emerald-300 shadow-lg shadow-emerald-500/40 hover:bg-emerald-400 focus-visible:ring-emerald-300'
             : promo?.color === 'rose'
-            ? 'border-rose-500/50 text-rose-200 bg-rose-500/10 hover:bg-rose-500/20 focus-visible:ring-rose-400'
-            : 'border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:ring-amber-400';
+            ? 'bg-rose-500 text-rose-50 border border-rose-300 shadow-lg shadow-rose-500/40 hover:bg-rose-400 focus-visible:ring-rose-300'
+            : 'bg-amber-400 text-slate-950 border border-amber-300 shadow-lg shadow-amber-500/40 hover:bg-amber-300 focus-visible:ring-amber-400';
 
     const animationClasses =
         promo?.animation === 'bounce'
             ? 'animate-bounce'
             : promo?.animation === 'pulse'
             ? 'animate-pulse'
+            : promo?.animation === 'glow'
+            ? 'promo-animate-glow'
+            : promo?.animation === 'wiggle'
+            ? 'promo-animate-wiggle'
             : '';
 
     const centerVisual =
         promo && promo.position === 'center' && promo.color === 'amber'
             ? `border border-amber-300 text-slate-900 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/40 tracking-[0.22em] uppercase ${animationClasses}`
-            : `border ${colorBase} ${animationClasses}`;
+            : `${colorBase} ${animationClasses}`;
 
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">
@@ -59,7 +63,7 @@ const Header: React.FC = () => {
                                     href={promo.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`btn-blueprint crt-strong ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`}
+                                    className={`inline-flex items-center justify-center rounded-md font-semibold ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`}
                                 >
                                     {promo.label || 'Deals'}
                                 </a>
@@ -67,7 +71,7 @@ const Header: React.FC = () => {
                                     <NavLink
                                     to={promo.url}
                                     className={() =>
-                                        `btn-blueprint crt-strong ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`
+                                        `inline-flex items-center justify-center rounded-md font-semibold ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`
                                     }
                                 >
                                     {promo.label || 'Deals'}
@@ -90,17 +94,15 @@ const Header: React.FC = () => {
                                         href={promo.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
+                                        className={`inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`}
                                     >
                                         {promo.label || 'Deals'}
                                     </a>
                                 ) : (
                                     <NavLink
                                         to={promo.url}
-                                        className={({ isActive }) =>
-                                            `btn-blueprint crt-strong ${sizeClasses} border ${colorBase} ${
-                                                isActive ? 'btn-blueprint--primary' : ''
-                                            }`
+                                        className={() =>
+                                            `inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`
                                         }
                                     >
                                         {promo.label || 'Deals'}
@@ -115,17 +117,15 @@ const Header: React.FC = () => {
                                         href={promo.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className={`btn-blueprint crt-strong ${sizeClasses} border ${colorBase}`}
+                                        className={`inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`}
                                     >
                                         {promo.label || 'Deals'}
                                     </a>
                                 ) : (
                                     <NavLink
                                         to={promo.url}
-                                        className={({ isActive }) =>
-                                            `btn-blueprint crt-strong ${sizeClasses} border ${colorBase} ${
-                                                isActive ? 'btn-blueprint--primary' : ''
-                                            }`
+                                        className={() =>
+                                            `inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`
                                         }
                                     >
                                         {promo.label || 'Deals'}
