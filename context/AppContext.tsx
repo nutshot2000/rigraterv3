@@ -7,6 +7,7 @@ import { fetchProducts, createProduct as createProductApi, updateProductById, de
 import { fetchBlogPosts as fetchBlogPostsApi, createBlogPost as createBlogPostApi, updateBlogPostById as updateBlogPostByIdApi, deleteBlogPostById as deleteBlogPostByIdApi } from '../services/blogService';
 import { fetchComparisonDocs as fetchComparisonDocsApi, createComparisonDoc as createComparisonDocApi, updateComparisonDocById as updateComparisonDocByIdApi, deleteComparisonDocById as deleteComparisonDocByIdApi } from '../services/comparisonService';
 import { fetchDeals as fetchDealsApi, createDeal as createDealApi, updateDealById as updateDealByIdApi, deleteDealById as deleteDealByIdApi } from '../services/dealsService';
+import { fetchPromoConfig, savePromoConfig } from '../services/promoService';
 import { loginWithEmailPassword, logoutSession } from '../services/authService';
 
 const MAX_COMPARISON_ITEMS = 3;
@@ -487,6 +488,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
                 console.error('Failed to fetch deals', e);
                 // do not toast; deals are a bonus feature
             }
+            try {
+                if (isBackendEnabled) {
+                    const remotePromo = await fetchPromoConfig();
+                    if (remotePromo) {
+                        setPromoButtonState(remotePromo);
+                        try { localStorage.setItem('promoButton', JSON.stringify(remotePromo)); } catch {}
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch promo button config', e);
+            }
         })();
     }, []);
 
@@ -499,6 +511,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         try {
             localStorage.setItem('promoButton', JSON.stringify(cfg));
         } catch {}
+        if (isBackendEnabled) {
+            (async () => {
+                try {
+                    await savePromoConfig(cfg);
+                } catch (e) {
+                    console.error('Failed to save promo button config to backend', e);
+                }
+            })();
+        }
     }, []);
 
     const value = {
