@@ -328,29 +328,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }
     }, []);
 
-    // Deals (local-only for now)
+    // Deals
     const addDeal = useCallback((deal: Omit<Deal, 'id' | 'createdAt'>) => {
+        const createLocal = () => {
+            const full: Deal = {
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+                ...deal,
+            };
+            setDeals(prev => [full, ...prev]);
+            recordAudit({ action: 'deal.create', targetType: 'deal', targetId: full.id, details: { title: full.title } });
+        };
+
         if (isBackendEnabled) {
             (async () => {
                 try {
                     const created = await createDealApi(deal);
                     setDeals(prev => [created, ...prev]);
                     recordAudit({ action: 'deal.create', targetType: 'deal', targetId: created.id, details: { title: created.title } });
-                    return;
                 } catch (e) {
                     console.error('Failed to create deal in Supabase, falling back to local', e);
+                    createLocal();
                 }
             })();
+        } else {
+            createLocal();
         }
-
-        const full: Deal = {
-            id: Date.now().toString(),
-            createdAt: new Date().toISOString(),
-            ...deal,
-        };
-        setDeals(prev => [full, ...prev]);
-        recordAudit({ action: 'deal.create', targetType: 'deal', targetId: full.id, details: { title: full.title } });
-    }, [recordAudit]);
+    }, [recordAudit, isBackendEnabled]);
 
     const updateDeal = useCallback((deal: Deal) => {
         setDeals(prev => prev.map(d => d.id === deal.id ? deal : d));
