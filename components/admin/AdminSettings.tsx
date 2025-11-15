@@ -12,6 +12,7 @@ const AdminSettings: React.FC = () => {
     size: promoButton?.size ?? 'md',
     color: promoButton?.color ?? 'amber',
     position: promoButton?.position ?? 'center',
+    animation: promoButton?.animation ?? 'pulse',
   }));
 
   const handleChange = (field: keyof PromoButtonConfig, value: any) => {
@@ -26,6 +27,7 @@ const AdminSettings: React.FC = () => {
       size: form.size ?? 'md',
       color: form.color ?? 'amber',
       position: form.position ?? 'center',
+      animation: form.animation ?? 'pulse',
     });
   };
 
@@ -82,7 +84,7 @@ const AdminSettings: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-200 mb-1">Size</label>
               <select
@@ -123,6 +125,23 @@ const AdminSettings: React.FC = () => {
                 <option value="center">Centre of header</option>
                 <option value="right">Right with nav</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-200 mb-1">Animation</label>
+              <select
+                value={form.animation ?? 'pulse'}
+                onChange={e => handleChange('animation', e.target.value as PromoButtonConfig['animation'])}
+                className="input-blueprint w-full"
+                disabled={!form.enabled}
+              >
+                <option value="none">None</option>
+                <option value="pulse">Soft pulse</option>
+                <option value="bounce">Bounce</option>
+              </select>
+              <p className="text-xs text-slate-500 mt-1">
+                Animations are subtle and only applied to the promo button so it grabs attention without being annoying.
+              </p>
             </div>
           </div>
 

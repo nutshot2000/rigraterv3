@@ -28,10 +28,17 @@ const Header: React.FC = () => {
             ? 'border-rose-500/50 text-rose-200 bg-rose-500/10 hover:bg-rose-500/20 focus-visible:ring-rose-400'
             : 'border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:ring-amber-400';
 
+    const animationClasses =
+        promo?.animation === 'bounce'
+            ? 'animate-bounce'
+            : promo?.animation === 'pulse'
+            ? 'animate-pulse'
+            : '';
+
     const centerVisual =
         promo && promo.position === 'center' && promo.color === 'amber'
-            ? 'border border-amber-300 text-slate-900 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/40 tracking-[0.22em] uppercase'
-            : `border ${colorBase}`;
+            ? `border border-amber-300 text-slate-900 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 shadow-lg shadow-amber-500/40 tracking-[0.22em] uppercase ${animationClasses}`
+            : `border ${colorBase} ${animationClasses}`;
 
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">

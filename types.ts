@@ -75,6 +75,7 @@ export interface PromoButtonConfig {
     size?: 'sm' | 'md' | 'lg';
     color?: 'amber' | 'sky' | 'emerald' | 'rose';
     position?: 'center' | 'right';
+    animation?: 'none' | 'pulse' | 'bounce';
 }
 
 export interface ComparisonDoc {
