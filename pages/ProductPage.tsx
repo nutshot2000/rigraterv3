@@ -70,6 +70,24 @@ const ProductPage: React.FC = () => {
     const ogDesc = product.seoDescription || (product.review || '').substring(0, 160);
     const ogImage = product.imageUrl ? `/api/proxy-image?url=${encodeURIComponent(product.imageUrl)}` : FALLBACK_IMAGE_URL;
 
+    const productJsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: product.name,
+        image: origin + ogImage,
+        description: ogDesc,
+        sku: product.slug || undefined,
+        brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+        category: product.category,
+        offers: {
+            '@type': 'Offer',
+            url: pageUrl,
+            price: parseFloat(product.price.replace(/[^0-9.]/g, '')) || undefined,
+            priceCurrency: product.price.includes('£') ? 'GBP' : product.price.includes('€') ? 'EUR' : 'USD',
+            availability: 'https://schema.org/InStock',
+        },
+    };
+
     const prosShort = Array.isArray((product as any).prosShort) ? (product as any).prosShort as string[] : [];
     const consShort = Array.isArray((product as any).consShort) ? (product as any).consShort as string[] : [];
 
@@ -93,6 +111,9 @@ const ProductPage: React.FC = () => {
                 <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={ogDesc} />
                 <meta name="twitter:image" content={origin + ogImage} />
+                <script type="application/ld+json">
+                    {JSON.stringify(productJsonLd)}
+                </script>
             </Helmet>
             
             <div className="max-w-4xl mx-auto">
