@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { trackEvent } from '../services/analytics';
 
 const DealsPage: React.FC = () => {
-  const { deals } = useApp();
+  const { deals, promoButton } = useApp();
 
   const now = new Date();
   const activeDeals = useMemo(
@@ -53,6 +53,7 @@ const DealsPage: React.FC = () => {
   }, [activeDeals, selectedTag, sortBy]);
 
   const dealsCount = visibleDeals.length;
+  const titleText = promoButton?.label || 'Black Friday Deals';
   const lastUpdated =
     activeDeals.length > 0
       ? new Date(
@@ -63,7 +64,7 @@ const DealsPage: React.FC = () => {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    name: 'RIGRATER PC Hardware Deals',
+    name: `RIGRATER – ${titleText}`,
     itemListElement: visibleDeals.map((deal, index) => ({
       '@type': 'Offer',
       position: index + 1,
@@ -77,22 +78,22 @@ const DealsPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>PC Hardware Black Friday Deals | RIGRATER</title>
+        <title>{`${titleText} | RIGRATER`}</title>
         <meta
           name="description"
           content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
         />
-        <link rel="canonical" href="https://www.rigrater.com/deals" />
-        <meta property="og:title" content="PC Hardware Black Friday Deals | RIGRATER" />
+        <link rel="canonical" href="https://www.rigrater.tech/deals" />
+        <meta property="og:title" content={`${titleText} | RIGRATER`} />
         <meta
           property="og:description"
           content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
         />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.rigrater.com/deals" />
-        <meta property="og:image" content="https://www.rigrater.com/og/rigrater-deals.png" />
+        <meta property="og:url" content="https://www.rigrater.tech/deals" />
+        <meta property="og:image" content="https://www.rigrater.tech/og/rigrater-deals.png" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="PC Hardware Black Friday Deals | RIGRATER" />
+        <meta name="twitter:title" content={`${titleText} | RIGRATER`} />
         <meta
           name="twitter:description"
           content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
@@ -106,7 +107,7 @@ const DealsPage: React.FC = () => {
 
       <div className="space-y-6">
         <div className="text-center space-y-2 mb-4">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white">Black Friday Deals</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">{titleText}</h1>
           <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
             Hand-picked offers on PC cases, GPUs, CPUs and more. Updated whenever we spot a strong deal worth sharing.
           </p>
