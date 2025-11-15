@@ -6,5 +6,5 @@ Allow: /
 # Block crawlers from the admin area
 Disallow: /admin
 
-# Point crawlers to the sitemap
-Sitemap: https://www.rigrater.tech/sitemap.xml
+# Point crawlers to the dynamic sitemap endpoint
+Sitemap: https://www.rigrater.tech/api/sitemap.xml
