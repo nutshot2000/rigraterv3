@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Product } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { createProduct } from '../../services/productService';
@@ -51,11 +51,24 @@ const deriveSummaryFromReview = (review: string | undefined | null) => {
 };
 
 const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBuilt }) => {
-    const { addToast } = useApp();
+    const { products, addToast } = useApp();
     const [input, setInput] = useState('');
     const [isBuilding, setIsBuilding] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [builtProduct, setBuiltProduct] = useState<Partial<Product> | null>(null);
+
+    const catalogList = useMemo(() => {
+        if (!products || !products.length) return '';
+        return products.map(p => {
+            const parts: string[] = [];
+            parts.push(p.name);
+            if (p.brand) parts.push(p.brand);
+            if (p.category) parts.push(p.category);
+            if (p.price) parts.push(p.price);
+            if (p.slug) parts.push(`https://www.rigrater.tech/products/${p.slug}`);
+            return parts.join(' | ');
+        }).join('\n');
+    }, [products]);
 
     const handleBuild = async () => {
         if (!input.trim()) {
@@ -170,23 +183,58 @@ const SimpleProductBuilder: React.FC<SimpleProductBuilderProps> = ({ onProductBu
             {/* Main Content - Scrollable */}
             <div className="flex-1 overflow-y-auto p-6">
                 <div className="max-w-5xl mx-auto">
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-white mb-4">Build Product</h1>
-                        <div className="flex gap-3">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Paste product URL or type product name (e.g., RTX 4070 Super)"
-                                className="input-blueprint flex-1"
+                    <div className="mb-8 space-y-6">
+                        <div>
+                            <h1 className="text-3xl font-bold text-white mb-2">Build Product</h1>
+                            <div className="flex gap-3">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="Paste product URL or type product name (e.g., RTX 4070 Super)"
+                                    className="input-blueprint flex-1"
+                                />
+                                <button
+                                    onClick={handleBuild}
+                                    disabled={isBuilding || !input.trim()}
+                                    className="btn-blueprint btn-blueprint--primary"
+                                >
+                                    {isBuilding ? 'Building...' : 'Build Product'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <h2 className="text-sm font-semibold text-slate-200">Current catalog snapshot</h2>
+                                <button
+                                    type="button"
+                                    className="btn-blueprint text-xs px-3 py-1"
+                                    onClick={() => {
+                                        if (!catalogList) {
+                                            addToast('No products to copy yet', 'info');
+                                            return;
+                                        }
+                                        try {
+                                            navigator.clipboard.writeText(catalogList);
+                                            addToast('Product list copied to clipboard', 'success');
+                                        } catch {
+                                            addToast('Could not access clipboard – select and copy manually', 'error');
+                                        }
+                                    }}
+                                >
+                                    Copy list
+                                </button>
+                            </div>
+                            <p className="text-xs text-slate-400 mb-2">
+                                Use this when prompting the AI: “Here are the products I already have, suggest new ones that are missing from this list.”
+                            </p>
+                            <textarea
+                                className="input-blueprint w-full h-32 text-xs font-mono"
+                                value={catalogList || 'No products in the catalog yet.'}
+                                readOnly
+                                onFocus={(e) => e.currentTarget.select()}
                             />
-                            <button
-                                onClick={handleBuild}
-                                disabled={isBuilding || !input.trim()}
-                                className="btn-blueprint btn-blueprint--primary"
-                            >
-                                {isBuilding ? 'Building...' : 'Build Product'}
-                            </button>
                         </div>
                     </div>
 
