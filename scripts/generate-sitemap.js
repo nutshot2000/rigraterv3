@@ -13,9 +13,11 @@ async function generateSitemap() {
     console.log('🔄 Generating sitemap.xml at build time...');
     
     // Initialize URLs with static pages
+    const nowIso = new Date().toISOString();
     const urls = [
-        { loc: BASE_URL, lastmod: new Date().toISOString(), changefreq: 'daily', priority: 1.0 },
-        { loc: `${BASE_URL}/blog`, lastmod: new Date().toISOString(), changefreq: 'weekly', priority: 0.8 },
+        { loc: BASE_URL, lastmod: nowIso, changefreq: 'daily', priority: 1.0 },
+        { loc: `${BASE_URL}/blog`, lastmod: nowIso, changefreq: 'weekly', priority: 0.8 },
+        { loc: `${BASE_URL}/deals`, lastmod: nowIso, changefreq: 'hourly', priority: 0.9 },
     ];
 
     try {
