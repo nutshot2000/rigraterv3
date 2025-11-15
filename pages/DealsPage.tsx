@@ -29,11 +29,11 @@ const DealsPage: React.FC = () => {
               className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-900/50 hover:border-amber-400/70 hover:bg-slate-900/80 transition-colors"
             >
               {deal.imageUrl && (
-                <div className="h-40 w-full overflow-hidden bg-slate-900/80">
+                <div className="w-full bg-slate-900/80 aspect-[21/9] flex items-center justify-center overflow-hidden">
                   <img
                     src={`/api/proxy-image?url=${encodeURIComponent(deal.imageUrl)}`}
                     alt={deal.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                    className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-[1.05]"
                     loading="lazy"
                   />
                 </div>
