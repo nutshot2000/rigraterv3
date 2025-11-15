@@ -2,10 +2,16 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { ChipIcon } from './Icons';
+import { useApp } from '../../context/AppContext';
 
 const Header: React.FC = () => {
+    const { blogPosts } = useApp();
+
     const navLinkClasses = ({ isActive }: { isActive: boolean }) => 
         `btn-blueprint ${isActive ? 'btn-blueprint--primary' : ''} text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400`;
+
+    // Use the first featured blog post (if any) as a promo target.
+    const promoPost = blogPosts.find(p => p.isFeatured);
 
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">
@@ -25,6 +31,18 @@ const Header: React.FC = () => {
                         <NavLink to="/blog" className={navLinkClasses}>
                             Blog
                         </NavLink>
+                        {promoPost && (
+                            <NavLink
+                                to={`/blog/${promoPost.slug}`}
+                                className={({ isActive }) =>
+                                    `btn-blueprint text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                                        isActive ? 'btn-blueprint--primary border-amber-400/60 text-amber-200' : 'border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'
+                                    }`
+                                }
+                            >
+                                {promoPost.category || 'Deals'}
+                            </NavLink>
+                        )}
                     </div>
                 </div>
             </nav>
