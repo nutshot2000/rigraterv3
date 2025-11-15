@@ -34,9 +34,9 @@ const AdminSettings: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="p-6 space-y-6 max-w-3xl">
-        <h1 className="text-2xl font-bold text-white mb-2">Site Settings</h1>
+        <h1 className="text-2xl font-bold text-white mb-2">Header Deals Button</h1>
         <p className="text-slate-400 text-sm mb-6">
-          Configure global UI elements like the header promo / deals button.
+          Configure the big promo button in your top navigation (Black Friday / Christmas / special deals).
         </p>
 
         <div className="bg-slate-800/70 border border-slate-700 rounded-lg p-6 space-y-4">

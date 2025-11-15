@@ -89,7 +89,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ currentPage, onNavig
           onClick={() => onNavigate(Page.ADMIN)}
         >
           <Cog6ToothIcon className="h-6 w-6" />
-          <span>Settings</span>
+          <span>Header Deals Button</span>
         </button>
       </div>
     </div>
