@@ -24,6 +24,9 @@ export async function createBlogPost(input: Omit<BlogPost, 'id' | 'createdAt'>):
         blog_images: (input as any).blogImages || [],
         seo_title: input.seoTitle || '',
         seo_description: input.seoDescription || '',
+        status: input.status || 'published',
+        category: input.category || null,
+        is_featured: input.isFeatured ?? false,
     };
     const { data, error } = await supabase
         .from('blog_posts')
@@ -64,6 +67,9 @@ export async function updateBlogPostById(id: string, input: Omit<BlogPost, 'id' 
         blog_images: (input as any).blogImages || [],
         seo_title: input.seoTitle || '',
         seo_description: input.seoDescription || '',
+        status: input.status || 'published',
+        category: input.category || null,
+        is_featured: input.isFeatured ?? false,
     };
     const { data, error } = await supabase
         .from('blog_posts')
@@ -96,6 +102,9 @@ function mapRowToBlogPost(row: any): BlogPost {
         seoDescription: row.seo_description || '',
         author_id: row.author_id,
         published_at: row.published_at,
+        status: (row.status as string) || 'published',
+        category: row.category || '',
+        isFeatured: row.is_featured ?? false,
     };
 }
 

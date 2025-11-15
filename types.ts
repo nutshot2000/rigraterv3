@@ -61,6 +61,10 @@ export interface BlogPost {
     blogImages?: string[]; // Array of additional blog images
     seoTitle?: string;
     seoDescription?: string;
+    // New options for blog management
+    status?: 'draft' | 'published';
+    category?: string;
+    isFeatured?: boolean;
 }
 
 export interface ComparisonDoc {

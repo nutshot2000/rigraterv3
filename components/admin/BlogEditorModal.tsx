@@ -219,6 +219,41 @@ const BlogEditorModal: React.FC<{
                     <label className="text-sm font-medium">Slug</label>
                     <input type="text" value={currentPost.slug || ''} onChange={e => updateField('slug', e.target.value)} className="input-blueprint w-full" />
                 </div>
+                <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <select
+                        value={currentPost.status || 'published'}
+                        onChange={e => updateField('status' as any, e.target.value as 'draft' | 'published')}
+                        className="input-blueprint w-full"
+                    >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                    </select>
+                </div>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <label className="text-sm font-medium">Category</label>
+                        <input
+                            type="text"
+                            value={currentPost.category || ''}
+                            onChange={e => updateField('category' as any, e.target.value)}
+                            placeholder="e.g., CPUs, GPUs, Peripherals"
+                            className="input-blueprint w-full"
+                        />
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <input
+                        id="featured-toggle"
+                        type="checkbox"
+                        checked={Boolean(currentPost.isFeatured)}
+                        onChange={e => updateField('isFeatured' as any, e.target.checked)}
+                        className="h-4 w-4"
+                    />
+                    <label htmlFor="featured-toggle" className="text-sm font-medium">
+                        Feature this post on blog home
+                    </label>
+                </div>
                 <div>
                     <label className="text-sm font-medium">Summary</label>
                     <textarea value={currentPost.summary || ''} onChange={e => updateField('summary', e.target.value)} className="input-blueprint w-full" rows={3} />
