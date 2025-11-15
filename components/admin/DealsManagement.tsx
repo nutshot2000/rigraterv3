@@ -17,6 +17,56 @@ const DealsManagement: React.FC = () => {
   const [editing, setEditing] = useState<Deal | null>(null);
   const [draft, setDraft] = useState<Omit<Deal, 'id' | 'createdAt'>>(emptyDeal);
 
+  const autoFillFromUrl = () => {
+    const raw = draft.url?.trim();
+    if (!raw) return;
+    try {
+      const withProtocol = raw.startsWith('http') ? raw : `https://${raw}`;
+      const u = new URL(withProtocol);
+      const host = u.hostname.replace(/^www\./i, '');
+
+      let path = u.pathname || '';
+      // Strip trailing slash
+      if (path.endsWith('/')) path = path.slice(0, -1);
+
+      let slug = path.split('/').filter(Boolean).pop() || '';
+
+      // Amazon special-case: try to grab segment before /dp or /gp/
+      const amazonMatch = path.match(/\/([^\/]+)\/dp\/|\/dp\/([^\/]+)/);
+      if (amazonMatch) {
+        slug = amazonMatch[1] || amazonMatch[2] || slug;
+      }
+
+      slug = decodeURIComponent(slug)
+        .replace(/[_+]+/g, ' ')
+        .replace(/-/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const titleGuess = slug
+        .split(' ')
+        .map(w => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
+        .join(' ');
+
+      // Try to grab an image filename from the URL if present
+      let imageFromUrl: string | undefined;
+      const imgMatch = raw.match(/(https?:\/\/[^\s]+?\.(jpg|jpeg|png|webp|gif))/i);
+      if (imgMatch) {
+        imageFromUrl = imgMatch[1];
+      }
+
+      setDraft(prev => ({
+        ...prev,
+        title: prev.title || titleGuess || prev.title,
+        merchant: prev.merchant || host,
+        tag: prev.tag || 'Black Friday',
+        imageUrl: prev.imageUrl || imageFromUrl || prev.imageUrl,
+      }));
+    } catch {
+      // best-effort only; silently ignore if URL is weird
+    }
+  };
+
   const startCreate = () => {
     setEditing(null);
     setDraft(emptyDeal);
@@ -149,13 +199,22 @@ const DealsManagement: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Destination URL</label>
-                <input
-                  type="text"
-                  value={draft.url}
-                  onChange={e => handleChange('url', e.target.value)}
-                  className="input-blueprint w-full"
-                  placeholder="Paste your Amazon / retailer URL"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={draft.url}
+                    onChange={e => handleChange('url', e.target.value)}
+                    className="input-blueprint flex-1"
+                    placeholder="Paste your Amazon / retailer URL"
+                  />
+                  <button
+                    type="button"
+                    onClick={autoFillFromUrl}
+                    className="btn-blueprint text-xs whitespace-nowrap px-3 py-2"
+                  >
+                    Auto-fill
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
