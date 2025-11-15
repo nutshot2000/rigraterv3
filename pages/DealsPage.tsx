@@ -1,18 +1,50 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
 
 const DealsPage: React.FC = () => {
   const { deals } = useApp();
 
+  const dealsCount = deals.length;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'RIGRATER PC Hardware Deals',
+    itemListElement: deals.map((deal, index) => ({
+      '@type': 'Offer',
+      position: index + 1,
+      name: deal.title,
+      url: deal.url,
+      description: deal.description || deal.priceLabel || undefined,
+      seller: deal.merchant ? { '@type': 'Organization', name: deal.merchant } : undefined,
+    })),
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="text-center space-y-2 mb-4">
-        <h1 className="text-3xl sm:text-4xl font-bold text-white">Black Friday Deals</h1>
-        <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
-          Hand-picked offers on cases, GPUs, CPUs and more. These tiles are powered directly by your admin
-          deals panel, so every time you add a new offer it shows up here automatically.
-        </p>
-      </div>
+    <>
+      <Helmet>
+        <title>PC Hardware Black Friday Deals | RIGRATER</title>
+        <meta
+          name="description"
+          content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
+        />
+        <link rel="canonical" href="https://www.rigrater.com/deals" />
+        {dealsCount > 0 && (
+          <script type="application/ld+json">
+            {JSON.stringify(jsonLd)}
+          </script>
+        )}
+      </Helmet>
+
+      <div className="space-y-6">
+        <div className="text-center space-y-2 mb-4">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white">Black Friday Deals</h1>
+          <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+            Hand-picked offers on cases, GPUs, CPUs and more. These tiles are powered directly by your admin
+            deals panel, so every time you add a new offer it shows up here automatically.
+          </p>
+        </div>
 
       {deals.length === 0 ? (
         <div className="border border-dashed border-slate-700 rounded-xl p-8 text-center text-slate-400 text-sm">
@@ -76,7 +108,7 @@ const DealsPage: React.FC = () => {
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
