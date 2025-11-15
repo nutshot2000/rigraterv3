@@ -149,21 +149,20 @@ const AdminSettings: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-500">
-              You can also update the public sitemap whenever you want so search engines see the latest deals, products and posts.
+              Your sitemap is always live at <code>/api/sitemap.xml</code>. You can open it below to check it's working or copy the URL for Google Search Console.
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={async () => {
                   try {
-                    await fetch('/api/admin/regenerate-sitemap', { method: 'POST' });
-                    alert('Sitemap regeneration requested. Google will pick it up next time it crawls /api/sitemap.xml.');
+                    window.open('/api/sitemap.xml', '_blank', 'noopener,noreferrer');
                   } catch {
-                    alert('Failed to call sitemap regeneration endpoint.');
+                    alert('Failed to open sitemap URL.');
                   }
                 }}
                 className="btn-blueprint text-xs"
               >
-                Regenerate Sitemap
+                Open Sitemap
               </button>
               <button
                 onClick={handleSave}
