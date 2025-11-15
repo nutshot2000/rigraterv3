@@ -12,6 +12,8 @@ function mapRowToDeal(row: any): Deal {
         tag: row.tag || undefined,
         imageUrl: row.image_url || undefined,
         createdAt: row.created_at,
+        isActive: row.is_active ?? true,
+        expiresAt: row.expires_at || undefined,
     };
 }
 
@@ -35,6 +37,8 @@ export async function createDeal(input: Omit<Deal, 'id' | 'createdAt'>): Promise
         price_label: input.priceLabel ?? null,
         tag: input.tag ?? null,
         image_url: input.imageUrl ?? null,
+        is_active: input.isActive ?? true,
+        expires_at: input.expiresAt ?? null,
     };
     const { data, error } = await supabase
         .from('deals')
@@ -55,6 +59,8 @@ export async function updateDealById(id: string, input: Omit<Deal, 'id' | 'creat
         price_label: input.priceLabel ?? null,
         tag: input.tag ?? null,
         image_url: input.imageUrl ?? null,
+        is_active: input.isActive ?? true,
+        expires_at: input.expiresAt ?? null,
     };
     const { data, error } = await supabase
         .from('deals')

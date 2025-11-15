@@ -90,6 +90,8 @@ export interface Deal {
     tag?: string; // e.g. "Black Friday", "GPU", "Case"
     imageUrl?: string;
     createdAt: string; // ISO date
+    isActive?: boolean;
+    expiresAt?: string; // ISO date
 }
 
 export interface ComparisonDoc {

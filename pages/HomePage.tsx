@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
 import { Product } from '../types';
 import ProductCard from '../components/public/ProductCard';
@@ -173,6 +174,29 @@ const HomePage: React.FC = () => {
     };
 
     return (
+        <>
+        <Helmet>
+            <title>RIGRATER | PC Hardware Ratings, Deals & AI-Powered Builds</title>
+            <meta
+                name="description"
+                content="Discover PC hardware deals and compare GPUs, CPUs, RAM and storage. RIGRATER helps you rate, compare and upgrade your rig faster with AI-powered tools."
+            />
+            <meta property="og:title" content="RIGRATER | PC Hardware Ratings, Deals & AI-Powered Builds" />
+            <meta
+                property="og:description"
+                content="Hand-picked PC parts, live deals and AI-powered tools to help you build and upgrade gaming rigs with confidence."
+            />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="https://www.rigrater.com/" />
+            <meta property="og:image" content="https://www.rigrater.com/og/rigrater-home.png" />
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="RIGRATER | PC Hardware Ratings, Deals & AI-Powered Builds" />
+            <meta
+                name="twitter:description"
+                content="Hand-picked PC parts, live deals and AI-powered tools to help you build and upgrade gaming rigs with confidence."
+            />
+        </Helmet>
+
         <div className="animate-fade-in">
             <header className="mb-10 text-center relative p-8 crt-frame">
                 <div className="hero-beam" />
@@ -290,6 +314,7 @@ const HomePage: React.FC = () => {
 
             <ComparisonBar />
         </div>
+        </>
     );
 };
 

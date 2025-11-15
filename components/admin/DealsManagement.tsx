@@ -11,6 +11,8 @@ const emptyDeal: Omit<Deal, 'id' | 'createdAt'> = {
   priceLabel: '',
   tag: '',
   imageUrl: '',
+  isActive: true,
+  expiresAt: '',
 };
 
 const DealsManagement: React.FC = () => {
@@ -110,10 +112,12 @@ const DealsManagement: React.FC = () => {
       priceLabel: deal.priceLabel || '',
       tag: deal.tag || '',
       imageUrl: deal.imageUrl || '',
+      isActive: deal.isActive ?? true,
+      expiresAt: deal.expiresAt || '',
     });
   };
 
-  const handleChange = (field: keyof Omit<Deal, 'id' | 'createdAt'>, value: string) => {
+  const handleChange = (field: keyof Omit<Deal, 'id' | 'createdAt'>, value: any) => {
     setDraft(prev => ({ ...prev, [field]: value }));
   };
 
@@ -127,6 +131,8 @@ const DealsManagement: React.FC = () => {
       priceLabel: draft.priceLabel?.trim() || undefined,
       tag: draft.tag?.trim() || undefined,
       imageUrl: draft.imageUrl?.trim() || undefined,
+       isActive: draft.isActive ?? true,
+       expiresAt: draft.expiresAt || undefined,
     };
     if (!payload.title || !payload.url) return;
 
@@ -294,6 +300,26 @@ const DealsManagement: React.FC = () => {
                   className="input-blueprint w-full min-h-[80px]"
                   placeholder="Why this deal is good, key specs, etc."
                 />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={draft.isActive ?? true}
+                    onChange={e => handleChange('isActive', e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  <span>Show this deal on the public deals page</span>
+                </label>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Expires (optional)</label>
+                  <input
+                    type="date"
+                    value={draft.expiresAt ? draft.expiresAt.slice(0, 10) : ''}
+                    onChange={e => handleChange('expiresAt', e.target.value)}
+                    className="input-blueprint w-full"
+                  />
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">

@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { ChipIcon } from './Icons';
 import { useApp } from '../../context/AppContext';
+import { trackEvent } from '../../services/analytics';
 
 const Header: React.FC = () => {
     const { promoButton } = useApp();
@@ -66,6 +67,13 @@ const Header: React.FC = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`inline-flex items-center justify-center rounded-md font-semibold ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`}
+                                    onClick={() =>
+                                        trackEvent('header_promo_click', {
+                                            label: promo.label || 'Deals',
+                                            url: promo.url,
+                                            position: 'center',
+                                        })
+                                    }
                                 >
                                     {promo.label || 'Deals'}
                                 </a>
@@ -74,6 +82,13 @@ const Header: React.FC = () => {
                                     to={promo.url}
                                     className={() =>
                                         `inline-flex items-center justify-center rounded-md font-semibold ${sizeClasses} ${centerVisual} min-w-[220px] md:min-w-[260px]`
+                                    }
+                                    onClick={() =>
+                                        trackEvent('header_promo_click', {
+                                            label: promo.label || 'Deals',
+                                            url: promo.url,
+                                            position: 'center',
+                                        })
                                     }
                                 >
                                     {promo.label || 'Deals'}
@@ -97,6 +112,13 @@ const Header: React.FC = () => {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`}
+                                        onClick={() =>
+                                            trackEvent('header_promo_click', {
+                                                label: promo.label || 'Deals',
+                                                url: promo.url,
+                                                position: 'mobile',
+                                            })
+                                        }
                                     >
                                         {promo.label || 'Deals'}
                                     </a>
@@ -105,6 +127,13 @@ const Header: React.FC = () => {
                                         to={promo.url}
                                         className={() =>
                                             `inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`
+                                        }
+                                        onClick={() =>
+                                            trackEvent('header_promo_click', {
+                                                label: promo.label || 'Deals',
+                                                url: promo.url,
+                                                position: 'mobile',
+                                            })
                                         }
                                     >
                                         {promo.label || 'Deals'}
@@ -120,6 +149,13 @@ const Header: React.FC = () => {
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className={`inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`}
+                                        onClick={() =>
+                                            trackEvent('header_promo_click', {
+                                                label: promo.label || 'Deals',
+                                                url: promo.url,
+                                                position: 'right',
+                                            })
+                                        }
                                     >
                                         {promo.label || 'Deals'}
                                     </a>
@@ -128,6 +164,13 @@ const Header: React.FC = () => {
                                         to={promo.url}
                                         className={() =>
                                             `inline-flex items-center justify-center rounded-md font-semibold crt-strong ${sizeClasses} ${colorBase}`
+                                        }
+                                        onClick={() =>
+                                            trackEvent('header_promo_click', {
+                                                label: promo.label || 'Deals',
+                                                url: promo.url,
+                                                position: 'right',
+                                            })
                                         }
                                     >
                                         {promo.label || 'Deals'}

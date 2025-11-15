@@ -1,17 +1,70 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
+import { trackEvent } from '../services/analytics';
 
 const DealsPage: React.FC = () => {
   const { deals } = useApp();
 
-  const dealsCount = deals.length;
+  const now = new Date();
+  const activeDeals = useMemo(
+    () =>
+      deals.filter(d => {
+        if (d.isActive === false) return false;
+        if (d.expiresAt) {
+          const exp = new Date(d.expiresAt);
+          if (!Number.isNaN(exp.getTime()) && exp < now) return false;
+        }
+        return true;
+      }),
+    [deals, now],
+  );
+
+  const [selectedTag, setSelectedTag] = useState<string>('All');
+  const [sortBy, setSortBy] = useState<'newest' | 'discount'>('newest');
+
+  const tags = useMemo(() => {
+    const set = new Set<string>();
+    activeDeals.forEach(d => {
+      if (d.tag) set.add(d.tag);
+    });
+    return ['All', ...Array.from(set)];
+  }, [activeDeals]);
+
+  const parseDiscount = (label?: string): number => {
+    if (!label) return 0;
+    const m = label.match(/(-?\d{1,3})%\s*/);
+    return m ? parseInt(m[1], 10) : 0;
+  };
+
+  const visibleDeals = useMemo(() => {
+    let list = activeDeals;
+    if (selectedTag !== 'All') {
+      list = list.filter(d => d.tag === selectedTag);
+    }
+    const sorted = [...list].sort((a, b) => {
+      if (sortBy === 'discount') {
+        return parseDiscount(b.priceLabel) - parseDiscount(a.priceLabel);
+      }
+      // newest first
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return sorted;
+  }, [activeDeals, selectedTag, sortBy]);
+
+  const dealsCount = visibleDeals.length;
+  const lastUpdated =
+    activeDeals.length > 0
+      ? new Date(
+          Math.max(...activeDeals.map(d => new Date(d.createdAt).getTime())),
+        ).toLocaleDateString()
+      : null;
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: 'RIGRATER PC Hardware Deals',
-    itemListElement: deals.map((deal, index) => ({
+    itemListElement: visibleDeals.map((deal, index) => ({
       '@type': 'Offer',
       position: index + 1,
       name: deal.title,
@@ -30,6 +83,20 @@ const DealsPage: React.FC = () => {
           content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
         />
         <link rel="canonical" href="https://www.rigrater.com/deals" />
+        <meta property="og:title" content="PC Hardware Black Friday Deals | RIGRATER" />
+        <meta
+          property="og:description"
+          content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
+        />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.rigrater.com/deals" />
+        <meta property="og:image" content="https://www.rigrater.com/og/rigrater-deals.png" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="PC Hardware Black Friday Deals | RIGRATER" />
+        <meta
+          name="twitter:description"
+          content="Live PC hardware deals on motherboards, GPUs, CPUs, cases and more. Curated Black Friday and seasonal offers hand-picked by RIGRATER."
+        />
         {dealsCount > 0 && (
           <script type="application/ld+json">
             {JSON.stringify(jsonLd)}
@@ -43,21 +110,66 @@ const DealsPage: React.FC = () => {
           <p className="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
             Hand-picked offers on PC cases, GPUs, CPUs and more. Updated whenever we spot a strong deal worth sharing.
           </p>
+          {lastUpdated && (
+            <p className="text-xs text-slate-500 mt-1">
+              Last updated: <span className="font-semibold">{lastUpdated}</span>
+            </p>
+          )}
         </div>
 
-        {deals.length === 0 ? (
+        {visibleDeals.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2 text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Filter by tag:</span>
+              <select
+                value={selectedTag}
+                onChange={e => setSelectedTag(e.target.value)}
+                className="input-blueprint px-2 py-1 text-xs sm:text-sm w-auto"
+              >
+                {tags.map(t => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Sort:</span>
+              <select
+                value={sortBy}
+                onChange={e =>
+                  setSortBy(e.target.value as 'newest' | 'discount')
+                }
+                className="input-blueprint px-2 py-1 text-xs sm:text-sm w-auto"
+              >
+                <option value="newest">Newest first</option>
+                <option value="discount">Biggest % off</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {visibleDeals.length === 0 ? (
           <div className="border border-dashed border-slate-700 rounded-xl p-8 text-center text-slate-400 text-sm">
             No deals published yet. Check back soon – or log in to the admin panel to add your first offers.
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {deals.map(deal => (
+            {visibleDeals.map(deal => (
               <a
                 key={deal.id}
                 href={deal.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-700 bg-slate-900/50 hover:border-amber-400/70 hover:bg-slate-900/80 transition-colors"
+                onClick={() =>
+                  trackEvent('deal_click', {
+                    id: deal.id,
+                    title: deal.title,
+                    url: deal.url,
+                    tag: deal.tag,
+                  })
+                }
               >
                 {deal.imageUrl && (
                   <div className="w-full bg-slate-900/80 aspect-[21/9] flex items-center justify-center overflow-hidden">
