@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Deal } from '../../types';
+import { AMAZON_TAG_UK, AMAZON_TAG_US } from '../../constants';
 
 const emptyDeal: Omit<Deal, 'id' | 'createdAt'> = {
   title: '',
@@ -16,6 +17,33 @@ const DealsManagement: React.FC = () => {
   const { deals, addDeal, updateDeal, deleteDeal } = useApp();
   const [editing, setEditing] = useState<Deal | null>(null);
   const [draft, setDraft] = useState<Omit<Deal, 'id' | 'createdAt'>>(emptyDeal);
+
+  const ensureAffiliateUrl = (raw: string): string => {
+    const trimmed = (raw || '').trim();
+    if (!trimmed) return trimmed;
+
+    try {
+      const withProto = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+      const u = new URL(withProto);
+      const host = u.hostname.toLowerCase();
+
+      // Only touch Amazon links
+      if (!host.includes('amazon.')) return trimmed;
+
+      const params = u.searchParams;
+      const isUK = host.endsWith('.co.uk') || host.endsWith('.uk');
+      const tag = isUK ? AMAZON_TAG_UK : AMAZON_TAG_US;
+
+      if (tag) {
+        params.set('tag', tag);
+      }
+
+      u.search = params.toString();
+      return u.toString();
+    } catch {
+      return trimmed;
+    }
+  };
 
   const autoFillFromUrl = () => {
     const raw = draft.url?.trim();
@@ -93,7 +121,7 @@ const DealsManagement: React.FC = () => {
     const payload = {
       ...draft,
       title: draft.title.trim(),
-      url: draft.url.trim(),
+      url: ensureAffiliateUrl(draft.url),
       description: draft.description?.trim() || undefined,
       merchant: draft.merchant?.trim() || undefined,
       priceLabel: draft.priceLabel?.trim() || undefined,
