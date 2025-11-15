@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { Product, Page, ToastMessage, BlogPost, ComparisonDoc, AuditEntry } from '../types';
+import { Product, Page, ToastMessage, BlogPost, ComparisonDoc, AuditEntry, PromoButtonConfig } from '../types';
 import { MOCK_PRODUCTS } from '../services/mockData';
 import { ADMIN_PASSWORD } from '../constants';
 import { isBackendEnabled } from '../services/supabaseClient';
@@ -50,6 +50,8 @@ interface AppContextType {
 
     audits: AuditEntry[];
     currentUserEmail?: string;
+    promoButton?: PromoButtonConfig;
+    setPromoButton: (cfg: PromoButtonConfig) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -107,6 +109,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     const [currentUserEmail, setCurrentUserEmail] = useState<string | undefined>(undefined);
+
+    const [promoButton, setPromoButtonState] = useState<PromoButtonConfig | undefined>(() => {
+        try {
+            const s = localStorage.getItem('promoButton');
+            if (s) return JSON.parse(s) as PromoButtonConfig;
+        } catch {}
+        return undefined;
+    });
 
     const recordAudit = useCallback((entry: Omit<AuditEntry, 'id' | 'ts' | 'actor'>) => {
         const full: AuditEntry = { id: Date.now().toString(), ts: new Date().toISOString(), actor: 'admin', ...entry };
@@ -401,6 +411,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPreferredRegionState(r);
     }, []);
 
+    const setPromoButton = useCallback((cfg: PromoButtonConfig) => {
+        setPromoButtonState(cfg);
+        try {
+            localStorage.setItem('promoButton', JSON.stringify(cfg));
+        } catch {}
+    }, []);
+
     const value = {
         products,
         addProduct,
@@ -431,6 +448,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setPreferredRegion: setPreferredRegionState,
         audits,
         currentUserEmail,
+        promoButton,
+        setPromoButton,
     };
 
     return (

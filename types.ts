@@ -67,6 +67,12 @@ export interface BlogPost {
     isFeatured?: boolean;
 }
 
+export interface PromoButtonConfig {
+    enabled: boolean;
+    label: string;
+    url: string;
+}
+
 export interface ComparisonDoc {
     id: string;
     title: string;

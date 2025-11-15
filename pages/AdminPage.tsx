@@ -7,9 +7,10 @@ import SimpleProductBuilder from '../components/admin/SimpleProductBuilder';
 import BlogManagement from '../components/admin/BlogManagement';
 // import { BlogWorkspace } from '../components/admin/BlogWorkspace';
 import AIChatModal from '../components/admin/AIChatModal';
-import CommandPalette from '../components/admin/CommandPalette';
+import CommandPalette, { CommandItem } from '../components/admin/CommandPalette';
 import { BlogPost } from '../types';
 import BlogEditorModal from '../components/admin/BlogEditorModal';
+import AdminSettings from '../components/admin/AdminSettings';
 
 const normalizeImageUrl = (val?: string): string => {
     if (!val) return '';
@@ -29,6 +30,13 @@ export const AdminPage: React.FC = () => {
     const { page, setPage, currentUserEmail, addBlogPost, updateBlogPost } = useApp();
     const [editingPost, setEditingPost] = useState<Partial<BlogPost> | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [isCmdOpen, setIsCmdOpen] = useState(false);
+
+    const commands: CommandItem[] = [
+        { id: 'go-products', title: 'Go to Manage Products', shortcut: 'G P', run: () => setPage(Page.ADMIN_MANAGE_PRODUCTS) },
+        { id: 'go-blog', title: 'Go to Manage Posts', shortcut: 'G B', run: () => setPage(Page.ADMIN_MANAGE_POSTS) },
+        { id: 'go-settings', title: 'Go to Settings', shortcut: 'G S', run: () => setPage(Page.ADMIN) },
+    ];
 
     const handleCreateNewPost = () => {
         setEditingPost({}); // Start with a new, empty post object
@@ -96,6 +104,7 @@ export const AdminPage: React.FC = () => {
                             onEdit={handleEditPost}
                         />
                     )}
+                    {page === Page.ADMIN && <AdminSettings />}
                 </main>
             </div>
             
@@ -109,7 +118,7 @@ export const AdminPage: React.FC = () => {
             )}
 
             {isChatOpen && <AIChatModal onClose={() => setIsChatOpen(false)} />}
-            <CommandPalette />
+            <CommandPalette isOpen={isCmdOpen} onClose={() => setIsCmdOpen(false)} commands={commands} />
         </div>
     );
 };

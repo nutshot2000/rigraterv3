@@ -5,13 +5,12 @@ import { ChipIcon } from './Icons';
 import { useApp } from '../../context/AppContext';
 
 const Header: React.FC = () => {
-    const { blogPosts } = useApp();
+    const { promoButton } = useApp();
 
     const navLinkClasses = ({ isActive }: { isActive: boolean }) => 
         `btn-blueprint ${isActive ? 'btn-blueprint--primary' : ''} text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400`;
 
-    // Use the first featured blog post (if any) as a promo target.
-    const promoPost = blogPosts.find(p => p.isFeatured);
+    const promo = promoButton && promoButton.enabled && promoButton.url ? promoButton : undefined;
 
     return (
         <header className="bg-gray-900/40 sticky top-0 z-50 border-b border-slate-700/50">
@@ -31,17 +30,29 @@ const Header: React.FC = () => {
                         <NavLink to="/blog" className={navLinkClasses}>
                             Blog
                         </NavLink>
-                        {promoPost && (
-                            <NavLink
-                                to={`/blog/${promoPost.slug}`}
-                                className={({ isActive }) =>
-                                    `btn-blueprint text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                                        isActive ? 'btn-blueprint--primary border-amber-400/60 text-amber-200' : 'border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'
-                                    }`
-                                }
-                            >
-                                {promoPost.category || 'Deals'}
-                            </NavLink>
+                        {promo && (
+                            promo.url.startsWith('http')
+                                ? (
+                                    <a
+                                        href={promo.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn-blueprint text-base crt-strong border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                                    >
+                                        {promo.label || 'Deals'}
+                                    </a>
+                                ) : (
+                                    <NavLink
+                                        to={promo.url}
+                                        className={({ isActive }) =>
+                                            `btn-blueprint text-base crt-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${
+                                                isActive ? 'btn-blueprint--primary border-amber-400/60 text-amber-200' : 'border border-amber-500/40 text-amber-300 bg-amber-500/10 hover:bg-amber-500/20'
+                                            }`
+                                        }
+                                    >
+                                        {promo.label || 'Deals'}
+                                    </NavLink>
+                                )
                         )}
                     </div>
                 </div>

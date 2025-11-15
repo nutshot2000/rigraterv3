@@ -1,0 +1,95 @@
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { PromoButtonConfig } from '../../types';
+
+const AdminSettings: React.FC = () => {
+  const { promoButton, setPromoButton } = useApp();
+
+  const [form, setForm] = useState<PromoButtonConfig>(() => ({
+    enabled: promoButton?.enabled ?? false,
+    label: promoButton?.label ?? 'Deals',
+    url: promoButton?.url ?? '/blog',
+  }));
+
+  const handleChange = (field: keyof PromoButtonConfig, value: any) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    setPromoButton({
+      enabled: form.enabled,
+      label: form.label.trim() || 'Deals',
+      url: form.url.trim() || '/blog',
+    });
+  };
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="p-6 space-y-6 max-w-3xl">
+        <h1 className="text-2xl font-bold text-white mb-2">Site Settings</h1>
+        <p className="text-slate-400 text-sm mb-6">
+          Configure global UI elements like the header promo / deals button.
+        </p>
+
+        <div className="bg-slate-800/70 border border-slate-700 rounded-lg p-6 space-y-4">
+          <h2 className="text-lg font-semibold text-white">Header Promo Button</h2>
+          <p className="text-slate-400 text-sm">
+            Control the optional button that appears in the top navigation (for example, Black Friday
+            deals, Christmas bundles, or featured guides).
+          </p>
+
+          <label className="inline-flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.enabled}
+              onChange={e => handleChange('enabled', e.target.checked)}
+              className="h-4 w-4"
+            />
+            <span className="text-sm text-slate-200">Show promo button in header</span>
+          </label>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-200 mb-1">Button text</label>
+            <input
+              type="text"
+              value={form.label}
+              onChange={e => handleChange('label', e.target.value)}
+              className="input-blueprint w-full"
+              placeholder="e.g., Black Friday Deals"
+              disabled={!form.enabled}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-200 mb-1">Button link</label>
+            <input
+              type="text"
+              value={form.url}
+              onChange={e => handleChange('url', e.target.value)}
+              className="input-blueprint w-full"
+              placeholder="e.g., /blog/black-friday-deals or https://example.com/deals"
+              disabled={!form.enabled}
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Use a relative path to link inside your site (like <code>/blog/my-deals-post</code>), or a full
+              URL to link out to another site.
+            </p>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSave}
+              className="btn-blueprint btn-blueprint--primary"
+            >
+              Save Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminSettings;
+
+
