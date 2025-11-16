@@ -52,6 +52,7 @@ const BlogPage: React.FC = () => {
             <Helmet>
                 <title>Blog | RIGRATER - PC Hardware Reviews & Tech Insights</title>
                 <meta name="description" content="Read the latest PC hardware reviews, tech insights, and gaming peripheral guides from RIGRATER." />
+                <link rel="canonical" href="https://www.rigrater.tech/blog" />
             </Helmet>
 
             <div className="max-w-6xl mx-auto">

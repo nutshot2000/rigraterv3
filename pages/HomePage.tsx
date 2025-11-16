@@ -181,14 +181,15 @@ const HomePage: React.FC = () => {
                 name="description"
                 content="Discover PC hardware deals and compare GPUs, CPUs, RAM and storage. RIGRATER helps you rate, compare and upgrade your rig faster with AI-powered tools."
             />
+            <link rel="canonical" href="https://www.rigrater.tech/" />
             <meta property="og:title" content="RIGRATER | PC Hardware Ratings, Deals & AI-Powered Builds" />
             <meta
                 property="og:description"
                 content="Hand-picked PC parts, live deals and AI-powered tools to help you build and upgrade gaming rigs with confidence."
             />
             <meta property="og:type" content="website" />
-            <meta property="og:url" content="https://www.rigrater.com/" />
-            <meta property="og:image" content="https://www.rigrater.com/og/rigrater-home.png" />
+            <meta property="og:url" content="https://www.rigrater.tech/" />
+            <meta property="og:image" content="https://www.rigrater.tech/og/rigrater-home.png" />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="RIGRATER | PC Hardware Ratings, Deals & AI-Powered Builds" />
             <meta
