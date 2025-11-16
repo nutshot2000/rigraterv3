@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
 import { trackEvent } from '../services/analytics';
+import AdSenseSlot from '../components/shared/AdSenseSlot';
 
 const DealsPage: React.FC = () => {
   const { deals, promoButton } = useApp();
@@ -220,6 +221,11 @@ const DealsPage: React.FC = () => {
             ))}
           </div>
         )}
+
+        {/* AdSense: light placement at the bottom of the deals page */}
+        <div className="mt-10">
+          <AdSenseSlot slot="0987654321" />
+        </div>
       </div>
     </>
   );

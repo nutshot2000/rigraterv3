@@ -6,6 +6,7 @@ import { fetchProductBySlug } from '../services/productService';
 import { FALLBACK_IMAGE_URL } from '../constants';
 import { useApp } from '../context/AppContext';
 import BuyButtons from '../components/public/BuyButtons';
+import AdSenseSlot from '../components/shared/AdSenseSlot';
 
 const ProductPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -165,6 +166,11 @@ const ProductPage: React.FC = () => {
                         )}
                     </div>
                 )}
+
+                {/* AdSense: one responsive unit after the quick verdict / before the long review */}
+                <div className="my-8">
+                    <AdSenseSlot slot="1234567890" />
+                </div>
 
                 <div className="prose prose-invert max-w-none mb-8">
                     <h2 className="text-3xl font-bold text-white">Review</h2>
