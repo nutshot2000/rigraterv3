@@ -8,6 +8,7 @@ import ProductPage from './pages/ProductPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import DealsPage from './pages/DealsPage';
+import NotFoundPage from './pages/NotFoundPage';
 const AdminPage = React.lazy(() => import('./pages/AdminPage'));
 import ToastContainer from './components/shared/ToastContainer';
 import { HelmetProvider } from 'react-helmet-async';
@@ -51,6 +52,8 @@ const App: React.FC = () => {
                                 <Route path="/products/:slug" element={<ProductPage />} />
                                 <Route path="/blog/:slug" element={<BlogPostPage />} />
                                 <Route path="/admin" element={<AdminGate />} />
+                                {/* Catch-all: old URLs from the previous site will land here instead of a blank screen */}
+                                <Route path="*" element={<NotFoundPage />} />
                             </Routes>
                         </main>
                         <Footer />
