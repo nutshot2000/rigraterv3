@@ -24,7 +24,7 @@ const AdSenseSlot: React.FC<AdSenseSlotProps> = ({ slot, className }) => {
     <ins
       className={`adsbygoogle ${className ?? ''}`}
       style={{ display: 'block' }}
-      data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+      data-ad-client="ca-pub-6046033815989416"
       data-ad-slot={slot}
       data-ad-format="auto"
       data-full-width-responsive="true"
