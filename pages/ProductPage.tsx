@@ -169,7 +169,7 @@ const ProductPage: React.FC = () => {
 
                 {/* AdSense: one responsive unit after the quick verdict / before the long review */}
                 <div className="my-8">
-                    <AdSenseSlot slot="1234567890" />
+                    <AdSenseSlot slot="9660319474" />
                 </div>
 
                 <div className="prose prose-invert max-w-none mb-8">

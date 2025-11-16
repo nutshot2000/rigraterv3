@@ -224,7 +224,7 @@ const DealsPage: React.FC = () => {
 
         {/* AdSense: light placement at the bottom of the deals page */}
         <div className="mt-10">
-          <AdSenseSlot slot="0987654321" />
+          <AdSenseSlot slot="4674875661" />
         </div>
       </div>
     </>
