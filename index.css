@@ -26,6 +26,29 @@ html, body {
 }
 .theme-blueprint { --accent:#38bdf8; --accent-2:#0ea5e9; }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #020617; 
+}
+::-webkit-scrollbar-thumb {
+  background: #334155; 
+  border-radius: 5px; 
+  border: 2px solid #020617;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8; 
+}
+
+/* Custom Selection */
+::selection {
+  background: rgba(56, 189, 248, 0.3);
+  color: #fff;
+}
+
 .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
   backdrop-filter: blur(12px);
@@ -171,4 +194,3 @@ html, body {
 .form-section-content {
     @apply p-6 space-y-6;
 }
-

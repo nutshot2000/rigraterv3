@@ -203,7 +203,7 @@ const HomePage: React.FC = () => {
                 <div className="hero-beam" />
                 <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-sky-500/30 bg-sky-500/10 text-sky-300 text-xs uppercase tracking-wider font-semibold">Rigrater • PC Parts, Rated</div>
                 <h1 className="mt-4 text-5xl md:text-7xl text-white leading-tight font-bold">
-                    Your Path to PC Domination: Start, Rate, Dominate.
+                    Your Path to PC Domination: <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-sky-400">Start, Rate, </span><span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-teal-400">Dominate.</span>
                 </h1>
                 <p className="mt-4 text-lg text-slate-300 max-w-3xl mx-auto">
                     Compare GPUs, CPUs, RAM, and storage. Instant reviews, specs, and trends—so you can <span className="text-sky-300 font-semibold">rate, compare, and upgrade</span> faster.

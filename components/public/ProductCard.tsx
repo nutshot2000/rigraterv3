@@ -64,39 +64,39 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onCardClick, onAddTo
 
     return (
         <div 
-            className="bg-slate-900/60 rounded-lg overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/10 cursor-pointer"
+            className="bg-slate-900/80 rounded-xl overflow-hidden transition-all duration-300 group hover:scale-[1.02] border border-slate-800 hover:border-sky-500/50 shadow-lg hover:shadow-sky-500/20 cursor-pointer h-full flex flex-col"
             onClick={() => onCardClick(product)}
         >
-            <div className="relative">
-                <div className="h-40 bg-slate-800/50 flex items-center justify-center p-2">
+            <div className="relative p-4 bg-slate-800/30">
+                <div className="h-40 bg-slate-800/50 rounded-lg flex items-center justify-center p-4 group-hover:bg-slate-800/80 transition-colors">
                 <img 
                         src={getProxiedImageUrl(primaryImageUrl || FALLBACK_IMAGE_URL)} 
                     alt={product.name} 
-                        className="max-h-full max-w-full object-contain" 
+                        className="max-h-full max-w-full object-contain drop-shadow-md" 
                     onError={handleImageError}
                         loading="lazy" 
                 />
                 </div>
                 {product.brand && (
-                    <span className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded-full bg-slate-900/80 border border-slate-700 text-sky-300 uppercase tracking-wider font-semibold">{product.brand}</span>
+                    <span className="absolute top-3 left-3 text-[10px] px-2 py-0.5 rounded-full bg-slate-950/90 border border-slate-700 text-sky-400 uppercase tracking-wider font-bold shadow-sm">{product.brand}</span>
                 )}
             </div>
-            <div className="p-3 bg-slate-900">
+            <div className="p-4 bg-slate-900/40 flex-1 flex flex-col">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="text-xs uppercase tracking-wider font-medium text-slate-400">{product.category}</span>
-                    <span className="font-bold text-lg text-sky-300">{product.price}</span>
+                    <span className="text-xs uppercase tracking-wider font-semibold text-slate-500">{product.category}</span>
+                    <span className="font-bold text-lg text-sky-400">{product.price}</span>
                 </div>
-                <h3 className="text-base font-bold text-white line-clamp-2 leading-snug h-12">{product.name}</h3>
+                <h3 className="text-base font-bold text-white line-clamp-2 leading-snug min-h-[2.5rem] mb-auto">{product.name}</h3>
                     <button 
                         onClick={(e) => {
                             e.stopPropagation();
                         if (!isInComparison) onAddToComparison(product); 
                         }}
                         disabled={isInComparison}
-                    className={`w-full mt-3 inline-flex items-center justify-center gap-1.5 text-xs px-2.5 py-2 rounded-md border font-semibold tracking-wider transition-colors ${
+                    className={`w-full mt-4 inline-flex items-center justify-center gap-1.5 text-xs px-3 py-2.5 rounded-md border font-bold tracking-wider transition-all duration-200 ${
                         isInComparison 
                             ? 'border-green-500/30 text-green-300 bg-green-500/10 cursor-not-allowed' 
-                            : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:border-sky-500 hover:text-white'
+                            : 'border-slate-700 bg-slate-800 text-slate-300 group-hover:bg-sky-500 group-hover:border-sky-500 group-hover:text-white group-hover:shadow-lg group-hover:shadow-sky-500/20'
                     }`}
                     title={isInComparison ? 'Added to Comparison' : 'Add to Compare'}
                     >

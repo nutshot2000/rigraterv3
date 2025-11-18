@@ -12,14 +12,14 @@ const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL 
 const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_US || '').trim();
 const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
 const SUPABASE_ANON_KEY = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
-const ADMIN_PWD = (process.env.ADMIN_PASSWORD || 'admin').trim();
+const ADMIN_PWD = (process.env.ADMIN_PASSWORD || '').trim();
 
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
 
 async function checkAuth(req: any): Promise<boolean> {
-  // 1. Check for Admin Password (Local Mode)
+  // 1. Check for Admin Password (Local Mode) - only if env var is set
   const passwordHeader = req.headers['x-admin-password'];
-  if (passwordHeader === ADMIN_PWD) return true;
+  if (ADMIN_PWD && passwordHeader === ADMIN_PWD) return true;
 
   // 2. Check for Supabase Token (Production Mode)
   const authHeader = req.headers['authorization'];
