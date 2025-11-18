@@ -57,6 +57,17 @@ const DealsManagement: React.FC = () => {
     try {
       const info = await generateProductInfo(raw);
       
+      // If the API returned a generic "Product from URL" fallback or empty name, 
+      // try to do a better job locally before giving up.
+      if (!info.name || info.name === 'Product from URL' || info.name === 'Unknown Product') {
+           fallbackAutoFill(raw);
+           // Also try to use whatever image the API *did* find
+           if (info.imageUrl) {
+                setDraft(prev => ({ ...prev, imageUrl: info.imageUrl }));
+           }
+           return;
+      }
+
       // Construct a price label if possible
       let label = '';
       if (info.price && info.price !== '$0.00') {
