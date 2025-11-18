@@ -65,7 +65,7 @@ const ProductPage: React.FC = () => {
         })
         .filter(s => s.key && s.value);
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.rigrater.tech';
+    const origin = 'https://www.rigrater.tech';
     const pageUrl = `${origin}/products/${product.slug || slug}`;
     const ogTitle = `${product.seoTitle || product.name} | RIGRATER`;
     const ogDesc = product.seoDescription || (product.review || '').substring(0, 160);

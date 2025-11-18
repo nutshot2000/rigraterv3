@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { stripHtml } from 'string-strip-html';
+import { createClient } from '@supabase/supabase-js';
 
 export const config = {
   runtime: 'nodejs',
@@ -9,7 +10,28 @@ export const config = {
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_key || '').trim();
 const GEMINI_MODEL = (process.env.GEMINI_MODEL || process.env.VITE_GEMINI_MODEL || 'gemini-1.5-pro-latest').trim();
 const AMAZON_TAG_US = (process.env.AMAZON_TAG_US || process.env.VITE_AMAZON_TAG_US || '').trim();
+const SUPABASE_URL = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
+const SUPABASE_ANON_KEY = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+const ADMIN_PWD = (process.env.ADMIN_PASSWORD || 'admin').trim();
+
 const ai = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null as any;
+
+async function checkAuth(req: any): Promise<boolean> {
+  // 1. Check for Admin Password (Local Mode)
+  const passwordHeader = req.headers['x-admin-password'];
+  if (passwordHeader === ADMIN_PWD) return true;
+
+  // 2. Check for Supabase Token (Production Mode)
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ') && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    const token = authHeader.split(' ')[1];
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (!error && user) return true;
+  }
+
+  return false;
+}
 
 async function fetchPageContent(url: string): Promise<string> {
   try {
@@ -107,6 +129,10 @@ function extractImagesFromHTML(html: string): string[] {
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!await checkAuth(req)) {
+    return res.status(401).json({ error: 'Unauthorized access. Please log in to the Admin Panel.' });
   }
 
   if (!ai) {

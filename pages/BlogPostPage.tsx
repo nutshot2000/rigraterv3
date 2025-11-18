@@ -139,7 +139,7 @@ const BlogPostPage: React.FC = () => {
         return () => window.removeEventListener('scroll', onScroll);
     }, []);
 
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.rigrater.tech';
+    const origin = 'https://www.rigrater.tech';
     const safeTitle = post?.title || '';
     const pageUrl = `${origin}/blog/${post?.slug || ''}`;
     const ogTitle = `${(post?.seoTitle || safeTitle) ? (post?.seoTitle || safeTitle) : 'RIGRATER Blog'}${post ? ' | RIGRATER Blog' : ''}`;

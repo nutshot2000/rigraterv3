@@ -1,7 +1,8 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { AIProductInfo, AISuggestedProduct, BlogPost, ComparisonDoc } from '../types';
-import { FALLBACK_IMAGE_URL } from '../constants';
+import { FALLBACK_IMAGE_URL, ADMIN_PASSWORD } from '../constants';
+import { supabase } from './supabaseClient';
 
 // Support multiple env shapes; Vite injects from vite.config define()
 const GEMINI_KEY = (process.env.GEMINI_API_KEY || process.env.API_KEY || '').trim();
@@ -208,9 +209,22 @@ export const generateBlogPost = async (opts: GenerateBlogPostOptions): Promise<O
     // Best-effort extraction of URLs (for comparison mode or multiple inputs)
     const urls = Array.from(trimmed.match(/https?:\/\/\S+/gi) || []);
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+    if (supabase) {
+        try {
+            const { data } = await supabase.auth.getSession();
+            if (data.session?.access_token) {
+                headers['Authorization'] = `Bearer ${data.session.access_token}`;
+            }
+        } catch {}
+    }
+    // Always send the local password just in case we are in local mode
+    headers['x-admin-password'] = ADMIN_PASSWORD;
+
     const resp = await fetch('/api/ai/build-blog-post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ source: trimmed, type, mode, urls }),
     });
 
