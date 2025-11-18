@@ -205,11 +205,18 @@ const DealsPage: React.FC = () => {
                         {deal.priceLabel}
                       </span>
                     )}
-                    {deal.merchant && (
-                      <span className="text-[11px] text-slate-400">
-                        {deal.merchant}
-                      </span>
-                    )}
+                    <div className="text-right flex flex-col items-end">
+                        {deal.merchant && (
+                        <span className="text-[11px] text-slate-400 block">
+                            {deal.merchant}
+                        </span>
+                        )}
+                        {deal.expiresAt && (
+                            <span className="text-[10px] text-slate-500">
+                                Expires {new Date(deal.expiresAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                        )}
+                    </div>
                   </div>
                 </div>
                 <div className="px-4 pb-3">

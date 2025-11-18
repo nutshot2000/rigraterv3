@@ -34,7 +34,7 @@ const PresetBar: React.FC<{ presets: { name: string; data: any }[]; onSave: () =
 };
 
 const HomePage: React.FC = () => {
-    const { products, addToComparison, comparisonList } = useApp();
+    const { products, addToComparison, comparisonList, blogPosts } = useApp();
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -172,6 +172,12 @@ const HomePage: React.FC = () => {
     const handleCardClick = (product: Product) => {
         if (product.slug) navigate(`/products/${product.slug}`);
     };
+
+    const latestPosts = useMemo(() => {
+        return [...blogPosts]
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 3);
+    }, [blogPosts]);
 
     return (
         <>
@@ -312,6 +318,42 @@ const HomePage: React.FC = () => {
                     Next
                 </button>
             </div>
+
+            {latestPosts.length > 0 && (
+                <div className="mt-24 mb-10 border-t border-slate-800 pt-12">
+                    <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                        <span className="w-1 h-8 bg-gradient-to-b from-sky-400 to-teal-400 rounded-full"></span>
+                        Latest from the Blog
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {latestPosts.map(post => (
+                            <div key={post.id} className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden hover:border-sky-500/30 transition-all hover:-translate-y-1 cursor-pointer group" onClick={() => navigate(`/blog/${post.slug}`)}>
+                                {post.coverImageUrl && (
+                                    <div className="h-48 w-full overflow-hidden relative">
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-60" />
+                                        <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                    </div>
+                                )}
+                                <div className="p-6 relative">
+                                    {!post.coverImageUrl && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-sky-500 to-teal-500" />}
+                                     <div className="flex gap-2 mb-3">
+                                        {post.tags?.slice(0,2).map(t => <span key={t} className="text-[10px] uppercase font-bold text-sky-300 bg-sky-900/30 px-2 py-1 rounded tracking-wider">{t}</span>)}
+                                    </div>
+                                    <h3 className="text-lg font-bold text-white mb-3 line-clamp-2 group-hover:text-sky-400 transition-colors">{post.title}</h3>
+                                    <p className="text-slate-400 text-sm line-clamp-3 mb-4 leading-relaxed">{post.summary}</p>
+                                    <div className="flex items-center justify-between text-xs text-slate-500 mt-auto border-t border-slate-800/50 pt-4">
+                                        <span>{new Date(post.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                        <span className="group-hover:translate-x-1 transition-transform text-sky-500 font-medium">Read Article →</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                     <div className="text-center mt-10">
+                        <button onClick={() => navigate('/blog')} className="btn-blueprint px-6">View All Articles</button>
+                    </div>
+                </div>
+            )}
 
             <ComparisonBar />
         </div>

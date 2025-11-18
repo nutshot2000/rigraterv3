@@ -126,7 +126,7 @@ export default async function handler(req: any, res: any) {
             const model = ai.getGenerativeModel({ model: GEMINI_MODEL });
             const prompt = `You extract structured product data from HTML for an e‑commerce admin tool. Be conservative and avoid copying page prose. Summarize neutrally.
 
-Return ONLY valid JSON with these keys: name, brand, category, price (USD like "$XXX.XX" if known), imageUrls (array), review (80–140 words, unique summary), specifications ("Key: Value, Key: Value"), affiliateLink, slug (kebab-case), seoTitle (<=60 chars), seoDescription (<=155 chars).
+Return ONLY valid JSON with these keys: name, brand, category, price (USD like "$XXX.XX" if known), originalPrice (MSRP/List price if crossed out, same format), discountPercentage (number, e.g. 20), imageUrls (array), review (80–140 words, unique summary), specifications ("Key: Value, Key: Value"), affiliateLink, slug (kebab-case), seoTitle (<=60 chars), seoDescription (<=155 chars).
 
 HTML (truncated):\n${html.substring(0, 30000)}`;
             const result = await model.generateContent(prompt);

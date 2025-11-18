@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Deal } from '../../types';
 import { AMAZON_TAG_UK, AMAZON_TAG_US } from '../../constants';
+import { generateProductInfo } from '../../services/geminiService';
 
 const emptyDeal: Omit<Deal, 'id' | 'createdAt'> = {
   title: '',
@@ -19,6 +20,7 @@ const DealsManagement: React.FC = () => {
   const { deals, addDeal, updateDeal, deleteDeal } = useApp();
   const [editing, setEditing] = useState<Deal | null>(null);
   const [draft, setDraft] = useState<Omit<Deal, 'id' | 'createdAt'>>(emptyDeal);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const ensureAffiliateUrl = (raw: string): string => {
     const trimmed = (raw || '').trim();
@@ -47,9 +49,46 @@ const DealsManagement: React.FC = () => {
     }
   };
 
-  const autoFillFromUrl = () => {
+  const autoFillFromUrl = async () => {
     const raw = draft.url?.trim();
     if (!raw) return;
+
+    setIsAnalyzing(true);
+    try {
+      const info = await generateProductInfo(raw);
+      
+      // Construct a price label if possible
+      let label = '';
+      if (info.price && info.price !== '$0.00') {
+        label = info.price;
+        if ((info as any).originalPrice) {
+          label += ` (was ${(info as any).originalPrice}`;
+          if ((info as any).discountPercentage) {
+             label += `, -${(info as any).discountPercentage}%`;
+          }
+          label += ')';
+        }
+      }
+
+      setDraft(prev => ({
+        ...prev,
+        title: prev.title || info.name || prev.title,
+        merchant: prev.merchant || info.brand || prev.merchant,
+        tag: prev.tag || info.category || 'Deal',
+        imageUrl: prev.imageUrl || info.imageUrl || prev.imageUrl,
+        description: prev.description || info.review || prev.description,
+        priceLabel: prev.priceLabel || label || prev.priceLabel,
+      }));
+    } catch (e) {
+      console.error('AI Auto-fill failed', e);
+      // Fallback to basic regex
+      fallbackAutoFill(raw);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const fallbackAutoFill = (raw: string) => {
     try {
       const withProtocol = raw.startsWith('http') ? raw : `https://${raw}`;
       const u = new URL(withProtocol);
@@ -78,23 +117,13 @@ const DealsManagement: React.FC = () => {
         .map(w => (w.length <= 2 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
         .join(' ');
 
-      // Try to grab an image filename from the URL if present
-      let imageFromUrl: string | undefined;
-      const imgMatch = raw.match(/(https?:\/\/[^\s]+?\.(jpg|jpeg|png|webp|gif))/i);
-      if (imgMatch) {
-        imageFromUrl = imgMatch[1];
-      }
-
       setDraft(prev => ({
         ...prev,
         title: prev.title || titleGuess || prev.title,
         merchant: prev.merchant || host,
         tag: prev.tag || 'Black Friday',
-        imageUrl: prev.imageUrl || imageFromUrl || prev.imageUrl,
       }));
-    } catch {
-      // best-effort only; silently ignore if URL is weird
-    }
+    } catch {}
   };
 
   const startCreate = () => {
@@ -244,9 +273,10 @@ const DealsManagement: React.FC = () => {
                   <button
                     type="button"
                     onClick={autoFillFromUrl}
-                    className="btn-blueprint text-xs whitespace-nowrap px-3 py-2"
+                    disabled={isAnalyzing}
+                    className="btn-blueprint text-xs whitespace-nowrap px-3 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Auto-fill
+                    {isAnalyzing ? 'Thinking...' : 'Magic Fill (AI)'}
                   </button>
                 </div>
               </div>
