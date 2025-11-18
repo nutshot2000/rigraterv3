@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
 import { CATEGORY_GROUPS } from '../constants';
 
@@ -14,6 +15,18 @@ const CategoriesPage: React.FC = () => {
     }, [products]);
 
     return (
+        <>
+        <Helmet>
+            <title>Browse PC Part Categories | RIGRATER</title>
+            <meta name="description" content="Explore all PC hardware categories: GPUs, CPUs, Motherboards, Cases, and Peripherals. Find the best rated parts for your build." />
+            <link rel="canonical" href="https://www.rigrater.tech/categories" />
+            <meta property="og:title" content="Browse PC Part Categories | RIGRATER" />
+            <meta property="og:description" content="Explore all PC hardware categories: GPUs, CPUs, Motherboards, Cases, and Peripherals. Find the best rated parts for your build." />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="https://www.rigrater.tech/categories" />
+            <meta property="og:image" content="https://www.rigrater.tech/og/rigrater-home.png" />
+            <meta name="twitter:card" content="summary_large_image" />
+        </Helmet>
         <div className="animate-fade-in">
             <h1 className="text-3xl font-bold text-white mb-6">Browse Categories</h1>
             <div className="space-y-6">
@@ -44,6 +57,7 @@ const CategoriesPage: React.FC = () => {
                 ))}
             </div>
         </div>
+        </>
     );
 };
 

@@ -146,6 +146,25 @@ const BlogPostPage: React.FC = () => {
     const ogDesc = post?.seoDescription || post?.summary || '';
     const ogImage = post?.coverImageUrl ? `/api/proxy-image?url=${encodeURIComponent(post.coverImageUrl)}` : FALLBACK_IMAGE_URL;
 
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: safeTitle,
+        image: post?.coverImageUrl ? [origin + ogImage] : [origin + FALLBACK_IMAGE_URL],
+        datePublished: post?.createdAt ? new Date(post.createdAt).toISOString() : undefined,
+        dateModified: post?.createdAt ? new Date(post.createdAt).toISOString() : undefined, // update if we track updated_at
+        author: {
+            '@type': 'Organization',
+            name: 'RIGRATER',
+            url: origin
+        },
+        description: ogDesc,
+        mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': pageUrl
+        }
+    };
+
     // Compute derived content safely even during loading
     const affiliateParsed = parseAffiliateLinks(post?.content || '');
     const contentWithoutTitle = removeTitleFromContent(affiliateParsed.body, safeTitle);
@@ -216,6 +235,9 @@ const BlogPostPage: React.FC = () => {
                 <meta name="twitter:title" content={ogTitle} />
                 <meta name="twitter:description" content={ogDesc} />
                 <meta name="twitter:image" content={origin + ogImage} />
+                <script type="application/ld+json">
+                    {JSON.stringify(jsonLd)}
+                </script>
             </Helmet>
 
             {/* reading progress */}

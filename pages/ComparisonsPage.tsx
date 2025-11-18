@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useApp } from '../context/AppContext';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
@@ -11,6 +12,18 @@ const ComparisonsPage: React.FC = () => {
     const productNames = (ids: string[]) => ids.map(id => products.find(p => p.id === id)?.name || 'Unknown').join(' vs ');
 
     return (
+        <>
+        <Helmet>
+            <title>PC Hardware Comparisons | RIGRATER</title>
+            <meta name="description" content="Detailed AI-generated comparisons of top PC components. See specs, performance differences, and buying advice for GPUs, CPUs, and more." />
+            <link rel="canonical" href="https://www.rigrater.tech/comparisons" />
+            <meta property="og:title" content="PC Hardware Comparisons | RIGRATER" />
+            <meta property="og:description" content="Detailed AI-generated comparisons of top PC components. See specs, performance differences, and buying advice for GPUs, CPUs, and more." />
+            <meta property="og:type" content="website" />
+            <meta property="og:url" content="https://www.rigrater.tech/comparisons" />
+            <meta property="og:image" content="https://www.rigrater.tech/og/rigrater-home.png" />
+            <meta name="twitter:card" content="summary_large_image" />
+        </Helmet>
         <div className="animate-fade-in">
             <h1 className="text-3xl font-bold text-white mb-6">Comparisons</h1>
             <div className="space-y-3">
@@ -35,6 +48,7 @@ const ComparisonsPage: React.FC = () => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 
